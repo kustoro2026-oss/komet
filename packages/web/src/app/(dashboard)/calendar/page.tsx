@@ -18,7 +18,6 @@ import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useTranslations } from "next-intl";
 import { usePosts } from "@/lib/zernio/hooks";
-import type { PostItem } from "@/lib/zernio/api";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
