@@ -122,16 +122,19 @@ interface RawPost {
 function normalizePost(raw: RawPost): PostItem {
   return {
     id: raw._id || raw.id || "",
-    content: raw.content,
+    content: raw.content || "",
     title: raw.title,
-    platforms: (raw.platforms || []).map((pl) =>
-      typeof pl === "string" ? pl : pl.platform
-    ),
-    status: raw.status,
+    platforms: (raw.platforms || [])
+      .filter((pl) => pl != null)
+      .map((pl) =>
+        typeof pl === "string" ? pl : pl.platform
+      )
+      .filter((p): p is string => typeof p === "string" && p.length > 0),
+    status: raw.status || "draft",
     scheduledFor: raw.scheduledFor,
     createdAt: raw.createdAt || "",
     engagement: raw.engagement,
-    tags: raw.tags || [],
+    tags: (raw.tags || []).filter(Boolean),
   };
 }
 
@@ -198,8 +201,12 @@ export async function listPosts(params?: {
 }
 
 export async function getPost(postId: string) {
-  const raw = await request<RawPost>(`/posts/${postId}`);
-  return normalizePost(raw);
+  const raw = await request<unknown>(`/posts/${postId}`);
+  // The API may wrap the post in { post: { ... } } or return it directly
+  const postData = raw && typeof raw === "object" && "post" in (raw as Record<string, unknown>)
+    ? (raw as { post: RawPost }).post
+    : (raw as RawPost);
+  return normalizePost(postData);
 }
 
 export async function updatePost(postId: string, data: UpdatePostData) {
