@@ -110,7 +110,9 @@
     "upcomingPosts": "Postingan Mendatang",
     "upcomingEmpty": "Postingan terjadwal akan muncul di sini. Hubungkan akun sosial media Anda untuk memulai.",
     "published": "Dipublikasikan",
-    "engagement": "Engagement"
+    "engagement": "Engagement",
+    "logout": "Keluar",
+    "loggingOut": "Keluar..."
   },
   "calendar": {
     "title": "Kalender Konten",

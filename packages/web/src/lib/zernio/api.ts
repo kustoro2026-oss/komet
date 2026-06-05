@@ -222,10 +222,20 @@ export async function getMediaPresignedUrl(filename: string, contentType: string
 
 // ===== Usage =====
 export async function getUsageStats() {
-  return request<{
-    postsThisMonth: number;
-    postLimit: number;
-    connectedAccounts: number;
-    accountLimit: number;
-  }>("/usage");
+  try {
+    return await request<{
+      postsThisMonth: number;
+      postLimit: number;
+      connectedAccounts: number;
+      accountLimit: number;
+    }>("/usage");
+  } catch {
+    // Usage endpoint may not be available; return defaults
+    return {
+      postsThisMonth: 0,
+      postLimit: 0,
+      connectedAccounts: 0,
+      accountLimit: 0,
+    };
+  }
 }

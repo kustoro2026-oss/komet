@@ -110,7 +110,9 @@
     "upcomingPosts": "Upcoming Posts",
     "upcomingEmpty": "Your scheduled posts will appear here. Connect your social accounts to get started.",
     "published": "Published",
-    "engagement": "Engagement"
+    "engagement": "Engagement",
+    "logout": "Logout",
+    "loggingOut": "Logging out..."
   },
   "calendar": {
     "title": "Content Calendar",
