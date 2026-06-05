@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo } from "lucide-react";
@@ -479,12 +480,14 @@ export default function CreatePostPage() {
                       className="group relative overflow-hidden rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]"
                     >
                       {/* Preview */}
-                      <div className="aspect-square">
+                      <div className="relative aspect-square">
                         {item.type === "image" ? (
-                          <img
+                          <Image
                             src={URL.createObjectURL(item.file)}
                             alt={item.file.name}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-[var(--color-surface-dark-raised)]">
@@ -854,11 +857,15 @@ export default function CreatePostPage() {
                             className="overflow-hidden rounded-lg border border-[var(--color-ink-muted)]"
                           >
                             {item.type === "image" ? (
-                              <img
-                                src={URL.createObjectURL(item.file)}
-                                alt={item.file.name}
-                                className="aspect-square w-full object-cover"
-                              />
+                              <div className="relative aspect-square w-full">
+                                <Image
+                                  src={URL.createObjectURL(item.file)}
+                                  alt={item.file.name}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                              </div>
                             ) : (
                               <div className="flex aspect-square w-full items-center justify-center bg-[var(--color-surface-dark-raised)]">
                                 <FileVideo className="h-6 w-6 text-[var(--color-on-dark-muted)]" />
