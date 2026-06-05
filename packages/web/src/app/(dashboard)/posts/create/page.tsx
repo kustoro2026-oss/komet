@@ -1,15 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
-import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo, X } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
 import { useCreatePost, useProfiles, useAccounts } from "@/lib/zernio/hooks";
-import { createProfile } from "@/lib/zernio/api";
+import { createProfile, getMediaPresignedUrl } from "@/lib/zernio/api";
 
 type ComposerStep = "content" | "platforms" | "schedule" | "review";
+
+interface MediaFile {
+  id: string;
+  file: File;
+  type: "image" | "video";
+  status: "pending" | "uploading" | "done" | "error";
+  progress: number;
+  publicUrl?: string;
+  error?: string;
+}
 
 interface PostForm {
   content: string;
@@ -20,7 +30,7 @@ interface PostForm {
   scheduledTime: string;
   timezone: string;
   publishNow: boolean;
-  mediaUrls: string[];
+  media: MediaFile[];
   hashtags: string[];
   tags: string[];
 }
@@ -36,12 +46,136 @@ export default function CreatePostPage() {
     scheduledTime: "09:00",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     publishNow: true,
-    mediaUrls: [],
+    media: [],
     hashtags: [],
     tags: [],
   });
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [submitError, setSubmitError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadMediaFile = useCallback(async (mediaFile: MediaFile) => {
+    setForm((prev) => ({
+      ...prev,
+      media: prev.media.map((m) =>
+        m.id === mediaFile.id ? { ...m, status: "uploading" as const, progress: 0 } : m
+      ),
+    }));
+
+    try {
+      const { uploadUrl, publicUrl } = await getMediaPresignedUrl(
+        mediaFile.file.name,
+        mediaFile.file.type
+      );
+
+      // Upload the file directly to the presigned URL
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", uploadUrl);
+      xhr.setRequestHeader("Content-Type", mediaFile.file.type);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          setForm((prev) => ({
+            ...prev,
+            media: prev.media.map((m) =>
+              m.id === mediaFile.id ? { ...m, progress } : m
+            ),
+          }));
+        }
+      };
+
+      await new Promise<void>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload failed with status ${xhr.status}`));
+        };
+        xhr.onerror = () => reject(new Error("Upload failed"));
+        xhr.send(mediaFile.file);
+      });
+
+      setForm((prev) => ({
+        ...prev,
+        media: prev.media.map((m) =>
+          m.id === mediaFile.id
+            ? { ...m, status: "done" as const, progress: 100, publicUrl }
+            : m
+        ),
+      }));
+    } catch (err) {
+      setForm((prev) => ({
+        ...prev,
+        media: prev.media.map((m) =>
+          m.id === mediaFile.id
+            ? {
+                ...m,
+                status: "error" as const,
+                error: err instanceof Error ? err.message : "Upload failed",
+              }
+            : m
+        ),
+      }));
+    }
+  }, []);
+
+  const addMediaFiles = useCallback(
+    (files: FileList | File[]) => {
+      const newMedia: MediaFile[] = Array.from(files).map((file) => {
+        const isVideo = file.type.startsWith("video/");
+        const mediaFile: MediaFile = {
+          id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+          file,
+          type: isVideo ? "video" : "image",
+          status: "pending",
+          progress: 0,
+        };
+        return mediaFile;
+      });
+
+      setForm((prev) => ({
+        ...prev,
+        media: [...prev.media, ...newMedia],
+      }));
+
+      // Start upload for each new file
+      newMedia.forEach((m) => uploadMediaFile(m));
+    },
+    [uploadMediaFile]
+  );
+
+  const removeMedia = useCallback((id: string) => {
+    setForm((prev) => ({
+      ...prev,
+      media: prev.media.filter((m) => m.id !== id),
+    }));
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files.length > 0) {
+      addMediaFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      addMediaFiles(e.target.files);
+    }
+    // Reset so the same file can be picked again
+    e.target.value = "";
+  };
 
   const createPostMutation = useCreatePost();
   const { data: profiles } = useProfiles();
@@ -94,7 +228,11 @@ export default function CreatePostPage() {
         publishNow,
         scheduledFor,
         timezone: form.timezone,
-        mediaUrls: form.mediaUrls.length > 0 ? form.mediaUrls : undefined,
+        mediaItems: form.media.filter((m) => m.status === "done").length > 0
+          ? form.media
+              .filter((m) => m.status === "done" && m.publicUrl)
+              .map((m) => ({ type: m.type, url: m.publicUrl! }))
+          : undefined,
         hashtags: form.hashtags.length > 0 ? form.hashtags : undefined,
       });
 
@@ -292,24 +430,119 @@ export default function CreatePostPage() {
               </div>
             </div>
 
-            {/* Media URLs */}
+            {/* Media Upload */}
             <div>
               <label className="flex items-center gap-2 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
                 <ImageIcon className="h-4 w-4" />
-                Media URLs (one per line)
+                Images & Videos
               </label>
-              <textarea
-                value={form.mediaUrls.join("\n")}
-                onChange={(e) =>
-                  updateField(
-                    "mediaUrls",
-                    e.target.value.split("\n").filter(Boolean)
-                  )
-                }
-                placeholder="https://example.com/image.jpg"
-                rows={3}
-                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
-              />
+
+              {/* Drop zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
+                  isDragging
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
+                    : "border-[var(--color-ink-muted)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-surface-dark-raised)]"
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,video/mp4,video/mpeg,video/quicktime,video/webm,video/x-m4v"
+                  onChange={handleFilePicker}
+                  className="hidden"
+                />
+                <Upload
+                  className={`h-8 w-8 mb-2 ${
+                    isDragging ? "text-[var(--color-primary)]" : "text-[var(--color-on-dark-muted)]"
+                  }`}
+                />
+                <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                  Drop files here or click to browse
+                </p>
+                <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">
+                  Images (JPG, PNG, WebP, GIF) & Videos (MP4, WebM, MOV)
+                </p>
+              </div>
+
+              {/* Uploaded files list */}
+              {form.media.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {form.media.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group relative overflow-hidden rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]"
+                    >
+                      {/* Preview */}
+                      <div className="aspect-square">
+                        {item.type === "image" ? (
+                          <img
+                            src={URL.createObjectURL(item.file)}
+                            alt={item.file.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-[var(--color-surface-dark-raised)]">
+                            <FileVideo className="h-8 w-8 text-[var(--color-on-dark-muted)]" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMedia(item.id);
+                          }}
+                          className="flex items-center gap-1 rounded-full bg-[var(--color-error)] px-3 py-1.5 text-micro text-white"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Remove
+                        </button>
+                      </div>
+
+                      {/* Status badge */}
+                      <div className="absolute top-1.5 right-1.5">
+                        {item.status === "pending" && (
+                          <span className="rounded-full bg-[var(--color-on-dark-muted)] px-2 py-0.5 text-micro text-white">
+                            Waiting
+                          </span>
+                        )}
+                        {item.status === "uploading" && (
+                          <span className="flex items-center gap-1 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-micro text-white">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            {item.progress}%
+                          </span>
+                        )}
+                        {item.status === "done" && (
+                          <span className="rounded-full bg-[var(--color-success)] px-2 py-0.5 text-micro text-white">
+                            Ready
+                          </span>
+                        )}
+                        {item.status === "error" && (
+                          <span
+                            className="rounded-full bg-[var(--color-error)] px-2 py-0.5 text-micro text-white"
+                            title={item.error}
+                          >
+                            Error
+                          </span>
+                        )}
+                      </div>
+
+                      {/* File name */}
+                      <div className="truncate px-2 py-1 text-micro text-[var(--color-on-dark-muted)]">
+                        {item.file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Hashtags */}
@@ -605,21 +838,35 @@ export default function CreatePostPage() {
                 </p>
               </div>
 
-              {form.mediaUrls.length > 0 && (
+              {form.media.filter((m) => m.status === "done").length > 0 && (
                 <>
                   <div className="h-px bg-[var(--color-ink-muted)]" />
                   <div>
                     <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">
-                      Media ({form.mediaUrls.length} files)
+                      Media ({form.media.filter((m) => m.status === "done").length} files)
                     </p>
-                    {form.mediaUrls.map((url, i) => (
-                      <p
-                        key={i}
-                        className="mt-1 text-caption text-[var(--color-on-dark-soft)] truncate"
-                      >
-                        {url}
-                      </p>
-                    ))}
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {form.media
+                        .filter((m) => m.status === "done")
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="overflow-hidden rounded-lg border border-[var(--color-ink-muted)]"
+                          >
+                            {item.type === "image" ? (
+                              <img
+                                src={URL.createObjectURL(item.file)}
+                                alt={item.file.name}
+                                className="aspect-square w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex aspect-square w-full items-center justify-center bg-[var(--color-surface-dark-raised)]">
+                                <FileVideo className="h-6 w-6 text-[var(--color-on-dark-muted)]" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 </>
               )}

@@ -256,7 +256,7 @@ export class ZernioClient {
     scheduledFor?: string;
     timezone?: string;
     publishNow?: boolean;
-    mediaUrls?: string[];
+    mediaItems?: { type: "image" | "video"; url: string; title?: string }[];
     hashtags?: string[];
     tags?: string[];
   }): Promise<ZernioPost> {

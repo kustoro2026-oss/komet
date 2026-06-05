@@ -121,7 +121,7 @@ interface CreatePostData {
   scheduledFor?: string;
   timezone?: string;
   publishNow?: boolean;
-  mediaUrls?: string[];
+  mediaItems?: { type: "image" | "video"; url: string; title?: string }[];
   hashtags?: string[];
   tags?: string[];
 }
@@ -161,6 +161,21 @@ export async function connectBluesky(
   return request<{ id: string; platform: string }>("/connect/bluesky", {
     method: "POST",
     body: { identifier, appPassword, profileId },
+  });
+}
+
+// ===== Media =====
+export interface PresignedUrlResult {
+  uploadUrl: string;
+  publicUrl: string;
+  key: string;
+  type: "image" | "video";
+}
+
+export async function getMediaPresignedUrl(filename: string, contentType: string) {
+  return request<PresignedUrlResult>("/media/presign", {
+    method: "POST",
+    body: { filename, contentType },
   });
 }
 
