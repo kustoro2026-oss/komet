@@ -97,17 +97,19 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
       if (!res.ok) {
         // API unavailable - fall back to localStorage
         set({ isLoading: false });
-        const current = get().workspaces;
-        if (current.length === 0) {
-          const defaultWs = { id: "default", name: "My Workspace", slug: "my-workspace", role: "admin" as const };
-          set({ workspaces: [defaultWs], activeWorkspace: defaultWs });
-          saveLocal([defaultWs], defaultWs);
-        }
+        seedIfEmpty();
         return;
       }
       const data = await res.json();
       if (data.workspaces && Array.isArray(data.workspaces)) {
         const apiWorkspaces: Workspace[] = data.workspaces;
+
+        if (apiWorkspaces.length === 0) {
+          // API returned empty list - keep localStorage data instead of overwriting with nothing
+          set({ isLoading: false });
+          seedIfEmpty();
+          return;
+        }
 
         // Preserve active workspace selection if it still exists in API
         const currentActive = get().activeWorkspace;
@@ -127,6 +129,10 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
     } catch {
       // Network error - fall back to localStorage
       set({ isLoading: false, error: null });
+      seedIfEmpty();
+    }
+
+    function seedIfEmpty() {
       const current = get().workspaces;
       if (current.length === 0) {
         const defaultWs = { id: "default", name: "My Workspace", slug: "my-workspace", role: "admin" as const };
