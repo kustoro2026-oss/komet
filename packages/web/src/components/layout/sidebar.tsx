@@ -66,6 +66,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         id: "1", name: "My Workspace", slug: "my-workspace", role: "admin"
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sidebarContent = (
