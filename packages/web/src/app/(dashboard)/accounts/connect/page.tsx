@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowLeft, ExternalLink, Check, Info, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, ExternalLink, Check, Loader2, Search, Shield, Globe, MessageSquare, Video, ChevronRight, X } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { startOAuth, connectBluesky, createProfile } from "@/lib/zernio/api";
-import { useProfiles } from "@/lib/zernio/hooks";
+import { useProfiles, useAccounts } from "@/lib/zernio/hooks";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { motion, AnimatePresence } from "framer-motion";
 
 const PLATFORM_COLORS: Record<Platform, string> = {
   twitter: "#1DA1F2",
@@ -25,18 +27,46 @@ const PLATFORM_COLORS: Record<Platform, string> = {
   whatsapp: "#25D366",
 };
 
+const PLATFORM_CATEGORIES: { label: string; icon: typeof Globe; platforms: Platform[] }[] = [
+  { label: "Social Media", icon: Globe, platforms: ["twitter", "instagram", "facebook", "linkedin", "threads", "pinterest", "reddit", "snapchat"] },
+  { label: "Video & Music", icon: Video, platforms: ["youtube", "tiktok"] },
+  { label: "Messaging", icon: MessageSquare, platforms: ["telegram", "discord", "whatsapp"] },
+  { label: "Business & Other", icon: Shield, platforms: ["bluesky", "googlebusiness"] },
+];
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06 },
+  },
+};
+
+const itemAnim = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
+
 export default function ConnectAccountPage() {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Bluesky-specific form
   const [blueskyIdentifier, setBlueskyIdentifier] = useState("");
   const [blueskyAppPassword, setBlueskyAppPassword] = useState("");
 
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
+  const { data: accountsData } = useAccounts();
   const [profileId, setProfileId] = useState<string | null>(null);
+
+  // Connected platforms set
+  const connectedPlatforms = useMemo(() => {
+    if (!accountsData) return new Set<string>();
+    return new Set(accountsData.map((a) => a.platform));
+  }, [accountsData]);
 
   // Auto-create default profile if none exists
   useEffect(() => {
@@ -44,7 +74,6 @@ export default function ConnectAccountPage() {
       if (profiles.length > 0) {
         setProfileId(profiles[0].id);
       } else {
-        // No profiles exist — create one
         createProfile("Default")
           .then((p) => setProfileId(p.id))
           .catch((err: Error) => setError(err.message || "Failed to create profile"));
@@ -66,7 +95,6 @@ export default function ConnectAccountPage() {
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
       } else {
-        // OAuth flow: get auth URL from Zernio API and redirect
         const result = await startOAuth(selectedPlatform, profileId, `${window.location.origin}/accounts`);
         if (result.authUrl) {
           window.location.href = result.authUrl;
@@ -82,153 +110,459 @@ export default function ConnectAccountPage() {
     }
   };
 
+  // Filter platforms by search
+  const filteredPlatforms = useMemo(() => {
+    if (!searchQuery) return null;
+    const q = searchQuery.toLowerCase();
+    return SUPPORTED_PLATFORMS.filter(
+      (p) =>
+        PLATFORM_LABELS[p].toLowerCase().includes(q) ||
+        p.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
+  // ========== SUCCESS VIEW ==========
   if (connected) {
     return (
-      <div className="mx-auto max-w-lg py-12 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success)]/20">
-          <Check className="h-8 w-8 text-[var(--color-success)]" />
-        </div>
-        <h2 className="mt-6 font-display text-heading-lg font-semibold text-[var(--color-on-dark)]">
-          Account Connected!
-        </h2>
-        <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
-          Your {selectedPlatform && PLATFORM_LABELS[selectedPlatform]} account has been successfully connected.
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <a href="/accounts" className="rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]">
+      <motion.div
+        className="mx-auto max-w-lg py-12 text-center"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.div
+          className="mx-auto flex h-20 w-20 items-center justify-center rounded-full"
+          style={{
+            backgroundColor: (selectedPlatform ? PLATFORM_COLORS[selectedPlatform] : "#22c55e") + "20",
+          }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        >
+          <Check
+            className="h-10 w-10"
+            style={{ color: selectedPlatform ? PLATFORM_COLORS[selectedPlatform] : "#22c55e" }}
+          />
+        </motion.div>
+
+        <motion.div
+          className="mt-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 className="font-display text-heading-lg font-semibold text-[var(--color-on-dark)]">
+            Account Connected!
+          </h2>
+          <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
+            Your <span className="font-medium text-[var(--color-on-dark)]">{selectedPlatform && PLATFORM_LABELS[selectedPlatform]}</span> account has been successfully connected.
+          </p>
+        </motion.div>
+
+        <motion.div
+          className="mt-10 flex items-center justify-center gap-3"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <a
+            href="/accounts"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-all active:scale-95 shadow-glow"
+          >
             View Accounts
+            <ChevronRight className="h-4 w-4" />
           </a>
           <button
             onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); }}
-            className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+            className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
             Connect Another
           </button>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     );
   }
 
+  // ========== PLATFORM DETAIL VIEW ==========
   if (selectedPlatform) {
+    const isBluesky = selectedPlatform === "bluesky";
     return (
-      <div className="mx-auto max-w-lg space-y-6">
+      <motion.div
+        className="mx-auto max-w-lg"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <button
-          onClick={() => setSelectedPlatform(null)}
-          className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]"
+          onClick={() => {
+            setSelectedPlatform(null);
+            setError("");
+            setBlueskyIdentifier("");
+            setBlueskyAppPassword("");
+          }}
+          className="group inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to platforms
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          Back to platforms
         </button>
 
-        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] + "20" }}>
-              <span className="text-heading-sm font-bold" style={{ color: PLATFORM_COLORS[selectedPlatform] }}>
-                {PLATFORM_LABELS[selectedPlatform][0]}
-              </span>
-            </div>
-            <div>
-              <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-                Connect {PLATFORM_LABELS[selectedPlatform]}
-              </h2>
-              <p className="text-body-sm text-[var(--color-on-dark-soft)]">
-                {selectedPlatform === "bluesky" ? "Enter your Bluesky credentials" : "You'll be redirected to authorize Komet"}
-              </p>
-            </div>
-          </div>
-
-          {selectedPlatform === "bluesky" ? (
-            <div className="space-y-4">
+        <div className="mt-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] overflow-hidden">
+          {/* Platform header */}
+          <div className="relative p-6 pb-0">
+            <div className="flex items-center gap-4">
+              <motion.div
+                className="flex h-14 w-14 items-center justify-center rounded-xl"
+                style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] + "18" }}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              >
+                <PlatformIcon platform={selectedPlatform} className="h-7 w-7" />
+              </motion.div>
               <div>
-                <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">Identifier</label>
-                <input
-                  type="text"
-                  value={blueskyIdentifier}
-                  onChange={(e) => setBlueskyIdentifier(e.target.value)}
-                  placeholder="your-handle.bsky.social"
-                  className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
-              </div>
-              <div>
-                <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">App Password</label>
-                <input
-                  type="password"
-                  value={blueskyAppPassword}
-                  onChange={(e) => setBlueskyAppPassword(e.target.value)}
-                  placeholder="xxxx-xxxx-xxxx-xxxx"
-                  className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
-                <p className="mt-1.5 text-caption text-[var(--color-on-dark-muted)]">
-                  Generate an app password in your Bluesky settings &gt; App Passwords
+                <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
+                  Connect {PLATFORM_LABELS[selectedPlatform]}
+                </h2>
+                <p className="mt-0.5 text-body-sm text-[var(--color-on-dark-soft)]">
+                  {isBluesky
+                    ? "Enter your Bluesky credentials to connect"
+                    : `Authorize Komet to manage your ${PLATFORM_LABELS[selectedPlatform]} account`}
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="rounded-lg bg-[var(--color-primary)]/5 p-4">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 shrink-0 text-[var(--color-primary-light)]" />
-                <div>
-                  <p className="text-body-sm text-[var(--color-on-dark)]">
-                    You will be redirected to {PLATFORM_LABELS[selectedPlatform]} to authorize Komet.
-                  </p>
-                  <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">
-                    After authorization, you&apos;ll be redirected back to your accounts page.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {error && (
-            <div className="rounded-lg bg-[var(--color-error)]/10 p-3 text-caption text-[var(--color-error)]">
-              {error}
-            </div>
-          )}
+            {/* Platform accent line */}
+            <div
+              className="mt-5 h-0.5 w-full rounded-full opacity-30"
+              style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] }}
+            />
+          </div>
 
-          <button
-            onClick={handleConnect}
-            disabled={connecting || !profileId || (selectedPlatform === "bluesky" && (!blueskyIdentifier || !blueskyAppPassword))}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
-          >
-            {connecting ? (
+          <div className="p-6 space-y-5">
+            {isBluesky ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Connecting...
+                <div className="space-y-4">
+                  <div>
+                    <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                      Bluesky Identifier
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={blueskyIdentifier}
+                        onChange={(e) => setBlueskyIdentifier(e.target.value)}
+                        placeholder="your-handle.bsky.social"
+                        className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-on-dark-muted)]">
+                        @
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                      App Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        value={blueskyAppPassword}
+                        onChange={(e) => setBlueskyAppPassword(e.target.value)}
+                        placeholder="xxxx-xxxx-xxxx-xxxx"
+                        className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                      />
+                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                    </div>
+                    <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
+                      <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      Generate an app password in your Bluesky settings &gt; App Passwords
+                    </p>
+                  </div>
+                </div>
               </>
             ) : (
-              <>
-                Connect {PLATFORM_LABELS[selectedPlatform]}
-                <ExternalLink className="h-4 w-4" />
-              </>
+              <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
+                    <Shield className="h-4 w-4 text-[var(--color-primary-light)]" />
+                  </div>
+                  <div>
+                    <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                      OAuth Authorization Required
+                    </p>
+                    <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                      You will be redirected to <strong className="text-[var(--color-on-dark)]">{PLATFORM_LABELS[selectedPlatform]}</strong> to authorize Komet.
+                    </p>
+                    <ul className="mt-2 space-y-1">
+                      {[
+                        "Read your profile and posts",
+                        "Publish content on your behalf",
+                        "View engagement metrics",
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-center gap-2 text-caption text-[var(--color-on-dark-muted)]">
+                          <Check className="h-3 w-3 text-[var(--color-success)]" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-caption text-[var(--color-on-dark-soft)] italic">
+                      After authorization, you&apos;ll be redirected back to your accounts page.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
-          </button>
+
+            {/* Error */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  className="rounded-lg bg-[var(--color-error)]/10 border border-[var(--color-error)]/20 p-3 text-caption text-[var(--color-error)]"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                >
+                  <div className="flex items-center gap-2">
+                    <X className="h-3.5 w-3.5 shrink-0" />
+                    {error}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Submit button */}
+            <button
+              onClick={handleConnect}
+              disabled={
+                connecting ||
+                !profileId ||
+                (isBluesky && (!blueskyIdentifier || !blueskyAppPassword))
+              }
+              className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 text-white"
+              style={{
+                backgroundColor: PLATFORM_COLORS[selectedPlatform],
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.filter = "brightness(1.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.filter = "brightness(1)";
+              }}
+            >
+              {connecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <PlatformIcon platform={selectedPlatform} className="h-4 w-4" />
+                  Connect {PLATFORM_LABELS[selectedPlatform]}
+                  {!isBluesky && <ExternalLink className="h-4 w-4" />}
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
+  // ========== PLATFORM LIST VIEW ==========
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">Connect Account</h1>
-        <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">Choose a platform to connect</p>
+    <motion.div className="space-y-6" variants={container} initial="hidden" animate="show">
+      {/* Header */}
+      <motion.div variants={itemAnim} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
+            Connect Account
+          </h1>
+          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+            Choose a platform to connect to your workspace
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="relative sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search platforms..."
+            className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] pl-9 pr-8 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)] transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Connection count */}
+      <motion.div variants={itemAnim} className="flex items-center gap-2 text-caption text-[var(--color-on-dark-muted)]">
+        <div className="flex -space-x-1.5">
+          {SUPPORTED_PLATFORMS.slice(0, 5).map((p) => (
+            <div
+              key={p}
+              className="h-6 w-6 rounded-full border-2 border-[var(--color-surface-dark)] flex items-center justify-center"
+              style={{ backgroundColor: PLATFORM_COLORS[p] + "30" }}
+            >
+              <PlatformIcon platform={p} className="h-3 w-3" />
+            </div>
+          ))}
+        </div>
+        <span>
+          {connectedPlatforms.size} of {SUPPORTED_PLATFORMS.length} platforms connected
+        </span>
+      </motion.div>
+
+      {/* Search results or categories */}
+      {filteredPlatforms ? (
+        <motion.div variants={itemAnim} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {filteredPlatforms.length > 0 ? (
+            filteredPlatforms.map((platform) => (
+              <PlatformCard
+                key={platform}
+                platform={platform}
+                isConnected={connectedPlatforms.has(platform)}
+                onSelect={setSelectedPlatform}
+              />
+            ))
+          ) : (
+            <div className="col-span-full flex flex-col items-center justify-center py-16">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-ink-muted)]/20">
+                <Search className="h-8 w-8 text-[var(--color-on-dark-muted)]" />
+              </div>
+              <p className="mt-4 text-body-sm text-[var(--color-on-dark-muted)]">
+                No platforms found for &quot;{searchQuery}&quot;
+              </p>
+              <button
+                onClick={() => setSearchQuery("")}
+                className="mt-2 text-caption font-medium text-[var(--color-primary-light)] hover:underline"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+        </motion.div>
+      ) : (
+        /* Categories */
+        <div className="space-y-8">
+          {PLATFORM_CATEGORIES.map((category) => (
+            <motion.div key={category.label} variants={itemAnim}>
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-surface-dark-raised)]">
+                  <category.icon className="h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                </div>
+                <h2 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
+                  {category.label}
+                </h2>
+                <div className="h-px flex-1 bg-[var(--color-ink-muted)]" />
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                {category.platforms.map((platform) => (
+                  <PlatformCard
+                    key={platform}
+                    platform={platform}
+                    isConnected={connectedPlatforms.has(platform)}
+                    onSelect={setSelectedPlatform}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+// ========== Platform Card ==========
+function PlatformCard({
+  platform,
+  isConnected,
+  onSelect,
+}: {
+  platform: Platform;
+  isConnected: boolean;
+  onSelect: (p: Platform) => void;
+}) {
+  const color = PLATFORM_COLORS[platform];
+
+  return (
+    <motion.button
+      onClick={() => onSelect(platform)}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.97 }}
+      className="group relative flex flex-col items-center gap-3 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:shadow-lg hover:shadow-black/20 text-left"
+      style={{
+        borderColor: isConnected ? `${color}40` : undefined,
+      }}
+    >
+      {/* Top accent bar */}
+      <div
+        className="absolute top-0 left-3 right-3 h-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ backgroundColor: color }}
+      />
+
+      {/* Connected badge */}
+      {isConnected && (
+        <div
+          className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium"
+          style={{ backgroundColor: color + "15", color: color }}
+        >
+          <Check className="h-2.5 w-2.5" />
+          Connected
+        </div>
+      )}
+
+      {/* Platform icon */}
+      <div
+        className="flex h-14 w-14 items-center justify-center rounded-xl transition-transform group-hover:scale-110 group-hover:shadow-md"
+        style={{
+          backgroundColor: color + "12",
+          boxShadow: isConnected ? `0 0 0 2px ${color}30` : undefined,
+        }}
+      >
+        <PlatformIcon platform={platform} className="h-7 w-7" />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {SUPPORTED_PLATFORMS.map((platform) => (
-          <button
-            key={platform}
-            onClick={() => setSelectedPlatform(platform)}
-            className="flex flex-col items-center gap-3 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6 hover:border-[var(--color-ink-soft)] hover:bg-[var(--color-surface-dark-raised)] transition-all"
-          >
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl" style={{ backgroundColor: PLATFORM_COLORS[platform] + "15" }}>
-              <span className="text-heading-lg font-bold" style={{ color: PLATFORM_COLORS[platform] }}>
-                {PLATFORM_LABELS[platform][0]}
-              </span>
-            </div>
-            <span className="text-body-sm font-medium text-[var(--color-on-dark)]">{PLATFORM_LABELS[platform]}</span>
-          </button>
-        ))}
-      </div>
-    </div>
+      {/* Platform name */}
+      <span className="text-body-sm font-medium text-[var(--color-on-dark)] text-center leading-tight">
+        {PLATFORM_LABELS[platform]}
+      </span>
+
+      {/* Action hint */}
+      <span className="text-micro text-[var(--color-on-dark-muted)] group-hover:text-[var(--color-on-dark-soft)] transition-colors">
+        {isConnected ? "Reconnect →" : "Connect →"}
+      </span>
+    </motion.button>
+  );
+}
+
+// Small inline Info icon for reuse
+function Info({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
   );
 }
