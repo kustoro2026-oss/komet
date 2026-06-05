@@ -95,8 +95,14 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
     try {
       const res = await fetch("/api/workspace");
       if (!res.ok) {
-        // API unavailable - keep localStorage data
+        // API unavailable - fall back to localStorage
         set({ isLoading: false });
+        const current = get().workspaces;
+        if (current.length === 0) {
+          const defaultWs = { id: "default", name: "My Workspace", slug: "my-workspace", role: "admin" as const };
+          set({ workspaces: [defaultWs], activeWorkspace: defaultWs });
+          saveLocal([defaultWs], defaultWs);
+        }
         return;
       }
       const data = await res.json();
@@ -119,8 +125,14 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
         set({ isLoading: false });
       }
     } catch {
-      // Network error - keep localStorage data
+      // Network error - fall back to localStorage
       set({ isLoading: false, error: null });
+      const current = get().workspaces;
+      if (current.length === 0) {
+        const defaultWs = { id: "default", name: "My Workspace", slug: "my-workspace", role: "admin" as const };
+        set({ workspaces: [defaultWs], activeWorkspace: defaultWs });
+        saveLocal([defaultWs], defaultWs);
+      }
     }
   },
 
