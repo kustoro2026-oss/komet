@@ -8,7 +8,7 @@ import {
   MoreHorizontal, AlertTriangle, ExternalLink, Loader2, CheckCircle2,
   XCircle, Clock, FileText
 } from "lucide-react";
-import type { PostStatus, Platform } from "@komet/shared";
+import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
 import { usePosts, useDeletePost } from "@/lib/zernio/hooks";
