@@ -1,0 +1,11 @@
+{
+  "name": "@komet/cache",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@upstash/redis": "^1.34.3"
+  }
+}

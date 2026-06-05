@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USER & WORKSPACE =====
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  avatarUrl    String?
+  supabaseId   String   @unique
+  zernioApiKey String?
+  lastSeenAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspaces   Workspace[]
+  apiKeys      ApiKey[]
+  subscription Subscription?
+  posts        Post[]
+  media        Media[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([supabaseId])
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  slug        String   @unique
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  isDeleted   Boolean  @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  profiles        Profile[]
+  members         WorkspaceMember[]
+  autoReplyRules  AutoReplyRule[]
+  aiTemplates     AiTemplate[]
+  webhookEndpoints WebhookEndpoint[]
+  reportSchedules ReportSchedule[]
+  activityLogs    ActivityLog[]
+
+  @@index([slug])
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String   // admin, editor, viewer
+
+  @@unique([workspaceId, userId])
+}
+
+// ===== PROFILES & SOCIAL ACCOUNTS =====
+
+model Profile {
+  id              String   @id @default(cuid())
+  zernioProfileId String?
+  workspaceId     String
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  color           String   @default("#3B82F6")
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  accounts SocialAccount[]
+  posts    Post[]
+
+  @@index([workspaceId])
+}
+
+model SocialAccount {
+  id               String   @id @default(cuid())
+  zernioAccountId  String?
+  profileId        String
+  profile          Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  platform         String
+  username         String
+  displayName      String
+  avatarUrl        String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  posts PostPlatform[]
+
+  @@index([platform])
+  @@index([profileId])
+  @@index([isActive])
+}
+
+// ===== POSTS =====
+
+model Post {
+  id           String    @id @default(cuid())
+  zernioPostId String?
+  profileId    String
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title        String?
+  content      String
+  status       String    // draft, scheduled, publishing, published, failed, partial
+  scheduledFor DateTime?
+  timezone     String    @default("UTC")
+  publishNow   Boolean   @default(false)
+  isDraft      Boolean   @default(false)
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
+  visibility   String    @default("public")
+  tags         Json      @default("[]")
+  hashtags     Json      @default("[]")
+  mediaItems   Json      @default("[]")
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  platforms     PostPlatform[]
+  versions      PostVersion[]
+
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([userId])
+  @@index([profileId])
+  @@index([status, scheduledFor])
+  @@index([isDraft])
+}
+
+model PostPlatform {
+  id             String    @id @default(cuid())
+  postId         String
+  post           Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  accountId      String
+  account        SocialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  platform       String
+  customContent  String?
+  status         String    // pending, publishing, published, failed
+  publishedUrl   String?
+  publishedAt    DateTime?
+  errorMessage   String?
+
+  @@index([status])
+  @@index([postId])
+  @@index([accountId])
+}
+
+model PostVersion {
+  id         String   @id @default(cuid())
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  content    String
+  title      String?
+  mediaItems Json     @default("[]")
+  platforms  Json     @default("[]")
+  tags       Json     @default("[]")
+  hashtags   Json     @default("[]")
+  version    Int
+  createdAt  DateTime @default(now())
+
+  @@index([postId])
+  @@index([postId, version])
+}
+
+// ===== MEDIA =====
+
+model Media {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  url             String
+  thumbnailUrl    String?
+  type            String   // image, video, gif, document
+  zernioMediaKey  String?
+  createdAt       DateTime @default(now())
+}
+
+// ===== AUTO-REPLY & AI =====
+
+model AutoReplyRule {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  profileId    String
+  name         String
+  triggerType  String   // keyword, exact, regex, ai
+  triggerValue String
+  replyType    String   // fixed, ai_generated, template
+  replyValue   String
+  platforms    Json     @default("[]")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+model AiTemplate {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  type        String   // caption, reply, thread, hashtag
+  prompt      String
+  tone        String?  // professional, casual, humorous, formal
+  platforms   Json     @default("[]")
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+// ===== API KEYS =====
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  key         String    @unique
+  permissions Json      @default("[]")
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// ===== SUBSCRIPTION =====
+
+model Subscription {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan              String    // free, creator, pro, business
+  status            String    // active, cancelled, past_due
+  paymentProvider   String?
+  paymentProviderId String?
+  currentPeriodEnd  DateTime?
+  createdAt         DateTime  @default(now())
+}
+
+// ===== WEBHOOKS =====
+
+model WebhookEndpoint {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  url             String
+  secret          String?
+  events          Json      @default("[]")
+  isActive        Boolean   @default(true)
+  lastDeliveryAt  DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+// ===== ANALYTICS =====
+
+model AnalyticsCache {
+  id        String   @id @default(cuid())
+  accountId String
+  platform  String
+  data      Json
+  dateFrom  DateTime
+  dateTo    DateTime
+  fetchedAt DateTime @default(now())
+}
+
+// ===== NOTIFICATIONS =====
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  data      Json      @default("{}")
+  link      String?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+// ===== AUDIT LOG =====
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  workspaceId String?
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json     @default("{}")
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// ===== REPORTS =====
+
+model ReportSchedule {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  name           String
+  type           String   // weekly, monthly, custom
+  cronExpression String
+  recipients     Json     @default("[]")
+  format         String   // pdf, csv
+  config         Json     @default("{}")
+  isActive       Boolean  @default(true)
+  lastSentAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+// ===== FEATURE FLAGS =====
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  rules       Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

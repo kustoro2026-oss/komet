@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "dashboard": "Beranda",
+    "calendar": "Kalender",
+    "posts": "Postingan",
+    "accounts": "Akun",
+    "analytics": "Analitik",
+    "inbox": "Kotak Masuk",
+    "aiStudio": "Studio AI",
+    "autoReply": "Balas Otomatis",
+    "media": "Media",
+    "settings": "Pengaturan",
+    "team": "Tim"
+  },
+  "auth": {
+    "login": "Masuk",
+    "register": "Daftar",
+    "forgotPassword": "Lupa Kata Sandi",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "name": "Nama",
+    "loginTitle": "Selamat datang kembali",
+    "loginSubtitle": "Masuk ke akun Komet Anda",
+    "registerTitle": "Buat akun Anda",
+    "registerSubtitle": "Mulai kelola konten media sosial Anda",
+    "forgotTitle": "Atur ulang kata sandi",
+    "forgotSubtitle": "Kami akan kirimkan tautan reset",
+    "noAccount": "Belum punya akun?",
+    "hasAccount": "Sudah punya akun?",
+    "signUp": "Daftar",
+    "signIn": "Masuk",
+    "sendReset": "Kirim tautan reset",
+    "backToLogin": "Kembali ke login",
+    "rememberPassword": "Ingat kata sandi?"
+  },
+  "landing": {
+    "heroTitle": "Kelola Semua Media Sosial dari Satu Dashboard",
+    "heroSubtitle": "Jadwalkan, publikasikan, dan analisis konten di 15+ platform. Dibuat untuk kreator, tim, dan pengembang.",
+    "startFree": "Mulai Gratis",
+    "login": "Masuk",
+    "features": "Fitur",
+    "pricing": "Harga",
+    "faq": "FAQ"
+  },
+  "dashboard": {
+    "title": "Beranda",
+    "welcome": "Selamat datang kembali! Ini ringkasan konten Anda.",
+    "scheduledPosts": "Postingan Terjadwal",
+    "published": "Dipublikasikan",
+    "engagement": "Engagement",
+    "connectedAccounts": "Akun Terhubung",
+    "upcomingPosts": "Postingan Mendatang",
+    "upcomingEmpty": "Postingan terjadwal akan muncul di sini. Hubungkan akun sosial media Anda untuk memulai."
+  },
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "retry": "Coba lagi",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "create": "Buat",
+    "search": "Cari",
+    "filter": "Filter",
+    "noData": "Tidak ada data",
+    "comingSoon": "Segera Hadir"
+  }
+}

@@ -1,0 +1,203 @@
+@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   KOMET DESIGN SYSTEM — CSS Custom Properties
+   Source: DESIGN.md YAML Frontmatter
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* ===== PRIMARY: Deep Indigo ===== */
+    --color-primary: #6366F1;
+    --color-primary-light: #818CF8;
+    --color-primary-lighter: #A5B4FC;
+    --color-primary-soft: #C7D2FE;
+    --color-primary-subtle: #E0E7FF;
+    --color-primary-wash: #EEF2FF;
+    --color-primary-hover: #4F46E5;
+    --color-primary-active: #4338CA;
+    --color-primary-deep: #3730A3;
+    --color-primary-dark: #312E81;
+    --color-primary-abyss: #1E1B4B;
+    --color-on-primary: #FFFFFF;
+
+    /* ===== ACCENT: Comet Gold/Amber ===== */
+    --color-accent: #F59E0B;
+    --color-accent-light: #FBBF24;
+    --color-accent-lighter: #FCD34D;
+    --color-accent-soft: #FDE68A;
+    --color-accent-subtle: #FEF3C7;
+    --color-accent-wash: #FFFBEB;
+    --color-accent-hover: #D97706;
+    --color-accent-active: #B45309;
+    --color-on-accent: #0F172A;
+
+    /* ===== NEUTRAL: Cool Gray ===== */
+    --color-ink: #0F172A;
+    --color-ink-strong: #1E293B;
+    --color-ink-muted: #334155;
+    --color-ink-soft: #475569;
+    --color-ink-faint: #64748B;
+    --color-muted: #94A3B8;
+    --color-muted-soft: #CBD5E1;
+    --color-hairline: #E2E8F0;
+    --color-hairline-soft: #F1F5F9;
+    --color-canvas: #F8FAFC;
+    --color-canvas-pure: #FFFFFF;
+
+    /* ===== DARK MODE SURFACES ===== */
+    --color-surface-dark: #020617;
+    --color-surface-dark-elevated: #0F172A;
+    --color-surface-dark-raised: #1E293B;
+    --color-on-dark: #F1F5F9;
+    --color-on-dark-soft: #94A3B8;
+    --color-on-dark-muted: #64748B;
+
+    /* ===== SEMANTIC ===== */
+    --color-success: #10B981;
+    --color-success-soft: #D1FAE5;
+    --color-success-on-soft: #065F46;
+    --color-warning: #F59E0B;
+    --color-warning-soft: #FEF3C7;
+    --color-warning-on-soft: #92400E;
+    --color-error: #EF4444;
+    --color-error-soft: #FEE2E2;
+    --color-error-on-soft: #991B1B;
+    --color-info: #3B82F6;
+    --color-info-soft: #DBEAFE;
+    --color-info-on-soft: #1E40AF;
+
+    /* ===== PLATFORM BRAND COLORS ===== */
+    --color-platform-twitter: #1DA1F2;
+    --color-platform-instagram: #E4405F;
+    --color-platform-facebook: #1877F2;
+    --color-platform-youtube: #FF0000;
+    --color-platform-linkedin: #0A66C2;
+    --color-platform-threads: #000000;
+    --color-platform-tiktok: #000000;
+    --color-platform-tiktok-accent: #FE2C55;
+    --color-platform-pinterest: #BD081C;
+    --color-platform-reddit: #FF4500;
+    --color-platform-bluesky: #0560FF;
+    --color-platform-telegram: #26A5E4;
+    --color-platform-discord: #5865F2;
+    --color-platform-snapchat: #FFFC00;
+    --color-platform-googlebusiness: #4285F4;
+    --color-platform-whatsapp: #25D366;
+
+    /* ===== SHADOWS: Light Mode ===== */
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.1), 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+    --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+    --shadow-glow-accent: 0 0 16px rgba(245, 158, 11, 0.25);
+
+    /* ===== SHADOWS: Dark Mode ===== */
+    --shadow-dark-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-dark-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-dark-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-dark-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --shadow-dark-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+
+    /* ===== TRANSITIONS ===== */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 350ms ease;
+    --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* ===== SURFACE MAPPING (Light default) ===== */
+    --background: var(--color-canvas);
+    --foreground: var(--color-ink);
+    --card: var(--color-canvas-pure);
+    --card-foreground: var(--color-ink);
+    --border: var(--color-hairline);
+    --input: var(--color-canvas-pure);
+    --muted: var(--color-hairline-soft);
+    --muted-foreground: var(--color-ink-faint);
+    --radius: 0.5rem;
+    --popover: var(--color-canvas-pure);
+    --popover-foreground: var(--color-ink);
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-on-primary);
+    --secondary: var(--color-hairline-soft);
+    --secondary-foreground: var(--color-ink);
+    --accent: var(--color-hairline-soft);
+    --accent-foreground: var(--color-ink);
+    --destructive: var(--color-error);
+    --destructive-foreground: var(--color-on-primary);
+    --ring: var(--color-primary);
+    --chart-1: var(--color-primary);
+    --chart-2: var(--color-success);
+    --chart-3: var(--color-warning);
+    --chart-4: var(--color-error);
+    --chart-5: var(--color-info);
+    --sidebar: var(--color-surface-dark);
+    --sidebar-foreground: var(--color-on-dark-soft);
+    --sidebar-primary: var(--color-primary);
+    --sidebar-primary-foreground: var(--color-on-primary);
+    --sidebar-accent: var(--color-surface-dark-raised);
+    --sidebar-accent-foreground: var(--color-on-dark);
+    --sidebar-border: var(--color-ink-muted);
+    --sidebar-ring: var(--color-primary);
+  }
+
+  /* ===== DARK MODE ===== */
+  .dark {
+    --background: var(--color-surface-dark);
+    --foreground: var(--color-on-dark);
+    --card: var(--color-surface-dark-elevated);
+    --card-foreground: var(--color-on-dark);
+    --border: var(--color-ink-muted);
+    --input: var(--color-surface-dark-raised);
+    --muted: var(--color-surface-dark-raised);
+    --muted-foreground: var(--color-on-dark-soft);
+    --popover: var(--color-surface-dark-elevated);
+    --popover-foreground: var(--color-on-dark);
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-on-primary);
+    --secondary: var(--color-surface-dark-raised);
+    --secondary-foreground: var(--color-on-dark);
+    --accent: var(--color-surface-dark-raised);
+    --accent-foreground: var(--color-on-dark);
+    --destructive: var(--color-error);
+    --destructive-foreground: var(--color-on-primary);
+    --ring: var(--color-primary);
+    --chart-1: var(--color-primary-light);
+    --chart-2: var(--color-success);
+    --chart-3: var(--color-warning);
+    --chart-4: var(--color-error);
+    --chart-5: var(--color-info);
+    --sidebar: var(--color-surface-dark);
+    --sidebar-foreground: var(--color-on-dark-soft);
+    --sidebar-primary: var(--color-primary);
+    --sidebar-primary-foreground: var(--color-on-primary);
+    --sidebar-accent: var(--color-surface-dark-raised);
+    --sidebar-accent-foreground: var(--color-on-dark);
+    --sidebar-border: var(--color-ink-muted);
+    --sidebar-ring: var(--color-primary);
+  }
+
+  /* ===== GLOBAL RESETS ===== */
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

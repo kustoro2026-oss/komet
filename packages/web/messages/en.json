@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "posts": "Posts",
+    "accounts": "Accounts",
+    "analytics": "Analytics",
+    "inbox": "Inbox",
+    "aiStudio": "AI Studio",
+    "autoReply": "Auto Reply",
+    "media": "Media",
+    "settings": "Settings",
+    "team": "Team"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot Password",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Sign in to your Komet account",
+    "registerTitle": "Create your account",
+    "registerSubtitle": "Start managing your social media content",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "We'll send you a reset link",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUp": "Sign up",
+    "signIn": "Sign in",
+    "sendReset": "Send reset link",
+    "backToLogin": "Back to login",
+    "rememberPassword": "Remember your password?"
+  },
+  "landing": {
+    "heroTitle": "Manage All Your Social Media from One Dashboard",
+    "heroSubtitle": "Schedule, publish, and analyze content across 15+ platforms. Built for creators, teams, and developers.",
+    "startFree": "Get Started Free",
+    "login": "Login",
+    "features": "Features",
+    "pricing": "Pricing",
+    "faq": "FAQ"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back! Here's what's happening with your content.",
+    "scheduledPosts": "Scheduled Posts",
+    "published": "Published",
+    "engagement": "Engagement",
+    "connectedAccounts": "Connected Accounts",
+    "upcomingPosts": "Upcoming Posts",
+    "upcomingEmpty": "Your scheduled posts will appear here. Connect your social accounts to get started."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "noData": "No data available",
+    "comingSoon": "Coming Soon"
+  }
+}

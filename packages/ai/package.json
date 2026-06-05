@@ -1,0 +1,12 @@
+{
+  "name": "@komet/ai",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {},
+  "dependencies": {
+    "@komet/shared": "workspace:*",
+    "openai": "^4.73.0"
+  }
+}
