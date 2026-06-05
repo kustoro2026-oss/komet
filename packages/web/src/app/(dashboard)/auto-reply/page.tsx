@@ -1,17 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Plus,
-  Search,
-  MessageSquare,
-  MessageCircle,
-  Globe,
-  Clock,
-  Edit3,
-  Trash2,
-  X,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { Plus, Search, MessageSquare, MessageCircle, Globe, Clock, Edit3, Trash2, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useAutoReplyStore } from "@/stores/auto-reply-store";
 import type { Platform } from "@komet/shared";
@@ -154,9 +145,10 @@ export default function AutoReplyPage() {
                     )}
                     {rule.source === "both" ? "Comments & Messages" : rule.source === "comments" ? "Comments" : "Messages"}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Globe className="h-3 w-3" />
-                    {rule.platforms.map((p) => PLATFORM_LABELS[p]).join(", ")}
+                  <div className="flex items-center gap-1.5">
+                    {rule.platforms.map((p) => (
+                      <PlatformIcon key={p} platform={p} className="h-3.5 w-3.5 text-[var(--color-on-dark-muted)]" />
+                    ))}
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />

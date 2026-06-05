@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Search, MessageSquare, Send, Paperclip } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -89,7 +90,10 @@ export default function MessagesPage() {
                   </div>
                 </div>
                 <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] truncate">{contact.lastMessage}</p>
-                <span className="text-micro text-[var(--color-primary-light)]">{PLATFORM_LABELS[contact.platform]}</span>
+                <span className="flex items-center gap-1 text-micro text-[var(--color-primary-light)]">
+                  <PlatformIcon platform={contact.platform} className="h-3 w-3" />
+                  {PLATFORM_LABELS[contact.platform]}
+                </span>
               </button>
             ))}
           </div>

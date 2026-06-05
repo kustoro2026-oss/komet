@@ -1,16 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Filter,
-  Search,
-  Calendar,
-  Edit3,
-  Trash2,
-  Send,
-  Copy,
-  Plus,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { Filter, Search, Calendar, Edit3, Trash2, Send, Copy, Plus } from "lucide-react";
 import type { Platform, PostStatus } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
@@ -204,8 +196,9 @@ export default function PostsPage() {
                       {post.platforms.map((p) => (
                         <span
                           key={p}
-                          className="rounded-md bg-[var(--color-surface-dark)] px-2 py-0.5 text-micro text-[var(--color-on-dark-soft)]"
+                          className="inline-flex items-center gap-1 rounded-md bg-[var(--color-surface-dark)] px-2 py-0.5 text-micro text-[var(--color-on-dark-soft)]"
                         >
+                          <PlatformIcon platform={p} className="h-3 w-3" />
                           {PLATFORM_LABELS[p]}
                         </span>
                       ))}

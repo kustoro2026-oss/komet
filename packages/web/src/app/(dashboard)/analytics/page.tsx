@@ -1,16 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  TrendingUp,
-  Eye,
-  Heart,
-  MessageCircle,
-  Share2,
-  Users,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { TrendingUp, Eye, Heart, MessageCircle, Share2, Users, ArrowUp, ArrowDown } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useTranslations } from "next-intl";
@@ -125,7 +117,8 @@ export default function AnalyticsPage() {
                 {PLATFORM_METRICS.map((pm) => (
                   <tr key={pm.platform} className="hover:bg-[var(--color-surface-dark-raised)]">
                     <td className="px-5 py-4">
-                      <span className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                      <span className="inline-flex items-center gap-2 text-body-sm font-medium text-[var(--color-on-dark)]">
+                        <PlatformIcon platform={pm.platform} className="h-4 w-4" />
                         {PLATFORM_LABELS[pm.platform]}
                       </span>
                     </td>

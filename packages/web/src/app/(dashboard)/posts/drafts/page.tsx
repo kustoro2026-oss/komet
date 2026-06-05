@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Search, Edit3, Trash2, Eye, Calendar } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -86,7 +87,8 @@ export default function DraftsPage() {
                     </span>
                     <div className="flex gap-1.5">
                       {draft.platforms.map((p) => (
-                        <span key={p} className="rounded-full bg-[var(--color-surface-dark)] px-2 py-0.5 text-micro text-[var(--color-on-dark-muted)]">
+                        <span key={p} className="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-dark)] px-2 py-0.5 text-micro text-[var(--color-on-dark-muted)]">
+                          <PlatformIcon platform={p} className="h-3 w-3" />
                           {PLATFORM_LABELS[p]}
                         </span>
                       ))}

@@ -2,19 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Edit3,
-  Eye,
-  History,
-  Save,
-  Send,
-  Trash2,
-  Globe,
-  Check,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { ArrowLeft, Calendar, Clock, Edit3, Eye, History, Save, Send, Trash2, Globe, Check } from "lucide-react";
 import type { Platform, PostStatus } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 
@@ -142,7 +131,10 @@ export default function PostDetailPage() {
                 {MOCK_POST.platforms.map((p) => (
                   <div key={p.platform} className="flex items-center justify-between rounded-lg bg-[var(--color-surface-dark)] p-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-body-sm font-medium text-[var(--color-on-dark)]">{PLATFORM_LABELS[p.platform]}</span>
+                      <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)]">
+                        <PlatformIcon platform={p.platform} className="h-4 w-4" />
+                        {PLATFORM_LABELS[p.platform]}
+                      </span>
                       {p.publishedUrl ? (
                         <a href={p.publishedUrl} target="_blank" className="flex items-center gap-1 text-caption text-[var(--color-primary-light)] hover:underline">
                           <Globe className="h-3 w-3" /> View

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Sparkles, Calendar, Share2, BarChart3, Bot, Globe } from "lucide-react";
 import { HeaderLanguageSwitcher } from "@/components/layout/header-language-switcher";
 
@@ -9,9 +10,21 @@ export default function LandingPage() {
   const t = useTranslations("landing");
 
   const platforms = [
-    "Twitter / X", "Instagram", "Facebook", "YouTube", "LinkedIn",
-    "Threads", "TikTok", "Pinterest", "Reddit", "Bluesky",
-    "Telegram", "Discord", "Snapchat", "Google Business", "WhatsApp",
+    { id: "twitter" as const, label: "Twitter / X" },
+    { id: "instagram" as const, label: "Instagram" },
+    { id: "facebook" as const, label: "Facebook" },
+    { id: "youtube" as const, label: "YouTube" },
+    { id: "linkedin" as const, label: "LinkedIn" },
+    { id: "threads" as const, label: "Threads" },
+    { id: "tiktok" as const, label: "TikTok" },
+    { id: "pinterest" as const, label: "Pinterest" },
+    { id: "reddit" as const, label: "Reddit" },
+    { id: "bluesky" as const, label: "Bluesky" },
+    { id: "telegram" as const, label: "Telegram" },
+    { id: "discord" as const, label: "Discord" },
+    { id: "snapchat" as const, label: "Snapchat" },
+    { id: "googlebusiness" as const, label: "Google Business" },
+    { id: "whatsapp" as const, label: "WhatsApp" },
   ];
 
   const featureKeys = [
@@ -87,10 +100,11 @@ export default function LandingPage() {
           <div className="mt-16 flex flex-wrap items-center justify-center gap-3">
             {platforms.map((p) => (
               <span
-                key={p}
-                className="rounded-full border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-raised)] px-3 py-1 text-caption text-[var(--color-on-dark-soft)]"
+                key={p.id}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-raised)] px-3 py-1 text-caption text-[var(--color-on-dark-soft)]"
               >
-                {p}
+                <PlatformIcon platform={p.id} className="h-3.5 w-3.5" />
+                {p.label}
               </span>
             ))}
           </div>

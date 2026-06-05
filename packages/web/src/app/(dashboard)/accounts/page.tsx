@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Plus,
-  ExternalLink,
-  AlertTriangle,
-  CheckCircle2,
-  Search,
-} from "lucide-react";
+import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search } from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
@@ -134,8 +129,8 @@ export default function AccountsPage() {
 
             {/* Account Info */}
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-caption font-bold text-[var(--color-primary-light)]">
-                {account.platform.slice(0, 2).toUpperCase()}
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary)]/20">
+                <PlatformIcon platform={account.platform} className="h-5 w-5 text-[var(--color-primary-light)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-body-sm font-medium text-[var(--color-on-dark)] truncate">

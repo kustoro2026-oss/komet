@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Search, MessageCircle, Reply, Trash2 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -70,7 +71,10 @@ export default function CommentsPage() {
                   <div>
                     <p className="text-body-sm font-medium text-[var(--color-on-dark)]">{comment.from}</p>
                     <div className="flex items-center gap-2 text-caption text-[var(--color-on-dark-muted)]">
-                      <span>{PLATFORM_LABELS[comment.platform]}</span>
+                      <span className="flex items-center gap-1">
+                        <PlatformIcon platform={comment.platform} className="h-3.5 w-3.5" />
+                        <span>{PLATFORM_LABELS[comment.platform]}</span>
+                      </span>
                       <span>&middot;</span>
                       <span>{comment.timestamp}</span>
                       {!comment.isRead && <span className="h-2 w-2 rounded-full bg-[var(--color-primary)]" />}

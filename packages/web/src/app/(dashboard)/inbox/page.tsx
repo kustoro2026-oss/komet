@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  MessageCircle,
-  MessageSquare,
-  Reply,
-  Trash2,
-  Search,
-  Check,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { MessageCircle, MessageSquare, Reply, Trash2, Search, Check } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useTranslations } from "next-intl";
@@ -148,7 +142,8 @@ export default function InboxPage() {
                     >
                       {item.type}
                     </span>
-                    <span className="text-micro text-[var(--color-on-dark-muted)]">
+                    <span className="flex items-center gap-1 text-micro text-[var(--color-on-dark-muted)]">
+                      <PlatformIcon platform={item.platform} className="h-3.5 w-3.5" />
                       {PLATFORM_LABELS[item.platform]}
                     </span>
                     {!item.isRead && (

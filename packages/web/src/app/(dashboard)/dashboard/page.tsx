@@ -1,17 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import {
-  TrendingUp,
-  Users,
-  CalendarCheck,
-  BarChart3,
-  Plus,
-  Activity,
-  Clock,
-  Send,
-  Loader2,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { TrendingUp, Users, CalendarCheck, BarChart3, Plus, Activity, Clock, Send, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import type { Platform } from "@komet/shared";
@@ -252,8 +243,9 @@ export default function DashboardPage() {
                       {post.platforms.map((p: Platform) => (
                         <span
                           key={p}
-                          className="text-micro text-[var(--color-on-dark-muted)]"
+                          className="inline-flex items-center gap-1 text-micro text-[var(--color-on-dark-muted)]"
                         >
+                          <PlatformIcon platform={p} className="h-3 w-3" />
                           {PLATFORM_LABELS[p]}
                         </span>
                       ))}
@@ -310,7 +302,8 @@ export default function DashboardPage() {
                     }`}
                   />
                   <div>
-                    <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                    <p className="inline-flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)]">
+                      <PlatformIcon platform={item.platform} className="h-4 w-4" />
                       {PLATFORM_LABELS[item.platform]}
                     </p>
                     <p className="text-micro text-[var(--color-on-dark-muted)]">

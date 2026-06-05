@@ -2,21 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Sparkles,
-  Calendar,
-  Check,
-  ArrowLeft,
-  ArrowRight,
-  Send,
-  Save,
-  Image as ImageIcon,
-  Hash,
-  Type,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
+import { PlatformIcon } from "@/components/ui/platform-icon";
+import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
 import { useCreatePost, useProfiles } from "@/lib/zernio/hooks";
@@ -398,16 +385,15 @@ export default function CreatePostPage() {
                         <Check className="h-3 w-3 text-[var(--color-on-primary)]" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                        {PLATFORM_LABELS[platform]}
+                    <p className="inline-flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)]">
+                      <PlatformIcon platform={platform} className="h-4 w-4" />
+                      {PLATFORM_LABELS[platform]}
+                    </p>
+                    {hasOverride && (
+                      <p className="text-micro text-[var(--color-accent)] truncate">
+                        Custom content set
                       </p>
-                      {hasOverride && (
-                        <p className="text-micro text-[var(--color-accent)] truncate">
-                          Custom content set
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </button>
                 );
               })}
@@ -584,9 +570,9 @@ export default function CreatePostPage() {
                   {form.platforms.map((p) => (
                     <span
                       key={p}
-                      className="rounded-full bg-[var(--color-primary)]/20 px-2.5 py-0.5 text-caption text-[var(--color-primary-light)]"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary)]/20 px-2.5 py-0.5 text-caption text-[var(--color-primary-light)]"
                     >
-                      {PLATFORM_LABELS[p]}
+                      <PlatformIcon platform={p} className="h-3.5 w-3.5" />
                     </span>
                   ))}
                 </div>
@@ -636,8 +622,8 @@ export default function CreatePostPage() {
                     key={p}
                     className="flex items-center justify-between"
                   >
-                    <span className="text-caption text-[var(--color-on-dark-soft)]">
-                      {PLATFORM_LABELS[p]}
+                    <span className="inline-flex items-center gap-1.5 text-caption text-[var(--color-on-dark-soft)]">
+                      <PlatformIcon platform={p} className="h-3.5 w-3.5" />
                     </span>
                     {limit ? (
                       <span

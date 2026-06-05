@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 import { ArrowLeft, TrendingUp, Download } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -45,7 +46,8 @@ export default function PlatformAnalyticsPage() {
           <a href="/analytics" className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
             <ArrowLeft className="h-4 w-4" /> Back to Analytics
           </a>
-          <h1 className="mt-2 font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
+          <h1 className="mt-2 inline-flex items-center gap-2 font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
+            <PlatformIcon platform={platform as Platform} className="h-7 w-7" />
             {PLATFORM_LABELS[platform as Platform] || platform} Analytics
           </h1>
         </div>
