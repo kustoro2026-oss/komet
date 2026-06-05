@@ -252,14 +252,13 @@ export class ZernioClient {
   async createPost(data: {
     content: string;
     title?: string;
-    platforms: string[];
+    platforms: { platform: string; accountId: string }[];
     scheduledFor?: string;
     timezone?: string;
     publishNow?: boolean;
     mediaUrls?: string[];
     hashtags?: string[];
     tags?: string[];
-    profileId: string;
   }): Promise<ZernioPost> {
     return this.request<ZernioPost>("/posts", {
       method: "POST",

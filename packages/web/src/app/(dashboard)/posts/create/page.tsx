@@ -6,7 +6,7 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
-import { useCreatePost, useProfiles } from "@/lib/zernio/hooks";
+import { useCreatePost, useProfiles, useAccounts } from "@/lib/zernio/hooks";
 import { createProfile } from "@/lib/zernio/api";
 
 type ComposerStep = "content" | "platforms" | "schedule" | "review";
@@ -45,6 +45,7 @@ export default function CreatePostPage() {
 
   const createPostMutation = useCreatePost();
   const { data: profiles } = useProfiles();
+  const { data: accounts } = useAccounts();
 
   // Auto-create default profile if none exists
   const profileId = profiles && profiles.length > 0 ? profiles[0].id : null;
@@ -72,16 +73,29 @@ export default function CreatePostPage() {
         ? undefined
         : `${form.scheduledFor}T${form.scheduledTime}:00`;
 
+      // Map platform names to {platform, accountId} format
+      // Use the first connected account for each selected platform
+      const platforms = form.platforms
+        .map((p) => {
+          const connectedAccount = accounts?.find((a) => a.platform === p && a.isActive);
+          if (!connectedAccount) return null;
+          return { platform: p, accountId: connectedAccount.id };
+        })
+        .filter(Boolean) as { platform: string; accountId: string }[];
+
+      if (platforms.length === 0) {
+        throw new Error("No connected accounts found for selected platforms. Please connect an account first.");
+      }
+
       await createPostMutation.mutateAsync({
         content: form.content,
         title: form.title || undefined,
-        platforms: form.platforms,
+        platforms,
         publishNow,
         scheduledFor,
         timezone: form.timezone,
         mediaUrls: form.mediaUrls.length > 0 ? form.mediaUrls : undefined,
         hashtags: form.hashtags.length > 0 ? form.hashtags : undefined,
-        profileId,
       });
 
       setSubmitStatus("success");
