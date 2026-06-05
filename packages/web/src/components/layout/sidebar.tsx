@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { LanguageSwitcher } from "./language-switcher";
 import {
   LayoutDashboard,
   Calendar,
@@ -208,23 +209,31 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       >
         {/* Theme Toggle */}
         {mounted && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-fast",
-              "text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]",
-              "light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
-              collapsed && "justify-center px-0"
-            )}
-            title={collapsed ? (theme === "dark" ? "Light mode" : "Dark mode") : undefined}
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5 shrink-0" />
-            ) : (
-              <Moon className="h-5 w-5 shrink-0" />
-            )}
-            {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
-          </button>
+          <>
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-fast",
+                "text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]",
+                "light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
+                collapsed && "justify-center px-0"
+              )}
+              title={collapsed ? (theme === "dark" ? "Light mode" : "Dark mode") : undefined}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 shrink-0" />
+              ) : (
+                <Moon className="h-5 w-5 shrink-0" />
+              )}
+              {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+            </button>
+
+            {/* Language Switcher */}
+            <div className={cn("mt-1", collapsed && "flex justify-center")}>
+              <LanguageSwitcher collapsed={collapsed} />
+            </div>
+          </>
         )}
 
         {/* User Section */}
