@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import {
@@ -56,9 +56,19 @@ interface CalendarPost {
 }
 
 export default function CalendarPage() {
-  const now = useMemo(() => new Date(), []);
-  const [currentDate, setCurrentDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1));
-  const [selectedDay, setSelectedDay] = useState<number | null>(now.getDate());
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<Date>(new Date(2024, 0, 1));
+
+  useEffect(() => {
+    const d = new Date();
+    setNow(d);
+    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+    setSelectedDay(d.getDate());
+    setMounted(true);
+  }, []);
+
+  const [currentDate, setCurrentDate] = useState(new Date(2024, 0, 1));
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const t = useTranslations("calendar");
   const router = useRouter();
@@ -131,6 +141,26 @@ export default function CalendarPage() {
 
   const months = Array.from({ length: 12 }, (_, i) => MONTH_NAMES[i]);
   const years = Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i);
+
+  if (!mounted) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
+              {t("title")}
+            </h1>
+            <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+              {t("subtitle")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-32 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
