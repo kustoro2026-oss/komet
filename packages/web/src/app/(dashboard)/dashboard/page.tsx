@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useRef } from "react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
-import { TrendingUp, Users, CalendarCheck, BarChart3, Plus, Activity, Clock, Send, Loader2 } from "lucide-react";
+import { TrendingUp, Users, CalendarCheck, BarChart3, Plus, Activity, Clock, Send, Loader2, LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { usePosts, useAccounts, useUsageStats } from "@/lib/zernio/hooks";
 import type { PostItem } from "@/lib/zernio/api";
+import { createClient } from "@/lib/supabase/client";
 
 function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
   const [displayed, setDisplayed] = useState(0);
@@ -55,7 +57,16 @@ const item = {
 
 export default function DashboardPage() {
   const [countUp, setCountUp] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
   const t = useTranslations("dashboard");
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 5 });
   const { data: accountsData, isLoading: accountsLoading } = useAccounts();
@@ -142,6 +153,14 @@ export default function DashboardPage() {
             <Plus className="h-4 w-4" />
             {t("newPost")}
           </a>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-error)] transition-all active:scale-95 disabled:opacity-50"
+          >
+            <LogOut className="h-4 w-4" />
+            {loggingOut ? t("loggingOut") || "Logging out..." : t("logout") || "Logout"}
+          </button>
         </div>
       </motion.div>
 
