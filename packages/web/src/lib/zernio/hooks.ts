@@ -56,6 +56,28 @@ export function useCreatePost() {
   });
 }
 
+export function useUpdatePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, data }: { postId: string; data: zernio.UpdatePostData }) =>
+      zernio.updatePost(postId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "posts"] });
+    },
+  });
+}
+
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: zernio.deletePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "posts"] });
+      queryClient.invalidateQueries({ queryKey: ["zernio", "usage"] });
+    },
+  });
+}
+
 // ===== Usage =====
 export function useUsageStats() {
   return useQuery({

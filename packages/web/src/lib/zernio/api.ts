@@ -153,6 +153,18 @@ interface PaginationInfo {
   total: number;
 }
 
+export interface UpdatePostData {
+  content?: string;
+  title?: string;
+  platforms?: { platform: string; accountId: string }[];
+  scheduledFor?: string;
+  timezone?: string;
+  publishNow?: boolean;
+  mediaItems?: { type: "image" | "video"; url: string; title?: string }[];
+  hashtags?: string[];
+  tags?: string[];
+}
+
 interface CreatePostData {
   content: string;
   title?: string;
@@ -188,6 +200,19 @@ export async function listPosts(params?: {
 export async function getPost(postId: string) {
   const raw = await request<RawPost>(`/posts/${postId}`);
   return normalizePost(raw);
+}
+
+export async function updatePost(postId: string, data: UpdatePostData) {
+  return request<{ id: string; status: string }>(`/posts/${postId}`, {
+    method: "PATCH",
+    body: data,
+  });
+}
+
+export async function deletePost(postId: string) {
+  return request<{ success: boolean }>(`/posts/${postId}`, {
+    method: "DELETE",
+  });
 }
 
 // ===== OAuth =====
