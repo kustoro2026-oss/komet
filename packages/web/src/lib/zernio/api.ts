@@ -116,6 +116,7 @@ interface RawPost {
   scheduledFor?: string;
   createdAt?: string;
   engagement?: number;
+  tags?: string[];
 }
 
 function normalizePost(raw: RawPost): PostItem {
@@ -130,6 +131,7 @@ function normalizePost(raw: RawPost): PostItem {
     scheduledFor: raw.scheduledFor,
     createdAt: raw.createdAt || "",
     engagement: raw.engagement,
+    tags: raw.tags || [],
   };
 }
 
@@ -142,6 +144,7 @@ export interface PostItem {
   scheduledFor?: string;
   createdAt: string;
   engagement?: number;
+  tags?: string[];
 }
 
 interface PaginationInfo {

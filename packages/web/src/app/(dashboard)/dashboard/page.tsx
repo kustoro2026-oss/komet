@@ -10,6 +10,7 @@ import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { usePosts, useAccounts, useUsageStats } from "@/lib/zernio/hooks";
 import type { PostItem } from "@/lib/zernio/api";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 import { createClient } from "@/lib/supabase/client";
 
 function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
@@ -77,7 +78,12 @@ export default function DashboardPage() {
   }, []);
 
   // Compute stats from real data
-  const allPosts: PostItem[] = (postsData?.posts ?? []);
+  const allPosts: PostItem[] = (postsData?.posts ?? []).filter((p) => {
+    const wsSlug = useWorkspaceStore.getState().activeWorkspace?.slug;
+    if (!wsSlug || wsSlug === "my-workspace") return true;
+    const postTags = p.tags || [];
+    return postTags.some((t) => t === wsSlug);
+  });
   const publishedPosts = allPosts.filter((p) => p.status === "published");
   const scheduledPostsData = allPosts.filter((p) => p.status === "scheduled");
   const draftPosts = allPosts.filter((p) => p.status === "draft");

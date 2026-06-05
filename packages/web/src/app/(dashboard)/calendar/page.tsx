@@ -18,6 +18,7 @@ import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useTranslations } from "next-intl";
 import { usePosts } from "@/lib/zernio/hooks";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -88,9 +89,16 @@ export default function CalendarPage() {
   // Parse API posts into calendar posts
   const calendarPosts = useMemo<CalendarPost[]>(() => {
     const items = postsData?.posts || [];
+    const activeWs = useWorkspaceStore.getState().activeWorkspace;
+    const wsSlug = activeWs?.slug;
     const result: CalendarPost[] = [];
 
     for (const post of items) {
+      // Filter by workspace if one is active
+      if (wsSlug && wsSlug !== "my-workspace") {
+        const postTags = post.tags || [];
+        if (!postTags.some((t) => t === wsSlug)) continue;
+      }
       // Parse scheduledFor date
       const dateStr = post.scheduledFor || post.createdAt;
       if (!dateStr) continue;

@@ -8,6 +8,7 @@ import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as 
 import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
 import { useCreatePost, useProfiles, useAccounts } from "@/lib/zernio/hooks";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 import { createProfile, getMediaPresignedUrl } from "@/lib/zernio/api";
 
 type ComposerStep = "content" | "platforms" | "schedule" | "review";
@@ -235,6 +236,7 @@ export default function CreatePostPage() {
               .map((m) => ({ type: m.type, url: m.publicUrl! }))
           : undefined,
         hashtags: form.hashtags.length > 0 ? form.hashtags : undefined,
+        tags: [useWorkspaceStore.getState().activeWorkspace?.slug].filter(Boolean) as string[] | undefined,
       });
 
       setSubmitStatus("success");

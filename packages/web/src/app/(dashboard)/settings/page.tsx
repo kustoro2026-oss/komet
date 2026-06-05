@@ -13,7 +13,10 @@ import {
   CreditCard,
   Webhook,
   Users,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const SETTINGS_TABS = [
   { id: "general", labelKey: "general", icon: User },
@@ -32,15 +35,13 @@ type SettingsTab = (typeof SETTINGS_TABS)[number]["id"];
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const t = useTranslations("settings");
+  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace } = useWorkspaceStore();
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // General settings form
   const [name, setName] = useState("John Doe");
   const [email, setEmail] = useState("john@example.com");
   const [bio, setBio] = useState("Social media manager & content creator");
-
-  // Workspace settings
-  const [workspaceName, setWorkspaceName] = useState("My Agency");
-  const [workspaceSlug, setWorkspaceSlug] = useState("my-agency");
 
   const renderContent = () => {
     switch (activeTab) {
@@ -121,30 +122,115 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-                  Workspace Name
-                </label>
-                <input
-                  type="text"
-                  value={workspaceName}
-                  onChange={(e) => setWorkspaceName(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
+            {/* Active Workspace Info */}
+            {activeWorkspace && (
+              <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-heading-sm font-bold text-[var(--color-primary-light)]">
+                      {activeWorkspace.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                        {activeWorkspace.name}
+                      </p>
+                      <p className="text-caption text-[var(--color-on-dark-muted)]">
+                        {activeWorkspace.slug} · {activeWorkspace.role}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-[var(--color-primary)]/10 px-2.5 py-0.5 text-micro font-medium text-[var(--color-primary-light)]">
+                    Active
+                  </span>
+                </div>
               </div>
-              <div>
-                <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-                  Workspace Slug
-                </label>
-                <input
-                  type="text"
-                  value={workspaceSlug}
-                  onChange={(e) => setWorkspaceSlug(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
+            )}
+
+            {/* All Workspaces */}
+            <div>
+              <h4 className="text-body-sm font-medium text-[var(--color-on-dark)] mb-3">
+                All Workspaces ({workspaces.length})
+              </h4>
+              <div className="space-y-2">
+                {workspaces.map((ws) => (
+                  <div
+                    key={ws.id}
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-caption font-bold text-[var(--color-primary-light)]">
+                        {ws.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                          {ws.name}
+                        </p>
+                        <p className="text-caption text-[var(--color-on-dark-muted)]">
+                          {ws.role}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {ws.id !== activeWorkspace?.id && (
+                        <>
+                          <button
+                            onClick={() => setActiveWorkspace(ws)}
+                            className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+                          >
+                            Switch
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(ws.id)}
+                            className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+                      {ws.id === activeWorkspace?.id && (
+                        <span className="text-caption text-[var(--color-primary-light)]">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Delete Confirmation */}
+            {deleteConfirmId && (
+              <div className="rounded-lg border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-[var(--color-error)] mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-body-sm font-medium text-[var(--color-on-dark)] mb-1">
+                      Delete “{workspaces.find((w) => w.id === deleteConfirmId)?.name}”?
+                    </p>
+                    <p className="text-caption text-[var(--color-on-dark-soft)] mb-3">
+                      This will permanently remove this workspace and all associated data. This action cannot be undone.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          deleteWorkspace(deleteConfirmId);
+                          setDeleteConfirmId(null);
+                        }}
+                        className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-caption text-white hover:bg-[var(--color-error)]/90"
+                      >
+                        Delete Permanently
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Team Members */}
             <div>
@@ -153,9 +239,7 @@ export default function SettingsPage() {
               </h4>
               <div className="space-y-2">
                 {[
-                  { name: "John Doe", email: "john@example.com", role: "Admin" },
-                  { name: "Jane Smith", email: "jane@example.com", role: "Editor" },
-                  { name: "Bob Wilson", email: "bob@example.com", role: "Viewer" },
+                  { name: "You", email: "admin@example.com", role: "Admin" },
                 ].map((member) => (
                   <div
                     key={member.email}
@@ -163,7 +247,7 @@ export default function SettingsPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary)]/20 text-caption font-bold text-[var(--color-primary-light)]">
-                        {member.name.split(" ").map((n) => n[0]).join("")}
+                        {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
@@ -180,10 +264,6 @@ export default function SettingsPage() {
                   </div>
                 ))}
               </div>
-              <button className="mt-3 flex items-center gap-2 text-caption font-medium text-[var(--color-primary-light)] hover:underline">
-                <Users className="h-3.5 w-3.5" />
-                Invite Member
-              </button>
             </div>
           </div>
         );

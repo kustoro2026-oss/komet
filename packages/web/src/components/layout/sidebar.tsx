@@ -27,6 +27,8 @@ import {
   Sun,
   ChevronDown,
   Check,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -57,6 +59,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const t = useTranslations("nav");
   const tc = useTranslations("common");
 
@@ -127,22 +130,34 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           {workspaceOpen && (
             <div className="absolute left-3 right-3 top-full z-50 mt-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-1 shadow-xl">
               {workspaces.map((ws) => (
-                <button
-                  key={ws.id}
-                  onClick={() => {
-                    setActiveWorkspace(ws);
-                    setWorkspaceOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-body-sm text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]"
-                >
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-[var(--color-primary)]/20 text-micro font-bold text-[var(--color-primary-light)]">
-                    {ws.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="flex-1 truncate text-left">{ws.name}</span>
-                  {ws.id === activeWorkspace.id && (
-                    <Check className="h-3.5 w-3.5 text-[var(--color-primary)]" />
-                  )}
-                </button>
+                <div key={ws.id} className="group relative">
+                  <button
+                    onClick={() => {
+                      setActiveWorkspace(ws);
+                      setWorkspaceOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-body-sm text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]"
+                  >
+                    <div className="flex h-5 w-5 items-center justify-center rounded bg-[var(--color-primary)]/20 text-micro font-bold text-[var(--color-primary-light)]">
+                      {ws.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="flex-1 truncate text-left">{ws.name}</span>
+                    {ws.id === activeWorkspace.id && (
+                      <Check className="h-3.5 w-3.5 text-[var(--color-primary)]" />
+                    )}
+                    {ws.id !== activeWorkspace.id && workspaces.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(ws.id);
+                        }}
+                        className="hidden group-hover:flex items-center justify-center h-5 w-5 rounded text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </button>
+                </div>
               ))}
               <div className="border-t border-[var(--color-ink-muted)] mt-1 pt-1">
                 <button
@@ -209,6 +224,53 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 className="rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
               >
                 {tc("create")}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteId && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setConfirmDeleteId(null)} />
+          <div className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 shadow-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-error)]/10">
+                <AlertTriangle className="h-5 w-5 text-[var(--color-error)]" />
+              </div>
+              <div>
+                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
+                  {tc("delete") || "Delete Workspace"}
+                </h3>
+                <p className="text-caption text-[var(--color-on-dark-soft)]">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-[var(--color-on-dark)]">
+                {workspaces.find((w) => w.id === confirmDeleteId)?.name}
+              </span>
+              ? All data will be lost.
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+              >
+                {tc("cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  const id = confirmDeleteId;
+                  setConfirmDeleteId(null);
+                  useWorkspaceStore.getState().deleteWorkspace(id);
+                }}
+                className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90"
+              >
+                {tc("delete") || "Delete"}
               </button>
             </div>
           </div>
