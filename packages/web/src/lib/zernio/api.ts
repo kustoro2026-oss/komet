@@ -97,6 +97,42 @@ export async function listAccounts(profileId?: string) {
 
 // ===== Posts =====
 
+interface RawPlatformInfo {
+  platform: string;
+  accountId?: unknown;
+  status?: string;
+  publishAttempts?: number;
+  contentHash?: string;
+  platformSpecificData?: unknown;
+}
+
+interface RawPost {
+  _id?: string;
+  id?: string;
+  content: string;
+  title?: string;
+  platforms: RawPlatformInfo[];
+  status: string;
+  scheduledFor?: string;
+  createdAt?: string;
+  engagement?: number;
+}
+
+function normalizePost(raw: RawPost): PostItem {
+  return {
+    id: raw._id || raw.id || "",
+    content: raw.content,
+    title: raw.title,
+    platforms: (raw.platforms || []).map((pl) =>
+      typeof pl === "string" ? pl : pl.platform
+    ),
+    status: raw.status,
+    scheduledFor: raw.scheduledFor,
+    createdAt: raw.createdAt || "",
+    engagement: raw.engagement,
+  };
+}
+
 export interface PostItem {
   id: string;
   content: string;
@@ -139,11 +175,16 @@ export async function listPosts(params?: {
   page?: number;
   limit?: number;
 }) {
-  return request<{ posts: PostItem[]; pagination: PaginationInfo }>("/posts", { params });
+  const raw = await request<{ posts: RawPost[]; pagination: PaginationInfo }>("/posts", { params });
+  return {
+    posts: (raw.posts || []).map(normalizePost),
+    pagination: raw.pagination,
+  };
 }
 
 export async function getPost(postId: string) {
-  return request<PostItem>(`/posts/${postId}`);
+  const raw = await request<RawPost>(`/posts/${postId}`);
+  return normalizePost(raw);
 }
 
 // ===== OAuth =====
