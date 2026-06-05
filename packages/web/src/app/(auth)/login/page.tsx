@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent, Suspense } from "react";
 import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -18,6 +19,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
   const router = useRouter();
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +45,7 @@ function LoginForm() {
         router.refresh();
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError(t("unexpectedError"));
     } finally {
       setLoading(false);
     }
@@ -56,10 +58,10 @@ function LoginForm() {
           <Sparkles className="h-6 w-6 text-[var(--color-on-primary)]" />
         </div>
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
-          Welcome back
+          {t("loginTitle")}
         </h1>
         <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-          Sign in to your Komet account
+          {t("loginSubtitle")}
         </p>
       </div>
 
@@ -67,7 +69,7 @@ function LoginForm() {
         {showSuccess && (
           <div className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3 text-body-sm text-green-400 flex items-start gap-2">
             <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
-            <span>Account created! Check your email to confirm your account, then sign in below.</span>
+            <span>{t("accountCreated")}</span>
           </div>
         )}
         {error && (
@@ -78,7 +80,7 @@ function LoginForm() {
 
         <div>
           <label htmlFor="email" className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
@@ -93,7 +95,7 @@ function LoginForm() {
 
         <div>
           <label htmlFor="password" className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-            Password
+            {t("password")}
           </label>
           <input
             id="password"
@@ -109,13 +111,13 @@ function LoginForm() {
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" className="rounded border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]" />
-            <span className="text-caption text-[var(--color-on-dark-soft)]">Remember me</span>
+            <span className="text-caption text-[var(--color-on-dark-soft)]">{t("rememberMe")}</span>
           </label>
           <Link
             href="/forgot-password"
             className="text-caption font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]"
           >
-            Forgot password?
+            {t("forgotPasswordLink")}
           </Link>
         </div>
 
@@ -125,14 +127,14 @@ function LoginForm() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-2.5 text-button font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? t("signingIn") : t("signIn")}
         </button>
       </form>
 
       <p className="text-center text-body-sm text-[var(--color-on-dark-soft)]">
-        Don&apos;t have an account?{" "}
+        {t("noAccount")}{" "}
         <Link href="/register" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
-          Sign up
+          {t("signUp")}
         </Link>
       </p>
     </div>

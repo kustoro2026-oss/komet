@@ -2,12 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +37,7 @@ export default function RegisterPage() {
         router.push("/login?registered=true");
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError(t("unexpectedError"));
     } finally {
       setLoading(false);
     }
@@ -48,10 +50,10 @@ export default function RegisterPage() {
           <Sparkles className="h-6 w-6 text-[var(--color-on-primary)]" />
         </div>
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
-          Create your account
+          {t("registerTitle")}
         </h1>
         <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-          Start managing your social media content
+          {t("registerSubtitle")}
         </p>
       </div>
 
@@ -64,7 +66,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="name" className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-            Full Name
+            {t("fullName")}
           </label>
           <input
             id="name"
@@ -79,7 +81,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="email" className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
@@ -94,7 +96,7 @@ export default function RegisterPage() {
 
         <div>
           <label htmlFor="password" className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-            Password
+            {t("password")}
           </label>
           <input
             id="password"
@@ -114,14 +116,14 @@ export default function RegisterPage() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-2.5 text-button font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {loading ? "Creating account..." : "Create Account"}
+          {loading ? t("creatingAccount") : t("createAccount")}
         </button>
       </form>
 
       <p className="text-center text-body-sm text-[var(--color-on-dark-soft)]">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link href="/login" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </div>

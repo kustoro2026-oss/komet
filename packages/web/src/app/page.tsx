@@ -1,69 +1,35 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Sparkles, Calendar, Share2, BarChart3, Bot, Globe } from "lucide-react";
+import { HeaderLanguageSwitcher } from "@/components/layout/header-language-switcher";
 
 export default function LandingPage() {
+  const t = useTranslations("landing");
+
   const platforms = [
     "Twitter / X", "Instagram", "Facebook", "YouTube", "LinkedIn",
     "Threads", "TikTok", "Pinterest", "Reddit", "Bluesky",
     "Telegram", "Discord", "Snapchat", "Google Business", "WhatsApp",
   ];
 
-  const features = [
-    {
-      icon: Calendar,
-      title: "Visual Calendar",
-      desc: "Drag & drop scheduling with monthly/weekly views across all platforms.",
-    },
-    {
-      icon: Share2,
-      title: "Multi-Platform Publishing",
-      desc: "Publish to 15+ social platforms simultaneously with per-platform customization.",
-    },
-    {
-      icon: BarChart3,
-      title: "Advanced Analytics",
-      desc: "Track engagement, growth, and top-performing posts with beautiful charts.",
-    },
-    {
-      icon: Bot,
-      title: "AI Content Generator",
-      desc: "Generate captions, hashtags, threads, and replies powered by GPT-4o.",
-    },
-    {
-      icon: Globe,
-      title: "Unified Inbox",
-      desc: "Manage comments, messages, and reviews from all platforms in one place.",
-    },
-    {
-      icon: Sparkles,
-      title: "Smart Queue",
-      desc: "AI-powered scheduling that finds the best times to post for maximum engagement.",
-    },
+  const featureKeys = [
+    { key: "visualCalendar", icon: Calendar },
+    { key: "multiPlatform", icon: Share2 },
+    { key: "advancedAnalytics", icon: BarChart3 },
+    { key: "aiGenerator", icon: Bot },
+    { key: "unifiedInbox", icon: Globe },
+    { key: "smartQueue", icon: Sparkles },
   ];
 
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      features: ["1 workspace", "3 social accounts", "10 scheduled posts", "Basic analytics"],
-    },
-    {
-      name: "Creator",
-      price: "$9",
-      features: ["3 workspaces", "10 social accounts", "Unlimited posts", "AI content generation", "Analytics export"],
-      popular: true,
-    },
-    {
-      name: "Pro",
-      price: "$39",
-      features: ["10 workspaces", "25 social accounts", "Team collaboration", "Auto-reply rules", "Custom reports", "Priority support"],
-    },
-    {
-      name: "Business",
-      price: "$99",
-      features: ["Unlimited workspaces", "Unlimited accounts", "API access", "MCP server", "White-label options", "Dedicated support"],
-    },
-  ];
+  const planKeys = ["free", "creator", "pro", "business"];
+  const planPopular: Record<string, boolean> = {
+    free: false,
+    creator: true,
+    pro: false,
+    business: false,
+  };
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-dark)]">
@@ -74,15 +40,16 @@ export default function LandingPage() {
             <Sparkles className="h-6 w-6 text-[var(--color-primary)]" />
             <span className="font-display text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <HeaderLanguageSwitcher />
             <Link href="/login" className="text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">
-              Login
+              {t("login")}
             </Link>
             <Link
               href="/register"
               className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
             >
-              Get Started Free
+              {t("startFree")}
             </Link>
           </div>
         </div>
@@ -93,27 +60,26 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-primary)]/5 via-transparent to-transparent" />
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           <h1 className="font-display text-display-xl font-bold text-[var(--color-on-dark)]">
-            Blast Your Content to{" "}
+            {t("heroTitle")}{" "}
             <span className="bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] bg-clip-text text-transparent">
-              Every Platform
+              {t("heroEmphasis")}
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-body-lg text-[var(--color-on-dark-soft)]">
-            Schedule, publish, and analyze content across 15+ social media platforms.
-            Built for creators, teams, and developers. All from one powerful dashboard.
+            {t("heroSubtitle")}
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link
               href="/register"
               className="rounded-lg bg-[var(--color-primary)] px-8 py-3 text-button-lg font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors shadow-glow"
             >
-              Get Started Free
+              {t("startFree")}
             </Link>
             <Link
               href="/login"
               className="rounded-lg border border-[var(--color-ink-muted)] px-8 py-3 text-button-lg font-semibold text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
             >
-              Sign In
+              {t("signIn")}
             </Link>
           </div>
 
@@ -135,24 +101,27 @@ export default function LandingPage() {
       <section className="border-t border-[var(--color-ink-muted)] px-6 py-24">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center font-display text-display-lg font-bold text-[var(--color-on-dark)]">
-            Everything You Need
+            {t("featuresTitle")}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-center text-body-md text-[var(--color-on-dark-soft)]">
-            Powerful features to manage your entire social media presence
+            {t("featuresSubtitle")}
           </p>
           <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6 hover:border-[var(--color-primary)]/50 transition-colors"
-              >
-                <f.icon className="h-8 w-8 text-[var(--color-primary)]" />
-                <h3 className="mt-4 font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-                  {f.title}
-                </h3>
-                <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">{f.desc}</p>
-              </div>
-            ))}
+            {featureKeys.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.key}
+                  className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6 hover:border-[var(--color-primary)]/50 transition-colors"
+                >
+                  <Icon className="h-8 w-8 text-[var(--color-primary)]" />
+                  <h3 className="mt-4 font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
+                    {t(`${f.key}`)}
+                  </h3>
+                  <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">{t(`${f.key}Desc`)}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -161,53 +130,58 @@ export default function LandingPage() {
       <section className="border-t border-[var(--color-ink-muted)] px-6 py-24" id="pricing">
         <div className="mx-auto max-w-6xl">
           <h2 className="text-center font-display text-display-lg font-bold text-[var(--color-on-dark)]">
-            Simple Pricing
+            {t("pricingTitle")}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-center text-body-md text-[var(--color-on-dark-soft)]">
-            Choose the plan that fits your needs
+            {t("pricingSubtitle")}
           </p>
           <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-xl border p-6 ${
-                  plan.popular
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5"
-                    : "border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]"
-                }`}
-              >
-                {plan.popular && (
-                  <span className="mb-3 inline-block rounded-full bg-[var(--color-primary)] px-3 py-0.5 text-caption-uppercase text-[var(--color-on-primary)]">
-                    Most Popular
-                  </span>
-                )}
-                <h3 className="font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-                  {plan.name}
-                </h3>
-                <p className="mt-2 font-display text-display-lg font-bold text-[var(--color-on-dark)]">
-                  {plan.price}
-                  <span className="text-body-sm text-[var(--color-on-dark-muted)]">/mo</span>
-                </p>
-                <ul className="mt-6 space-y-3">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/register"
-                  className={`mt-8 flex w-full items-center justify-center rounded-lg py-2.5 text-button font-semibold transition-colors ${
-                    plan.popular
-                      ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
-                      : "border border-[var(--color-ink-muted)] text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+            {planKeys.map((planId) => {
+              const popular = planPopular[planId];
+              const planKey = planId === "free" ? "planFree" : planId === "creator" ? "planCreator" : planId === "pro" ? "planPro" : "planBusiness";
+              const features = t.raw(`${planKey}Features`) as string[];
+              return (
+                <div
+                  key={planId}
+                  className={`rounded-xl border p-6 ${
+                    popular
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5"
+                      : "border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]"
                   }`}
                 >
-                  Get Started
-                </Link>
-              </div>
-            ))}
+                  {popular && (
+                    <span className="mb-3 inline-block rounded-full bg-[var(--color-primary)] px-3 py-0.5 text-caption-uppercase text-[var(--color-on-primary)]">
+                      {t("mostPopular")}
+                    </span>
+                  )}
+                  <h3 className="font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
+                    {t(planKey)}
+                  </h3>
+                  <p className="mt-2 font-display text-display-lg font-bold text-[var(--color-on-dark)]">
+                    {t(`${planKey}Price`)}
+                    <span className="text-body-sm text-[var(--color-on-dark-muted)]">{t("perMonth")}</span>
+                  </p>
+                  <ul className="mt-6 space-y-3">
+                    {features.map((feature: string) => (
+                      <li key={feature} className="flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/register"
+                    className={`mt-8 flex w-full items-center justify-center rounded-lg py-2.5 text-button font-semibold transition-colors ${
+                      popular
+                        ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+                        : "border border-[var(--color-ink-muted)] text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+                    }`}
+                  >
+                    {t("getStarted")}
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -220,14 +194,14 @@ export default function LandingPage() {
             <span className="font-display text-base font-bold text-[var(--color-on-dark)]">Komet</span>
           </div>
           <p className="text-caption text-[var(--color-on-dark-muted)]">
-            &copy; {new Date().getFullYear()} Komet. All rights reserved.
+            &copy; {new Date().getFullYear()} Komet. {t("allRightsReserved")}
           </p>
           <div className="flex gap-6">
             <Link href="/login" className="text-caption text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
-              Login
+              {t("login")}
             </Link>
             <Link href="/register" className="text-caption text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
-              Register
+              {t("startFree")}
             </Link>
           </div>
         </div>
