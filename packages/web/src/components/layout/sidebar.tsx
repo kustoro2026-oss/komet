@@ -52,23 +52,18 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { collapsed, toggleCollapsed } = useSidebarStore();
-  const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
+  const { workspaces, activeWorkspace, setActiveWorkspace, fetchWorkspaces, createWorkspace } = useWorkspaceStore();
   const [mounted, setMounted] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [showNewWorkspace, setShowNewWorkspace] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const t = useTranslations("nav");
   const tc = useTranslations("common");
 
-  // Seed default workspace on first mount
+  // Fetch workspaces from API on mount; fall back to localStorage
   useEffect(() => {
     setMounted(true);
-    if (workspaces.length === 0) {
-      useWorkspaceStore.getState().setWorkspaces([
-        { id: "1", name: "My Workspace", slug: "my-workspace", role: "admin" },
-      ]);
-      useWorkspaceStore.getState().setActiveWorkspace({
-        id: "1", name: "My Workspace", slug: "my-workspace", role: "admin"
-      });
-    }
+    fetchWorkspaces();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -150,7 +145,14 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 </button>
               ))}
               <div className="border-t border-[var(--color-ink-muted)] mt-1 pt-1">
-                <button className="flex w-full items-center gap-2 px-3 py-2 text-body-sm text-[var(--color-primary-light)] hover:bg-[var(--color-surface-dark-raised)]">
+                <button
+                  onClick={() => {
+                    setWorkspaceOpen(false);
+                    setShowNewWorkspace(true);
+                    setNewWorkspaceName("");
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-body-sm text-[var(--color-primary-light)] hover:bg-[var(--color-surface-dark-raised)]"
+                >
                   <UserPlus className="h-3.5 w-3.5" />
                   {tc("newWorkspace")}
                 </button>
@@ -158,6 +160,59 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             </div>
           )}
         </div>
+      )}
+
+      {/* New Workspace Dialog */}
+      {showNewWorkspace && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setShowNewWorkspace(false)} />
+          <div className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 shadow-xl">
+            <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)] mb-1">
+              {tc("newWorkspace")}
+            </h3>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
+              Enter a name for your new workspace
+            </p>
+            <input
+              type="text"
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newWorkspaceName.trim()) {
+                  const name = newWorkspaceName.trim();
+                  setNewWorkspaceName("");
+                  createWorkspace(name);
+                  setShowNewWorkspace(false);
+                }
+                if (e.key === "Escape") setShowNewWorkspace(false);
+              }}
+              placeholder="My New Workspace"
+              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] mb-4"
+              autoFocus
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowNewWorkspace(false)}
+                className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+              >
+                {tc("cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  if (!newWorkspaceName.trim()) return;
+                  const name = newWorkspaceName.trim();
+                  setNewWorkspaceName("");
+                  createWorkspace(name);
+                  setShowNewWorkspace(false);
+                }}
+                disabled={!newWorkspaceName.trim()}
+                className="rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+              >
+                {tc("create")}
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Navigation */}
