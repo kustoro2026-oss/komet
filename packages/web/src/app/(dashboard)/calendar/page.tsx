@@ -36,7 +36,6 @@ const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 5, 5)); // June 2024
   const t = useTranslations("calendar");
-  const tp = useTranslations("posts");
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

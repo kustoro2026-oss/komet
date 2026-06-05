@@ -65,7 +65,6 @@ const item = {
 export default function DashboardPage() {
   const [countUp, setCountUp] = useState(false);
   const t = useTranslations("dashboard");
-  const tc = useTranslations("common");
 
   const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 5 });
   const { data: accountsData, isLoading: accountsLoading } = useAccounts();
