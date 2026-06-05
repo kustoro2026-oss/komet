@@ -2,10 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -28,7 +30,7 @@ export default function ForgotPasswordPage() {
         setSent(true);
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError(t("unexpectedError"));
     } finally {
       setLoading(false);
     }
@@ -41,17 +43,17 @@ export default function ForgotPasswordPage() {
           <Sparkles className="h-6 w-6 text-[var(--color-on-primary)]" />
         </div>
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
-          Reset your password
+          {t("forgotTitle")}
         </h1>
         <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-          {sent ? "Check your email for the reset link" : "We'll send you a reset link"}
+          {sent ? t("forgotCheckEmail") : t("forgotSubtitle")}
         </p>
       </div>
 
       {sent ? (
         <div className="rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/30 px-4 py-4 text-center">
           <p className="text-body-sm text-[var(--color-success)]">
-            Reset link sent! Check your email inbox.
+            {t("forgotResetSent")}
           </p>
         </div>
       ) : (
@@ -64,7 +66,7 @@ export default function ForgotPasswordPage() {
 
           <div>
             <label htmlFor="email" className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -83,7 +85,7 @@ export default function ForgotPasswordPage() {
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] py-2.5 text-button font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {loading ? "Sending..." : "Send Reset Link"}
+            {loading ? t("forgotSending") : t("sendReset")}
           </button>
         </form>
       )}
@@ -91,7 +93,7 @@ export default function ForgotPasswordPage() {
       <p className="text-center text-body-sm text-[var(--color-on-dark-soft)]">
         <Link href="/login" className="inline-flex items-center gap-1 font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to login
+          {t("backToLogin")}
         </Link>
       </p>
     </div>

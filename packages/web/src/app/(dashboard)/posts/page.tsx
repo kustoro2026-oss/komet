@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { Platform, PostStatus } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
+import { useTranslations } from "next-intl";
 import { usePosts } from "@/lib/zernio/hooks";
 
 interface PostItem {
@@ -54,6 +55,7 @@ export default function PostsPage() {
   const [statusFilter, setStatusFilter] = useState<PostStatus | "all">("all");
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const t = useTranslations("posts");
 
   const { data: apiPosts } = usePosts();
   const posts = (apiPosts?.posts && apiPosts.posts.length > 0) ? apiPosts.posts : FALLBACK_POSTS;
@@ -74,10 +76,10 @@ export default function PostsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Posts
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Manage all your content in one place
+            {t("subtitle")}
           </p>
         </div>
         <a
@@ -85,7 +87,7 @@ export default function PostsPage() {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow"
         >
           <Plus className="h-4 w-4" />
-          Create Post
+          {t("createPost")}
         </a>
       </div>
 
@@ -97,7 +99,7 @@ export default function PostsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search posts..."
+            placeholder={t("searchPlaceholder")}
             className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           />
         </div>
@@ -107,13 +109,13 @@ export default function PostsPage() {
           onChange={(e) => setStatusFilter(e.target.value as PostStatus | "all")}
           className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         >
-          <option value="all">All Status</option>
-          <option value="draft">Draft</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="published">Published</option>
-          <option value="failed">Failed</option>
-          <option value="publishing">Publishing</option>
-          <option value="partial">Partial</option>
+          <option value="all">{t("allStatus")}</option>
+          <option value="draft">{t("draft")}</option>
+          <option value="scheduled">{t("scheduled")}</option>
+          <option value="published">{t("published")}</option>
+          <option value="failed">{t("failed")}</option>
+          <option value="publishing">{t("publishing")}</option>
+          <option value="partial">{t("partial")}</option>
         </select>
 
         <select
@@ -121,7 +123,7 @@ export default function PostsPage() {
           onChange={(e) => setPlatformFilter(e.target.value as Platform | "all")}
           className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         >
-          <option value="all">All Platforms</option>
+          <option value="all">{t("allPlatforms")}</option>
           {SUPPORTED_PLATFORMS.map((p) => (
             <option key={p} value={p}>
               {PLATFORM_LABELS[p]}
@@ -134,23 +136,23 @@ export default function PostsPage() {
           onChange={(e) => setSort(e.target.value as "newest" | "oldest")}
           className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         >
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
+          <option value="newest">{t("newestFirst")}</option>
+          <option value="oldest">{t("oldestFirst")}</option>
         </select>
 
         <button className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
           <Filter className="h-4 w-4" />
-          More Filters
+          {t("moreFilters")}
         </button>
       </div>
 
       {/* Stats Summary */}
       <div className="flex flex-wrap items-center gap-4 text-caption text-[var(--color-on-dark-soft)]">
-        <span>Total: {posts.length}</span>
+        <span>{t("total")}: {posts.length}</span>
         <span className="h-3 w-px bg-[var(--color-ink-muted)]" />
-        <span>Published: {posts.filter((p) => p.status === "published").length}</span>
-        <span>Scheduled: {posts.filter((p) => p.status === "scheduled").length}</span>
-        <span>Drafts: {posts.filter((p) => p.status === "draft").length}</span>
+        <span>{t("published")}: {posts.filter((p) => p.status === "published").length}</span>
+        <span>{t("scheduled")}: {posts.filter((p) => p.status === "scheduled").length}</span>
+        <span>{t("drafts")}: {posts.filter((p) => p.status === "draft").length}</span>
       </div>
 
       {/* Posts Table */}
@@ -160,22 +162,22 @@ export default function PostsPage() {
             <thead>
               <tr className="border-b border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
                 <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)] font-medium">
-                  Content
+                  {t("content")}
                 </th>
                 <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)] font-medium">
-                  Platforms
+                  {t("platforms")}
                 </th>
                 <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)] font-medium">
-                  Status
+                  {t("status")}
                 </th>
                 <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)] font-medium">
-                  Date
+                  {t("date")}
                 </th>
                 <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)] font-medium">
-                  Engagement
+                  {t("engagement")}
                 </th>
                 <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)] font-medium">
-                  Actions
+                  {t("actions")}
                 </th>
               </tr>
             </thead>
@@ -258,12 +260,12 @@ export default function PostsPage() {
         </div>
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-body-sm text-[var(--color-on-dark-muted)]">No posts found</p>
+            <p className="text-body-sm text-[var(--color-on-dark-muted)]">{t("noPostsFound")}</p>
             <a
               href="/posts/create"
               className="mt-3 text-caption font-medium text-[var(--color-primary-light)] hover:underline"
             >
-              Create your first post
+              {t("createFirstPost")}
             </a>
           </div>
         )}

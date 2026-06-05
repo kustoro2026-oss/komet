@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
+import { useTranslations } from "next-intl";
 import { useAccounts } from "@/lib/zernio/hooks";
 
 interface ConnectedAccount {
@@ -39,6 +40,7 @@ const FALLBACK_ACCOUNTS = MOCK_ACCOUNTS;
 export default function AccountsPage() {
   const [search, setSearch] = useState("");
   const { data: apiAccounts } = useAccounts();
+  const t = useTranslations("accountsPage");
   const accounts: ConnectedAccount[] = (apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS;
 
   const filtered = accounts.filter(
@@ -53,10 +55,10 @@ export default function AccountsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Connected Accounts
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Manage your social media accounts across all platforms
+            {t("subtitle")}
           </p>
         </div>
         <a
@@ -64,7 +66,7 @@ export default function AccountsPage() {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow"
         >
           <Plus className="h-4 w-4" />
-          Connect Account
+          {t("connectAccount")}
         </a>
       </div>
 
@@ -75,7 +77,7 @@ export default function AccountsPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search accounts..."
+          placeholder={t("searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         />
       </div>
@@ -83,19 +85,19 @@ export default function AccountsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Total</p>
+          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("total")}</p>
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">{accounts.length}</p>
         </div>
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Active</p>
+          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("active")}</p>
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-success)]">{accounts.filter((a) => a.isActive).length}</p>
         </div>
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Inactive</p>
+          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("inactive")}</p>
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-warning)]">{accounts.filter((a) => !a.isActive).length}</p>
         </div>
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Total Reach</p>
+          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("totalReach")}</p>
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
             {accounts.reduce((s, a) => s + ((a as { followers?: number }).followers || 0), 0).toLocaleString()}
           </p>
@@ -123,7 +125,7 @@ export default function AccountsPage() {
                 ) : (
                   <AlertTriangle className="h-3 w-3" />
                 )}
-                {account.isActive ? "Active" : "Expired"}
+                {account.isActive ? t("active") : t("expired")}
               </span>
               <button className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)]">
                 <ExternalLink className="h-4 w-4" />
@@ -150,7 +152,7 @@ export default function AccountsPage() {
 
             {/* Followers */}
             <div className="mt-3 flex items-center justify-between rounded-lg bg-[var(--color-surface-dark)] px-3 py-2">
-              <span className="text-caption text-[var(--color-on-dark-soft)]">Followers</span>
+              <span className="text-caption text-[var(--color-on-dark-soft)]">{t("followers")}</span>
               <span className="text-body-sm font-semibold text-[var(--color-on-dark)]">
                 {(account as { followers?: number }).followers?.toLocaleString() || "—"}
               </span>
@@ -162,10 +164,10 @@ export default function AccountsPage() {
                 disabled={!account.isActive}
                 className="flex-1 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Post
+                {t("post")}
               </button>
               <button className="flex-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
-                Analytics
+                {t("analytics")}
               </button>
             </div>
           </div>
@@ -175,7 +177,7 @@ export default function AccountsPage() {
       {/* Available Platforms */}
       <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5">
         <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)] mb-4">
-          Available Platforms
+          {t("availablePlatforms")}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {SUPPORTED_PLATFORMS.filter(

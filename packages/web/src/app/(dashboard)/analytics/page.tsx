@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
+import { useTranslations } from "next-intl";
 
 const OVERVIEW_METRICS = [
   { label: "Total Impressions", value: "284.5K", change: "+12.3%", isUp: true, icon: Eye },
@@ -42,6 +43,7 @@ const TOP_POSTS = [
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState("7d");
+  const t = useTranslations("analyticsPage");
 
   return (
     <div className="space-y-6">
@@ -49,10 +51,10 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Analytics
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Track your performance across all platforms
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -66,7 +68,7 @@ export default function AnalyticsPage() {
                   : "border border-[var(--color-ink-muted)] text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
               }`}
             >
-              {range === "7d" ? "7 Days" : range === "30d" ? "30 Days" : range === "90d" ? "90 Days" : "1 Year"}
+              {range === "7d" ? t("days7") : range === "30d" ? t("days30") : range === "90d" ? t("days90") : t("year1")}
             </button>
           ))}
         </div>
@@ -105,18 +107,18 @@ export default function AnalyticsPage() {
         <div className="lg:col-span-2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]">
           <div className="border-b border-[var(--color-ink-muted)] px-5 py-4">
             <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-              Platform Performance
+              {t("platformPerformance")}
             </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
-                  <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">Platform</th>
-                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">Impressions</th>
-                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">Engagement</th>
-                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">Followers</th>
-                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">Change</th>
+                  <th className="px-5 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("platform")}</th>
+                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("impressions")}</th>
+                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("engagement")}</th>
+                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("followers")}</th>
+                  <th className="px-5 py-3 text-right text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("change")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-ink-muted)]">
@@ -159,7 +161,7 @@ export default function AnalyticsPage() {
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]">
           <div className="border-b border-[var(--color-ink-muted)] px-5 py-4">
             <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-              Top Posts
+              {t("topPosts")}
             </h2>
           </div>
           <div className="divide-y divide-[var(--color-ink-muted)]">

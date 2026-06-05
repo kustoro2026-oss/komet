@@ -12,6 +12,7 @@ import {
   Send,
   Loader2,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -63,6 +64,8 @@ const item = {
 
 export default function DashboardPage() {
   const [countUp, setCountUp] = useState(false);
+  const t = useTranslations("dashboard");
+  const tc = useTranslations("common");
 
   const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 5 });
   const { data: accountsData, isLoading: accountsLoading } = useAccounts();
@@ -128,10 +131,10 @@ export default function DashboardPage() {
       <motion.div className="flex items-center justify-between" variants={item}>
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Dashboard
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Welcome back! Here&apos;s your content overview.
+            {t("welcome")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -140,14 +143,14 @@ export default function DashboardPage() {
             className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
             <Send className="h-4 w-4" />
-            Quick Post
+            {t("quickPost")}
           </a>
           <a
             href="/posts/create"
             className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            New Post
+            {t("newPost")}
           </a>
         </div>
       </motion.div>
@@ -157,7 +160,7 @@ export default function DashboardPage() {
         <motion.div variants={item} className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
           <span className="ml-3 text-body-sm text-[var(--color-on-dark-soft)]">
-            Loading dashboard data...
+            {t("loadingData")}
           </span>
         </motion.div>
       )}
@@ -166,46 +169,46 @@ export default function DashboardPage() {
       <motion.div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" variants={item}>
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-primary)]/50 hover:-translate-y-0.5">
           <div className="flex items-center justify-between">
-            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Posts Published</p>
+            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("postsPublished")}</p>
             <CalendarCheck className="h-5 w-5 text-[var(--color-primary-light)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
             {countUp ? <AnimatedNumber value={usageData?.postsThisMonth ?? publishedPosts.length} /> : (usageData?.postsThisMonth ?? publishedPosts.length)}
           </p>
-          <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">This month</p>
+          <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">{t("thisMonth")}</p>
         </div>
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-success)]/50 hover:-translate-y-0.5">
           <div className="flex items-center justify-between">
-            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Total Engagement</p>
+            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("totalEngagement")}</p>
             <TrendingUp className="h-5 w-5 text-[var(--color-success)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
             {countUp ? <AnimatedNumber value={totalEngagement} /> : totalEngagement.toLocaleString()}
           </p>
-          <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">Across all posts</p>
+          <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">{t("acrossAllPosts")}</p>
         </div>
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-accent)]/50 hover:-translate-y-0.5">
           <div className="flex items-center justify-between">
-            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Connected Accounts</p>
+            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("connectedAccounts")}</p>
             <Users className="h-5 w-5 text-[var(--color-accent)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
             {usageData?.connectedAccounts ?? allAccounts.length}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-            {usageData ? `${usageData.connectedAccounts}/${usageData.accountLimit}` : "Active"}
+            {usageData ? `${usageData.connectedAccounts}/${usageData.accountLimit}` : t("active")}
           </p>
         </div>
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-warning)]/50 hover:-translate-y-0.5">
           <div className="flex items-center justify-between">
-            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Scheduled Posts</p>
+            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("scheduledPosts")}</p>
             <Clock className="h-5 w-5 text-[var(--color-warning)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
             {scheduledPostsData.length}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-            {draftPosts.length} drafts
+            {draftPosts.length} {t("drafts")}
           </p>
         </div>
       </motion.div>
@@ -215,13 +218,13 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]">
           <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-5 py-4">
             <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-              Recent Posts
+              {t("recentPosts")}
             </h2>
             <a
               href="/posts"
               className="text-caption font-medium text-[var(--color-primary-light)] hover:underline"
             >
-              View All
+              {t("viewAll")}
             </a>
           </div>
           <div className="divide-y divide-[var(--color-ink-muted)]">
@@ -272,12 +275,12 @@ export default function DashboardPage() {
               </div>
             )) : (
               <div className="flex flex-col items-center justify-center py-12">
-                <p className="text-body-sm text-[var(--color-on-dark-muted)]">No posts yet</p>
+                <p className="text-body-sm text-[var(--color-on-dark-muted)]">{t("noPostsYet")}</p>
                 <a
                   href="/posts/create"
                   className="mt-2 text-caption font-medium text-[var(--color-primary-light)] hover:underline"
                 >
-                  Create your first post
+                  {t("createFirstPost")}
                 </a>
               </div>
             )}
@@ -288,7 +291,7 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]">
           <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-5 py-4">
             <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-              Connected Accounts
+              {t("connectedAccounts")}
             </h2>
           </div>
           <div className="divide-y divide-[var(--color-ink-muted)]">
@@ -312,14 +315,14 @@ export default function DashboardPage() {
                       {PLATFORM_LABELS[item.platform]}
                     </p>
                     <p className="text-micro text-[var(--color-on-dark-muted)]">
-                      {item.followers} followers
+                      {item.followers} {t("followers")}
                     </p>
                   </div>
                 </div>
                 <div>
                   {item.status === "expiring" ? (
                     <span className="text-micro text-[var(--color-warning)]">
-                      Reconnect
+                      {t("reconnect")}
                     </span>
                   ) : (
                     <span className={`text-micro capitalize ${
@@ -332,7 +335,7 @@ export default function DashboardPage() {
               </div>
             )) : (
               <div className="flex flex-col items-center justify-center py-8">
-                <p className="text-body-sm text-[var(--color-on-dark-muted)]">No accounts connected</p>
+                <p className="text-body-sm text-[var(--color-on-dark-muted)]">{t("noAccountsConnected")}</p>
               </div>
             )}
           </div>
@@ -342,7 +345,7 @@ export default function DashboardPage() {
               className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--color-ink-muted)] py-2 text-caption font-medium text-[var(--color-primary-light)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
-              Connect Account
+              {t("connectAccount")}
             </a>
           </div>
         </div>
@@ -355,7 +358,7 @@ export default function DashboardPage() {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-            This Week Overview
+            {t("weekOverview")}
           </h2>
           <BarChart3 className="h-5 w-5 text-[var(--color-on-dark-muted)]" />
         </div>

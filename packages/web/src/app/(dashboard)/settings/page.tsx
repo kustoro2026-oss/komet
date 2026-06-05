@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Save,
   User,
@@ -15,21 +16,22 @@ import {
 } from "lucide-react";
 
 const SETTINGS_TABS = [
-  { id: "general", label: "General", icon: User },
-  { id: "workspace", label: "Workspace", icon: Users },
-  { id: "appearance", label: "Appearance", icon: Palette },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "language", label: "Language", icon: Globe },
-  { id: "security", label: "Security", icon: Shield },
-  { id: "api-keys", label: "API Keys", icon: Key },
-  { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "webhooks", label: "Webhooks", icon: Webhook },
+  { id: "general", labelKey: "general", icon: User },
+  { id: "workspace", labelKey: "workspace", icon: Users },
+  { id: "appearance", labelKey: "appearance", icon: Palette },
+  { id: "notifications", labelKey: "notifications", icon: Bell },
+  { id: "language", labelKey: "language", icon: Globe },
+  { id: "security", labelKey: "security", icon: Shield },
+  { id: "api-keys", labelKey: "apiKeys", icon: Key },
+  { id: "billing", labelKey: "billing", icon: CreditCard },
+  { id: "webhooks", labelKey: "webhooks", icon: Webhook },
 ];
 
 type SettingsTab = (typeof SETTINGS_TABS)[number]["id"];
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
+  const t = useTranslations("settings");
 
   // General settings form
   const [name, setName] = useState("John Doe");
@@ -47,7 +49,7 @@ export default function SettingsPage() {
           <div className="space-y-6">
             <div>
               <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-                Profile Settings
+                {t("profileSettings")}
               </h3>
               <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
                 Update your personal information
@@ -484,7 +486,7 @@ export default function SettingsPage() {
               }`}
             >
               <tab.icon className="h-4 w-4" />
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           ))}
         </nav>

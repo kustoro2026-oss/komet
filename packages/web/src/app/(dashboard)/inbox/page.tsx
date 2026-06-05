@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
+import { useTranslations } from "next-intl";
 
 interface InboxItem {
   id: string;
@@ -38,6 +39,7 @@ const MOCK_INBOX: InboxItem[] = [
 export default function InboxPage() {
   const [activeTab, setActiveTab] = useState<"all" | "comments" | "messages">("all");
   const [search, setSearch] = useState("");
+  const t = useTranslations("inboxPage");
 
   const filtered = MOCK_INBOX.filter((item) => {
     if (activeTab === "comments" && item.type !== "comment") return false;
@@ -54,10 +56,10 @@ export default function InboxPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Inbox
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Manage comments and messages from all platforms
+            {t("subtitle")}
           </p>
         </div>
       </div>
@@ -66,9 +68,9 @@ export default function InboxPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-lg border border-[var(--color-ink-muted)] p-1">
           {[
-            { id: "all" as const, label: `All (${MOCK_INBOX.length})` },
-            { id: "comments" as const, label: `Comments (${MOCK_INBOX.filter((i) => i.type === "comment").length})` },
-            { id: "messages" as const, label: `Messages (${MOCK_INBOX.filter((i) => i.type === "message").length})` },
+            { id: "all" as const, label: `${t("all")} (${MOCK_INBOX.length})` },
+            { id: "comments" as const, label: `${t("comments")} (${MOCK_INBOX.filter((i) => i.type === "comment").length})` },
+            { id: "messages" as const, label: `${t("messages")} (${MOCK_INBOX.filter((i) => i.type === "message").length})` },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -90,7 +92,7 @@ export default function InboxPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search inbox..."
+            placeholder={t("searchPlaceholder")}
             className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           />
         </div>
@@ -100,7 +102,7 @@ export default function InboxPage() {
       {unreadCount > 0 && (
         <div className="rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 px-4 py-3">
           <p className="text-body-sm text-[var(--color-primary-light)]">
-            You have <strong>{unreadCount}</strong> unread {unreadCount === 1 ? "item" : "items"}
+            {t("unreadItems", { count: unreadCount })}
           </p>
         </div>
       )}
@@ -163,14 +165,14 @@ export default function InboxPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 shrink-0">
-                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title="Reply">
+                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title={t("reply")}>
                     <Reply className="h-4 w-4" />
                   </button>
-                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)]" title="Delete">
+                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)]" title={t("delete")}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                   {!item.isRead && (
-                    <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-on-dark)]" title="Mark as read">
+                    <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-on-dark)]" title={t("markRead")}>
                       <Check className="h-4 w-4" />
                     </button>
                   )}
@@ -181,7 +183,7 @@ export default function InboxPage() {
             <div className="flex flex-col items-center justify-center py-16">
               <MessageCircle className="h-12 w-12 text-[var(--color-on-dark-muted)] mb-3" />
               <p className="text-body-sm text-[var(--color-on-dark-muted)]">
-                No {activeTab !== "all" ? activeTab : "messages"} found
+                {t("noMessages", { type: activeTab !== "all" ? (activeTab === "comments" ? t("comments") : t("messages")) : t("messages") })}
               </p>
             </div>
           )}

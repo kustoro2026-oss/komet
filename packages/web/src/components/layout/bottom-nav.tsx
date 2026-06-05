@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -12,15 +13,16 @@ import {
 } from "lucide-react";
 
 const bottomNavItems = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
-  { href: "/posts", label: "Posts", icon: FileText },
-  { href: "/inbox", label: "Inbox", icon: Inbox },
-  { href: "/ai", label: "AI", icon: Sparkles },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/posts", labelKey: "posts", icon: FileText },
+  { href: "/inbox", labelKey: "inbox", icon: Inbox },
+  { href: "/ai", labelKey: "aiStudio", icon: Sparkles },
+  { href: "/settings", labelKey: "settings", icon: Settings },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav
@@ -48,7 +50,7 @@ export function BottomNav() {
           >
             <item.icon className="h-5 w-5" />
             <span className="text-[11px] font-medium leading-tight">
-              {item.label}
+              {t(item.labelKey)}
             </span>
           </Link>
         );

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
+import { useTranslations } from "next-intl";
 
 interface CalendarPost {
   id: string;
@@ -34,6 +35,8 @@ const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 5, 5)); // June 2024
+  const t = useTranslations("calendar");
+  const tp = useTranslations("posts");
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -58,10 +61,10 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Content Calendar
+            {t("title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Plan and schedule your content
+            {t("subtitle")}
           </p>
         </div>
         <a
@@ -69,7 +72,7 @@ export default function CalendarPage() {
           className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow"
         >
           <Plus className="h-4 w-4" />
-          New Post
+          {t("newPost")}
         </a>
       </div>
 
@@ -154,7 +157,7 @@ export default function CalendarPage() {
                   ))}
                   {posts.length > 2 && (
                     <span className="text-micro text-[var(--color-on-dark-muted)]">
-                      +{posts.length - 2} more
+                      +{posts.length - 2} {t("more")}
                     </span>
                   )}
                 </div>
@@ -167,7 +170,7 @@ export default function CalendarPage() {
       {/* Today's Schedule */}
       <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5">
         <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)] mb-4">
-          Today&apos;s Schedule
+          {t("todaySchedule")}
         </h2>
         <div className="space-y-3">
           {getPostsForDay(today).length > 0 ? (
@@ -208,7 +211,7 @@ export default function CalendarPage() {
             ))
           ) : (
             <p className="text-body-sm text-[var(--color-on-dark-muted)] text-center py-4">
-              No posts scheduled for today
+              {t("noPostsToday")}
             </p>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -34,17 +35,17 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/dashboard", label: "Beranda", icon: LayoutDashboard },
-  { href: "/calendar", label: "Kalender", icon: Calendar },
-  { href: "/posts", label: "Posts", icon: FileText },
-  { href: "/accounts", label: "Akun", icon: Users },
-  { href: "/analytics", label: "Analitik", icon: BarChart3 },
-  { href: "/inbox", label: "Inbox", icon: Inbox },
-  { href: "/ai", label: "AI Studio", icon: Sparkles },
-  { href: "/auto-reply", label: "Auto-Reply", icon: Bot },
-  { href: "/media", label: "Media", icon: Image },
-  { href: "/settings", label: "Settings", icon: Settings },
-  { href: "/team", label: "Tim", icon: UserPlus },
+  { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/calendar", labelKey: "calendar", icon: Calendar },
+  { href: "/posts", labelKey: "posts", icon: FileText },
+  { href: "/accounts", labelKey: "accounts", icon: Users },
+  { href: "/analytics", labelKey: "analytics", icon: BarChart3 },
+  { href: "/inbox", labelKey: "inbox", icon: Inbox },
+  { href: "/ai", labelKey: "aiStudio", icon: Sparkles },
+  { href: "/auto-reply", labelKey: "autoReply", icon: Bot },
+  { href: "/media", labelKey: "media", icon: Image },
+  { href: "/settings", labelKey: "settings", icon: Settings },
+  { href: "/team", labelKey: "team", icon: UserPlus },
 ];
 
 export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
@@ -54,6 +55,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
   const [mounted, setMounted] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const t = useTranslations("nav");
+  const tc = useTranslations("common");
 
   // Seed default workspace on first mount
   useEffect(() => {
@@ -149,7 +152,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
               <div className="border-t border-[var(--color-ink-muted)] mt-1 pt-1">
                 <button className="flex w-full items-center gap-2 px-3 py-2 text-body-sm text-[var(--color-primary-light)] hover:bg-[var(--color-surface-dark-raised)]">
                   <UserPlus className="h-3.5 w-3.5" />
-                  New Workspace
+                  {tc("newWorkspace")}
                 </button>
               </div>
             </div>
@@ -175,10 +178,10 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                       : "text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
                     collapsed && "justify-center px-0"
                   )}
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? t(item.labelKey) : undefined}
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && <span>{t(item.labelKey)}</span>}
                 </Link>
               </li>
             );
@@ -220,14 +223,14 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 "light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
                 collapsed && "justify-center px-0"
               )}
-              title={collapsed ? (theme === "dark" ? "Light mode" : "Dark mode") : undefined}
+              title={collapsed ? (theme === "dark" ? tc("lightMode") : tc("darkMode")) : undefined}
             >
               {theme === "dark" ? (
                 <Sun className="h-5 w-5 shrink-0" />
               ) : (
                 <Moon className="h-5 w-5 shrink-0" />
               )}
-              {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+              {!collapsed && <span>{theme === "dark" ? tc("lightMode") : tc("darkMode")}</span>}
             </button>
 
             {/* Language Switcher */}
