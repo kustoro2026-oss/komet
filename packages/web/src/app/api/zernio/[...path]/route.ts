@@ -33,7 +33,10 @@ async function proxyHandler(
       Accept: "application/json",
     };
 
-    if (!(body instanceof FormData)) {
+    // Only set Content-Type when there's a body (POST/PUT/PATCH)
+    // Sending Content-Type on GET requests can cause 400 errors
+    const hasBody = body !== undefined && body !== null;
+    if (hasBody && !(body instanceof FormData)) {
       headers["Content-Type"] = "application/json";
     }
 
