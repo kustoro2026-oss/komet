@@ -58,7 +58,7 @@ export default function DashboardPage() {
   const [countUp, setCountUp] = useState(false);
   const t = useTranslations("dashboard");
 
-  const { data: postsData, isLoading: postsLoading } = usePosts();
+  const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 1000 });
   const { data: accountsData, isLoading: accountsLoading } = useAccounts();
   const { data: usageData, isLoading: usageLoading } = useUsageStats();
 
@@ -179,7 +179,7 @@ export default function DashboardPage() {
             <CalendarCheck className="h-5 w-5 text-[var(--color-primary-light)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-            {countUp ? <AnimatedNumber value={usageData?.postsThisMonth ?? postsThisMonth} /> : (usageData?.postsThisMonth ?? postsThisMonth)}
+            {countUp ? <AnimatedNumber value={postsThisMonth || usageData?.postsThisMonth || 0} /> : (postsThisMonth || usageData?.postsThisMonth || 0)}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">{t("thisMonth")}</p>
         </div>
