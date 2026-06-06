@@ -752,8 +752,8 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
-      {/* ── MOBILE: Horizontal tab chips ── */}
-      <div className="lg:hidden -mx-4 px-4 pb-1 overflow-x-auto scrollbar-none">
+      {/* ── MOBILE (< md): Horizontal tab chips ── */}
+      <div className="md:hidden -mx-4 px-4 pb-1 overflow-x-auto scrollbar-none">
         <div className="flex gap-1.5 min-w-max">
           {ALL_TABS.map((tab) => (
             <button
@@ -772,8 +772,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── DESKTOP: Sidebar navigation ── */}
-      <div className="hidden lg:block w-52 shrink-0">
+      {/* ── DESKTOP (≥ md): Sidebar navigation ── */}
+      <div className="hidden md:block w-44 lg:w-52 shrink-0">
         <nav className="sticky top-24 space-y-0.5">
           <p className="px-3 pb-2 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
             Settings
@@ -808,8 +808,8 @@ export default function SettingsPage() {
       {/* ── Content area ── */}
       <div className="flex-1 min-w-0">
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 sm:p-6">
-          {/* Active tab header (mobile + desktop) */}
-          <p className="text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1 lg:hidden">
+          {/* Active tab header (mobile < md only) */}
+          <p className="text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1 md:hidden">
             {t(ALL_TABS.find((t) => t.id === activeTab)!.labelKey)}
           </p>
 
