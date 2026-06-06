@@ -23,7 +23,7 @@ const MOCK_ACCOUNTS: ConnectedAccount[] = [
   { id: "1", platform: "twitter", username: "@kometapp", displayName: "Komet", followers: 12500, isActive: true, connectedAt: "2024-01-15" },
   { id: "2", platform: "instagram", username: "@komet_app", displayName: "Komet Official", followers: 10200, isActive: true, connectedAt: "2024-02-20" },
   { id: "3", platform: "facebook", username: "kometapp", displayName: "Komet Page", followers: 8100, isActive: true, connectedAt: "2024-01-15" },
-  { id: "4", platform: "linkedin", username: "company/komet", displayName: "Komet Inc.", followers: 5400, isActive: false, connectedAt: "2024-03-10" },
+  { id: "4", platform: "linkedin", username: "company/komet", displayName: "Komet Inc.", followers: 5400, isActive: true, connectedAt: "2024-03-10" },
   { id: "5", platform: "tiktok", username: "@komet", displayName: "Komet", followers: 25300, isActive: true, connectedAt: "2024-04-01" },
   { id: "6", platform: "youtube", username: "@komet", displayName: "Komet Channel", followers: 7400, isActive: true, connectedAt: "2024-04-15" },
   { id: "7", platform: "pinterest", username: "komet", displayName: "Komet", followers: 3200, isActive: true, connectedAt: "2024-05-01" },
