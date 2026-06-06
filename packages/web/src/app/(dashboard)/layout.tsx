@@ -33,10 +33,10 @@ export default function DashboardLayout({
           // Mobile: offset for top nav + bottom nav
           "pt-14 pb-14",
           // Tablet (md) & Desktop (lg): offset depends on collapsed state
-          "md:pb-0 md:pt-0",
+          "md:pb-0",
           collapsed ? "md:ml-[72px] lg:ml-[72px]" : "md:ml-[264px] lg:ml-[264px]",
           // Content styling
-          "mx-auto max-w-[1280px] p-6",
+          "mx-auto max-w-[1280px] p-6 md:pt-8 lg:pt-10",
           "bg-[var(--color-surface-dark)]"
         )}
       >
