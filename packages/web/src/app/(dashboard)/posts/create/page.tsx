@@ -62,20 +62,18 @@ export default function CreatePostPage() {
   const clearComposer = usePostStore((s) => s.clearComposer);
   const composerUsedRef = useRef(false);
 
-  // Pre-fill form with content from AI Studio
-  useEffect(() => {
-    const incomingContent = composerState.content;
-    if (incomingContent && !composerUsedRef.current) {
-      composerUsedRef.current = true;
-      setForm((prev) => ({
-        ...prev,
-        content: incomingContent,
-        hashtags: composerState.hashtags?.length ? composerState.hashtags : prev.hashtags,
-        platforms: composerState.platforms?.length ? composerState.platforms : prev.platforms,
-      }));
-      clearComposer();
+  // Convert data URI to File object
+  const dataUriToFile = (dataUri: string, filename: string): File => {
+    const arr = dataUri.split(",");
+    const mime = arr[0].match(/:(.*?);/)?.[1] || "image/png";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
     }
-  }, [composerState.content, clearComposer]);
+    return new File([u8arr], filename, { type: mime });
+  };
 
   const uploadMediaFile = useCallback(async (mediaFile: MediaFile) => {
     setForm((prev) => ({
@@ -140,6 +138,48 @@ export default function CreatePostPage() {
       }));
     }
   }, []);
+
+  // Pre-fill form with content from AI Studio
+  useEffect(() => {
+    const incomingContent = composerState.content;
+    const incomingMediaUrls = composerState.mediaUrls;
+    if ((incomingContent || incomingMediaUrls?.length) && !composerUsedRef.current) {
+      composerUsedRef.current = true;
+
+      // Set content
+      if (incomingContent) {
+        setForm((prev) => ({
+          ...prev,
+          content: incomingContent,
+          hashtags: composerState.hashtags?.length ? composerState.hashtags : prev.hashtags,
+          platforms: composerState.platforms?.length ? composerState.platforms : prev.platforms,
+        }));
+      }
+
+      // Convert data URI images to Files and add to media
+      if (incomingMediaUrls?.length) {
+        incomingMediaUrls.forEach((url) => {
+          if (url.startsWith("data:")) {
+            const file = dataUriToFile(url, `ai-generated-${Date.now()}.png`);
+            const mediaFile: MediaFile = {
+              id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+              file,
+              type: "image",
+              status: "pending",
+              progress: 0,
+            };
+            setForm((prev) => ({
+              ...prev,
+              media: [...prev.media, mediaFile],
+            }));
+            uploadMediaFile(mediaFile);
+          }
+        });
+      }
+
+      clearComposer();
+    }
+  }, [composerState.content, composerState.mediaUrls, clearComposer, uploadMediaFile]);
 
   const addMediaFiles = useCallback(
     (files: FileList | File[]) => {
