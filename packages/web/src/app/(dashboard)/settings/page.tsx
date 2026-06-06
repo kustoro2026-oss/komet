@@ -78,20 +78,43 @@ const THEMES = [
   },
 ];
 
-/* ───────── Settings tab definitions ───────── */
-const SETTINGS_TABS = [
-  { id: "general", labelKey: "general", icon: User },
-  { id: "workspace", labelKey: "workspace", icon: Users },
-  { id: "appearance", labelKey: "appearance", icon: Palette },
-  { id: "notifications", labelKey: "notifications", icon: Bell },
-  { id: "language", labelKey: "language", icon: Globe },
-  { id: "security", labelKey: "security", icon: Shield },
-  { id: "api-keys", labelKey: "apiKeys", icon: Key },
-  { id: "billing", labelKey: "billing", icon: CreditCard },
-  { id: "webhooks", labelKey: "webhooks", icon: Webhook },
+/* ───────── Settings grouped for clean sidebar ───────── */
+const SETTINGS_GROUPS = [
+  {
+    label: "Account",
+    items: [
+      { id: "general", labelKey: "general", icon: User },
+      { id: "security", labelKey: "security", icon: Shield },
+      { id: "language", labelKey: "language", icon: Globe },
+    ],
+  },
+  {
+    label: "Preferences",
+    items: [
+      { id: "appearance", labelKey: "appearance", icon: Palette },
+      { id: "notifications", labelKey: "notifications", icon: Bell },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      { id: "workspace", labelKey: "workspace", icon: Users },
+      { id: "billing", labelKey: "billing", icon: CreditCard },
+    ],
+  },
+  {
+    label: "Developer",
+    items: [
+      { id: "api-keys", labelKey: "apiKeys", icon: Key },
+      { id: "webhooks", labelKey: "webhooks", icon: Webhook },
+    ],
+  },
 ] as const;
 
-type TabId = (typeof SETTINGS_TABS)[number]["id"];
+type TabId = (typeof SETTINGS_GROUPS)[number]["items"][number]["id"];
+
+// Flatten for mobile chips
+const ALL_TABS = SETTINGS_GROUPS.flatMap((g) => [...g.items]);
 
 /* ───────── Shared form input class ───────── */
 const inputClass =
@@ -732,7 +755,7 @@ export default function SettingsPage() {
       {/* ── MOBILE: Horizontal tab chips ── */}
       <div className="lg:hidden -mx-4 px-4 pb-1 overflow-x-auto scrollbar-none">
         <div className="flex gap-1.5 min-w-max">
-          {SETTINGS_TABS.map((tab) => (
+          {ALL_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -755,23 +778,30 @@ export default function SettingsPage() {
           <p className="px-3 pb-2 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
             Settings
           </p>
-          {SETTINGS_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-body-sm transition-all ${
-                  isActive
-                    ? "bg-[var(--color-primary)]/15 text-[var(--color-primary-light)] font-semibold"
-                    : "text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
-                }`}
-              >
-                <tab.icon className="h-4 w-4 shrink-0" />
-                {t(tab.labelKey)}
-              </button>
-            );
-          })}
+          {SETTINGS_GROUPS.map((group) => (
+            <div key={group.label}>
+              <p className="px-3 pt-3 pb-1.5 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
+                {group.label}
+              </p>
+              {group.items.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-body-sm transition-all ${
+                      isActive
+                        ? "bg-[var(--color-primary)]/15 text-[var(--color-primary-light)] font-semibold"
+                        : "text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+                    }`}
+                  >
+                    <tab.icon className="h-4 w-4 shrink-0" />
+                    {t(tab.labelKey)}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 
@@ -780,7 +810,7 @@ export default function SettingsPage() {
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 sm:p-6">
           {/* Active tab header (mobile + desktop) */}
           <p className="text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1 lg:hidden">
-            {t(SETTINGS_TABS.find((t) => t.id === activeTab)!.labelKey)}
+            {t(ALL_TABS.find((t) => t.id === activeTab)!.labelKey)}
           </p>
 
           {renderContent()}
