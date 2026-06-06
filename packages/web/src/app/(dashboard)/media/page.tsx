@@ -16,7 +16,6 @@ import {
   Loader2,
   ImagePlus,
   X,
-  Copy,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
 import { usePostStore } from "@/stores/post-store";
@@ -47,7 +46,6 @@ export default function MediaPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filtered = items.filter((m) => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
@@ -134,24 +132,6 @@ export default function MediaPage() {
     });
     router.push("/posts/create");
   }, [incrementUsedIn, setComposerState, router]);
-
-  const handleCopyUrl = useCallback(async (url: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch {
-      // Fallback
-      const ta = document.createElement("textarea");
-      ta.value = url;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    }
-  }, []);
 
   const getColorClass = (type: string) => {
     switch (type) {
@@ -334,13 +314,6 @@ export default function MediaPage() {
                     <div className="flex gap-1">
                       <button
                         className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30 transition-colors"
-                        onClick={(e) => { e.stopPropagation(); handleCopyUrl(item.publicUrl, item.id); }}
-                        title="Copy URL"
-                      >
-                        {copiedId === item.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                      </button>
-                      <button
-                        className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30 transition-colors"
                         onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
                         title="Use in post"
                       >
@@ -445,9 +418,6 @@ export default function MediaPage() {
                           title="Use in post"
                         >
                           <ImagePlus className="h-3.5 w-3.5" />
-                        </button>
-                        <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]" onClick={(e) => { e.stopPropagation(); handleCopyUrl(item.publicUrl, item.id); }}>
-                          {copiedId === item.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                         </button>
                         <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-error)]" onClick={(e) => { e.stopPropagation(); deleteItems([item.id]); }}><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
