@@ -117,3 +117,16 @@ export function useUsageStats() {
     queryFn: zernio.getUsageStats,
   });
 }
+
+// ===== Analytics =====
+export function useAccountAnalytics(
+  accountId: string | undefined,
+  platform: string,
+  dateRange?: { from: string; to: string }
+) {
+  return useQuery({
+    queryKey: ["zernio", "analytics", "account", accountId, dateRange],
+    queryFn: () => zernio.getAccountAnalytics(accountId!, platform, dateRange),
+    enabled: !!accountId,
+  });
+}

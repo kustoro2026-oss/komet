@@ -1,3 +1,5 @@
+import type { ZernioAnalytics } from "@komet/shared";
+
 // Zernio API client — calls the internal proxy /api/zernio/[...path]
 
 const BASE_URL = "/api/zernio";
@@ -276,6 +278,17 @@ export async function getMediaPresignedUrl(filename: string, contentType: string
   return request<PresignedUrlResult>("/media/presign", {
     method: "POST",
     body: { filename, contentType },
+  });
+}
+
+// ===== Analytics =====
+export async function getAccountAnalytics(
+  accountId: string,
+  platform: string,
+  dateRange?: { from: string; to: string }
+) {
+  return request<ZernioAnalytics>(`/analytics/accounts/${accountId}`, {
+    params: { platform, dateFrom: dateRange?.from, dateTo: dateRange?.to },
   });
 }
 
