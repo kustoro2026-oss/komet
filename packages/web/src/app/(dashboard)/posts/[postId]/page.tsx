@@ -311,7 +311,7 @@ export default function PostDetailPage() {
                   <div className="mt-2 rounded-lg border border-neutral-500/20 bg-neutral-500/5 p-3">
                     <p className="text-body-sm text-neutral-300 font-medium">Cannot unpublish from:</p>
                     <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                      {blockedUnpublishPlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")} — not supported by Zernio API
+                      {blockedUnpublishPlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")} — not supported for unpublish
                     </p>
                   </div>
                 )}
@@ -680,16 +680,13 @@ export default function PostDetailPage() {
         {/* ===== History Tab ===== */}
         {activeTab === "history" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-body-sm text-[var(--color-on-dark-soft)]">Version history for this post</p>
-              <span className="text-caption text-[var(--color-on-dark-muted)]">Powered by Zernio</span>
-            </div>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)]">Version history for this post</p>
 
             <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-6 text-center">
               <History className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)] mb-3" />
               <p className="text-body-sm text-[var(--color-on-dark)] font-medium">Version history</p>
               <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">
-                Version history is available through the Zernio dashboard.
+                Version history tracked automatically.
               </p>
               <p className="mt-4 text-caption text-[var(--color-on-dark-muted)]">
                 Created: {new Date(post.createdAt).toLocaleString("en-US", {
