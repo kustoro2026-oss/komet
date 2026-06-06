@@ -176,9 +176,14 @@ export default function CreatePostPage() {
               }));
               uploadMediaFile(mediaFile);
             } else if (url.startsWith("http://") || url.startsWith("https://")) {
-              // Media Library URL — fetch the file and upload
+              // Media Library URL — fetch via proxy to avoid CORS
               try {
-                const response = await fetch(url);
+                const proxyUrl = `/api/media/proxy?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                if (!response.ok) {
+                  console.error("Proxy fetch failed:", response.status);
+                  continue;
+                }
                 const blob = await response.blob();
                 const filename = url.split("/").pop()?.split("?")[0] || `media-${Date.now()}`;
                 const file = new File([blob], filename, { type: blob.type || "image/png" });
