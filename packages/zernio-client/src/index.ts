@@ -6,6 +6,7 @@ import type {
   ZernioOAuthStart,
   ZernioAnalytics,
   ZernioMediaUploadResult,
+  ZernioWebhook,
   ZernioPagination,
 } from "@komet/shared";
 
@@ -442,24 +443,61 @@ export class ZernioClient {
     return this.request<void>(`/queue/slots/${slotId}`, { method: "DELETE" });
   }
 
-  // ===== WEBHOOKS =====
-  async registerWebhook(
-    url: string,
-    events: string[],
-    secret?: string
-  ): Promise<any> {
-    return this.request("/webhooks", {
-      method: "POST",
-      body: { url, events, secret },
+  // ===== WEBHOOKS (docs.zernio.com/webhooks) =====
+
+  /** GET /v1/webhooks/settings — List all webhooks (max 10) */
+  async getWebhookSettings(): Promise<{
+    webhooks: ZernioWebhook[];
+  }> {
+    return this.request("/webhooks/settings");
+  }
+
+  /** POST /v1/webhooks/settings — Create a new webhook */
+  async createWebhookSettings(data: {
+    name: string;
+    url: string;
+    events: string[];
+    secret?: string;
+    isActive?: boolean;
+    customHeaders?: Record<string, string>;
+  }): Promise<{ success: boolean; webhook: ZernioWebhook }> {
+    return this.request("/webhooks/settings", { method: "POST", body: data });
+  }
+
+  /** PUT /v1/webhooks/settings — Update an existing webhook */
+  async updateWebhookSettings(
+    webhookId: string,
+    data: {
+      name?: string;
+      url?: string;
+      events?: string[];
+      secret?: string;
+      isActive?: boolean;
+      customHeaders?: Record<string, string>;
+    }
+  ): Promise<{ success: boolean; webhook: ZernioWebhook }> {
+    return this.request("/webhooks/settings", {
+      method: "PUT",
+      body: { webhookId, ...data },
     });
   }
 
-  async listWebhooks(): Promise<any[]> {
-    return this.request<any[]>("/webhooks");
+  /** DELETE /v1/webhooks/settings — Delete a webhook */
+  async deleteWebhookSettings(webhookId: string): Promise<{ success: boolean }> {
+    return this.request("/webhooks/settings", {
+      method: "DELETE",
+      body: { webhookId },
+    });
   }
 
-  async deleteWebhook(webhookId: string): Promise<void> {
-    return this.request<void>(`/webhooks/${webhookId}`, { method: "DELETE" });
+  /** POST /v1/webhooks/test — Send a test webhook event */
+  async testWebhook(
+    webhookId: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request("/webhooks/test", {
+      method: "POST",
+      body: { webhookId },
+    });
   }
 
   // ===== USAGE =====

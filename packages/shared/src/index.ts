@@ -166,6 +166,19 @@ export interface ZernioMediaUploadResult {
   key: string;
 }
 
+// ===== Zernio Webhook Types =====
+export interface ZernioWebhook {
+  _id: string;
+  name: string;
+  url: string;
+  secret?: string;
+  events: string[];
+  isActive: boolean;
+  lastFiredAt?: string;
+  failureCount: number;
+  customHeaders?: Record<string, string>;
+}
+
 // ===== Zernio Inbox / Comments Types =====
 export interface ZernioComment {
   id: string;
