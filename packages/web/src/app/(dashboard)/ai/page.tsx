@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Sparkles,
   Zap,
@@ -16,6 +17,7 @@ import {
   PencilLine,
   Palette,
 } from "lucide-react";
+import { usePostStore } from "@/stores/post-store";
 
 type FeatureMode = "generate" | "hashtag" | "rewrite" | "image";
 
@@ -109,6 +111,8 @@ const EMPTY_MESSAGES: Record<FeatureMode, { line1: string; line2: string }> = {
 };
 
 export default function AIPage() {
+  const router = useRouter();
+  const setComposerState = usePostStore((s) => s.setComposerState);
   const [mode, setMode] = useState<FeatureMode>("generate");
   const [prompt, setPrompt] = useState("");
   const [rewriteText, setRewriteText] = useState("");
@@ -238,6 +242,14 @@ export default function AIPage() {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     }
+  };
+
+  const handleUseInPost = (content: string, imageUrl?: string) => {
+    setComposerState({
+      content,
+      ...(imageUrl ? { mediaUrls: [imageUrl] } : {}),
+    });
+    router.push("/posts/create");
   };
 
   const header = FEATURE_HEADERS[mode];
@@ -535,13 +547,13 @@ export default function AIPage() {
                           <Copy className="h-4 w-4" />
                         )}
                       </button>
-                      <a
-                        href="/posts/create"
+                      <button
+                        onClick={() => handleUseInPost(result.content, result.imageUrl)}
                         className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-accent)] transition-colors"
                         title="Use in post"
                       >
                         <ChevronRight className="h-4 w-4" />
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -9,6 +9,7 @@ import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
 import { useCreatePost, useProfiles, useAccounts } from "@/lib/zernio/hooks";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { usePostStore } from "@/stores/post-store";
 import { createProfile, getMediaPresignedUrl } from "@/lib/zernio/api";
 
 type ComposerStep = "content" | "platforms" | "schedule" | "review";
@@ -56,6 +57,25 @@ export default function CreatePostPage() {
   const [submitError, setSubmitError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const composerState = usePostStore((s) => s.composerState);
+  const clearComposer = usePostStore((s) => s.clearComposer);
+  const composerUsedRef = useRef(false);
+
+  // Pre-fill form with content from AI Studio
+  useEffect(() => {
+    const incomingContent = composerState.content;
+    if (incomingContent && !composerUsedRef.current) {
+      composerUsedRef.current = true;
+      setForm((prev) => ({
+        ...prev,
+        content: incomingContent,
+        hashtags: composerState.hashtags?.length ? composerState.hashtags : prev.hashtags,
+        platforms: composerState.platforms?.length ? composerState.platforms : prev.platforms,
+      }));
+      clearComposer();
+    }
+  }, [composerState.content, clearComposer]);
 
   const uploadMediaFile = useCallback(async (mediaFile: MediaFile) => {
     setForm((prev) => ({
