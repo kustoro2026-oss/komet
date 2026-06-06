@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { LanguageSwitcher } from "./language-switcher";
+import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard,
   Calendar,
@@ -29,6 +30,7 @@ import {
   Check,
   Trash2,
   AlertTriangle,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -60,8 +62,21 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [showNewWorkspace, setShowNewWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
   const t = useTranslations("nav");
   const tc = useTranslations("common");
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (_) {
+      // proceed to redirect even if signOut fails
+    }
+    router.push("/login");
+  };
 
   // Fetch workspaces from API on mount; fall back to localStorage
   useEffect(() => {
@@ -102,16 +117,21 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             </Link>
           </>
         )}
-        {/* Collapse toggle - visible on desktop/tablet */}
-        {!collapsed && (
-          <button
-            onClick={toggleCollapsed}
-            className="hidden rounded-md p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)] md:block"
-            aria-label="Collapse sidebar"
-          >
+        {/* Collapse/Expand toggle - visible on desktop/tablet */}
+        <button
+          onClick={toggleCollapsed}
+          className={cn(
+            "hidden rounded-md p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)] md:block",
+            collapsed && "mx-auto"
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
             <ChevronLeft className="h-4 w-4" />
-          </button>
-        )}
+          )}
+        </button>
       </div>
 
       {/* Workspace Switcher */}
@@ -306,65 +326,63 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* Expand button when collapsed */}
-      {collapsed && (
-        <div className="hidden border-t border-[var(--color-ink-muted)] px-3 py-3 md:block light:border-[var(--color-hairline)]">
-          <button
-            onClick={toggleCollapsed}
-            className="flex h-10 w-full items-center justify-center rounded-md text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]"
-            aria-label="Expand sidebar"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
       {/* Bottom Section */}
       <div
         className={cn(
-          "border-t p-3",
+          "mt-auto border-t p-3 space-y-2",
           "border-[var(--color-ink-muted)]",
           "light:border-[var(--color-hairline)]",
           collapsed && "px-2"
         )}
       >
-        {/* Theme Toggle */}
         {mounted && (
           <>
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-fast",
-                "text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]",
-                "light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
-                collapsed && "justify-center px-0"
-              )}
-              title={collapsed ? (theme === "dark" ? tc("lightMode") : tc("darkMode")) : undefined}
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5 shrink-0" />
-              ) : (
-                <Moon className="h-5 w-5 shrink-0" />
-              )}
-              {!collapsed && <span>{theme === "dark" ? tc("lightMode") : tc("darkMode")}</span>}
-            </button>
+            {/* Theme + Language row */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-fast flex-1",
+                  "text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]",
+                  "light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
+                  collapsed && "justify-center flex-none w-full"
+                )}
+                title={theme === "dark" ? tc("lightMode") : tc("darkMode")}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 shrink-0" />
+                ) : (
+                  <Moon className="h-4 w-4 shrink-0" />
+                )}
+                {!collapsed && <span>{theme === "dark" ? tc("lightMode") : tc("darkMode")}</span>}
+              </button>
 
-            {/* Language Switcher */}
-            <div className={cn("mt-1", collapsed && "flex justify-center")}>
-              <LanguageSwitcher collapsed={collapsed} />
+              {!collapsed && (
+                <div className="shrink-0">
+                  <LanguageSwitcher collapsed={false} />
+                </div>
+              )}
             </div>
+
+            {collapsed && (
+              <div className="flex justify-center">
+                <LanguageSwitcher collapsed={true} />
+              </div>
+            )}
           </>
         )}
+
+        {/* Separator */}
+        <div className="h-px bg-[var(--color-ink-muted)]/50 light:bg-[var(--color-hairline)]" />
 
         {/* User Section */}
         <div
           className={cn(
-            "mt-2 flex items-center gap-3 rounded-md px-3 py-2",
+            "flex items-center gap-3 rounded-lg px-2.5 py-2",
             collapsed && "justify-center px-0"
           )}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-[var(--color-on-primary)]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-deep)] text-xs font-semibold text-[var(--color-on-primary)] shadow-sm">
             U
           </div>
           {!collapsed && (
@@ -378,6 +396,27 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             </div>
           )}
         </div>
+
+        {/* Separator */}
+        <div className="h-px bg-[var(--color-ink-muted)]/50 light:bg-[var(--color-hairline)]" />
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-fast group",
+            "text-[var(--color-on-dark-muted)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]",
+            "light:text-[var(--color-ink-faint)] light:hover:bg-[var(--color-error)]/10 light:hover:text-[var(--color-error)]",
+            collapsed && "justify-center px-0"
+          )}
+          title="Sign Out"
+        >
+          <LogOut className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />
+          {!collapsed && (
+            <span>{loggingOut ? "Signing out..." : "Sign Out"}</span>
+          )}
+        </button>
       </div>
     </aside>
   );
