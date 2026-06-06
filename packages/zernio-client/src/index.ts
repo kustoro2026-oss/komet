@@ -315,10 +315,13 @@ export class ZernioClient {
   // ===== MEDIA =====
   async getPresignedUrl(
     filename: string,
-    contentType: string
+    contentType: string,
+    size?: number
   ): Promise<ZernioMediaUploadResult> {
-    return this.request<ZernioMediaUploadResult>("/media/presigned-url", {
-      params: { filename, contentType },
+    // POST /media/presign per Zernio docs: https://docs.zernio.com/media/get-media-presigned-url
+    return this.request<ZernioMediaUploadResult>("/media/presign", {
+      method: "POST",
+      body: { filename, contentType, size },
     });
   }
 

@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
 
     const client = new ZernioClient(apiKey);
 
-    // Get presigned upload URL from Zernio
-    const presigned = await client.getPresignedUrl(file.name, file.type);
+    // Get presigned upload URL from Zernio (pass size for pre-validation, max 5GB)
+    const presigned = await client.getPresignedUrl(file.name, file.type, file.size);
 
     // Upload file to presigned URL
     const uploadResponse = await fetch(presigned.uploadUrl, {
