@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Activity, Edit3, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useAccounts, useDeleteAccount } from "@/lib/zernio/hooks";

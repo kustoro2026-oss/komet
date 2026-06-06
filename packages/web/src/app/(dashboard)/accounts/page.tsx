@@ -35,13 +35,12 @@ const FALLBACK_ACCOUNTS = MOCK_ACCOUNTS;
 export default function AccountsPage() {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [localAccounts, setLocalAccounts] = useState<ConnectedAccount[] | null>(null);
   const [showExpiredBanner, setShowExpiredBanner] = useState(true);
   const { data: apiAccounts } = useAccounts();
   const deleteAccountMutation = useDeleteAccount();
   const [isDeleting, setIsDeleting] = useState(false);
   const t = useTranslations("accountsPage");
-  const accounts: ConnectedAccount[] = localAccounts ?? ((apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS);
+  const accounts: ConnectedAccount[] = (apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS;
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true);
