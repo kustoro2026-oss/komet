@@ -773,8 +773,8 @@ export default function SettingsPage() {
       </div>
 
       {/* ── DESKTOP (≥ md): Sidebar navigation ── */}
-      <div className="hidden md:block w-44 lg:w-52 shrink-0">
-        <nav className="sticky top-24 space-y-0.5">
+      <div className="hidden md:block w-44 lg:w-52 shrink-0 self-start sticky top-20 md:top-8 lg:top-10">
+        <nav className="space-y-0.5">
           <p className="px-3 pb-2 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
             Settings
           </p>
