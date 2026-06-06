@@ -189,10 +189,10 @@ export default function DashboardPage() {
             <Users className="h-5 w-5 text-[var(--color-accent)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-            {usageData?.connectedAccounts ?? allAccounts.length}
+            {allAccounts.length > 0 ? allAccounts.length : (usageData?.connectedAccounts ?? 0)}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-            {usageData ? `${usageData.connectedAccounts}/${usageData.accountLimit}` : t("active")}
+            {usageData && usageData.accountLimit > 0 ? `${allAccounts.length > 0 ? allAccounts.length : usageData.connectedAccounts}/${usageData.accountLimit}` : t("active")}
           </p>
         </div>
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-warning)]/50 hover:-translate-y-0.5">

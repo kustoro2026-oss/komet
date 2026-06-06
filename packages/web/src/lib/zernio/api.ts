@@ -84,14 +84,18 @@ interface ListAccountsResponse {
 }
 
 export async function listAccounts(profileId?: string) {
-  const raw = await request<ListAccountsResponse>("/accounts", { params: { profileId } });
-  return (raw.accounts || []).map((a) => ({
-    id: a._id,
+  const raw = await request<unknown>("/accounts", { params: { profileId } });
+  // Zernio API returns array directly, not { accounts: [...] }
+  const items: SocialAccountRaw[] = Array.isArray(raw)
+    ? (raw as SocialAccountRaw[])
+    : (raw as ListAccountsResponse).accounts || [];
+  return items.map((a) => ({
+    id: a._id || (a as unknown as { id?: string }).id || "",
     platform: a.platform,
     username: a.username,
     displayName: a.displayName,
     avatarUrl: a.avatarUrl,
-    isActive: a.isActive,
+    isActive: a.isActive ?? true,
   }));
 }
 
