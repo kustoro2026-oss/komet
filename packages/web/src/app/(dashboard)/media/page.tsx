@@ -1,21 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Upload,
   Search,
   Grid3X3,
   List,
   Trash2,
-  Download,
-  Copy,
   Image as ImageIcon,
   Video,
   File,
   Music,
   Check,
+  Loader2,
+  ImagePlus,
+  X,
+  Copy,
 } from "lucide-react";
 import { useMediaStore } from "@/stores/media-store";
+import { usePostStore } from "@/stores/post-store";
 
 const TYPE_ICONS: Record<string, typeof ImageIcon> = {
   image: ImageIcon,
@@ -32,12 +36,18 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function MediaPage() {
-  const { items, deleteItems } = useMediaStore();
+  const router = useRouter();
+  const { items, deleteItems, addItem, incrementUsedIn, isUploading, uploadProgress, setUploading, setUploadProgress } =
+    useMediaStore();
+  const { setComposerState } = usePostStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selected, setSelected] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filtered = items.filter((m) => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
@@ -55,6 +65,93 @@ export default function MediaPage() {
     deleteItems(selected);
     setSelected([]);
   };
+
+  const handleUpload = useCallback(async (files: FileList | File[]) => {
+    setUploadError("");
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    for (let i = 0; i < fileArray.length; i++) {
+      const file = fileArray[i];
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/media/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: "Upload failed" }));
+          throw new Error(err.error || `Error ${res.status}`);
+        }
+
+        const data = await res.json();
+        addItem({
+          id: data.media.id,
+          name: data.media.name,
+          type: data.media.type,
+          mimeType: data.media.mimeType,
+          size: data.media.size,
+          sizeBytes: data.media.sizeBytes,
+          publicUrl: data.media.publicUrl,
+          key: data.media.key,
+          createdAt: data.media.createdAt?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+          usedIn: 0,
+        });
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : "Upload failed");
+      }
+      setUploadProgress(Math.round(((i + 1) / fileArray.length) * 100));
+    }
+
+    setUploading(false);
+  }, [addItem, setUploading, setUploadProgress]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files.length > 0) {
+      handleUpload(e.dataTransfer.files);
+    }
+  }, [handleUpload]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleUpload(e.target.files);
+      e.target.value = "";
+    }
+  }, [handleUpload]);
+
+  const handleUseInPost = useCallback((item: typeof items[0]) => {
+    incrementUsedIn(item.id);
+    setComposerState({
+      mediaUrls: [item.publicUrl],
+    });
+    router.push("/posts/create");
+  }, [incrementUsedIn, setComposerState, router]);
+
+  const handleCopyUrl = useCallback(async (url: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // Fallback
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  }, []);
 
   const getColorClass = (type: string) => {
     switch (type) {
@@ -81,10 +178,6 @@ export default function MediaPage() {
         <div className="flex items-center gap-2">
           {selected.length > 0 && (
             <>
-              <button className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-caption text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                <Download className="h-3.5 w-3.5 mr-1.5 inline" />
-                Download
-              </button>
               <button
                 onClick={handleDelete}
                 className="rounded-lg border border-[var(--color-error)]/30 px-3 py-2 text-caption text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors"
@@ -94,9 +187,25 @@ export default function MediaPage() {
               </button>
             </>
           )}
-          <button className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow transition-all active:scale-95">
-            <Upload className="h-4 w-4" />
-            Upload
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,video/*,audio/*,.pdf"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {isUploading ? `Uploading ${uploadProgress}%` : "Upload"}
           </button>
         </div>
       </div>
@@ -105,21 +214,50 @@ export default function MediaPage() {
       <div
         onDragEnter={() => setIsDragging(true)}
         onDragLeave={() => setIsDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setIsDragging(false); }}
+        onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
         className={`rounded-xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
+          isUploading ? "pointer-events-none opacity-60" : ""
+        } ${
           isDragging
             ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5"
             : "border-[var(--color-ink-muted)] hover:border-[var(--color-primary)]/50"
         }`}
       >
-        <Upload className={`mx-auto h-10 w-10 ${isDragging ? "text-[var(--color-primary)]" : "text-[var(--color-on-dark-muted)]"}`} />
-        <p className={`mt-3 text-body-sm font-medium ${isDragging ? "text-[var(--color-primary-light)]" : "text-[var(--color-on-dark)]"}`}>
-          {isDragging ? "Drop files here" : "Drag & drop files here, or click to browse"}
-        </p>
-        <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">
-          Supports images, videos, audio, and documents up to 50MB
-        </p>
+        {isUploading ? (
+          <>
+            <Loader2 className="mx-auto h-10 w-10 text-[var(--color-primary)] animate-spin" />
+            <p className="mt-3 text-body-sm font-medium text-[var(--color-on-dark)]">
+              Uploading files...
+            </p>
+            <div className="mt-3 mx-auto max-w-xs bg-[var(--color-surface-dark)] rounded-full h-2 overflow-hidden">
+              <div
+                className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+            <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">
+              {uploadProgress}%
+            </p>
+          </>
+        ) : (
+          <>
+            <Upload className={`mx-auto h-10 w-10 ${isDragging ? "text-[var(--color-primary)]" : "text-[var(--color-on-dark-muted)]"}`} />
+            <p className={`mt-3 text-body-sm font-medium ${isDragging ? "text-[var(--color-primary-light)]" : "text-[var(--color-on-dark)]"}`}>
+              {isDragging ? "Drop files here" : "Drag & drop files here, or click to browse"}
+            </p>
+            <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">
+              Supports images, videos, audio, and documents up to 50MB
+            </p>
+          </>
+        )}
+        {uploadError && (
+          <div className="mt-3 flex items-center justify-center gap-2 text-micro text-[var(--color-error)]">
+            <X className="h-3 w-3" />
+            {uploadError}
+          </div>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -168,42 +306,68 @@ export default function MediaPage() {
           {filtered.map((item) => {
             const Icon = TYPE_ICONS[item.type];
             const isSelected = selected.includes(item.id);
+            const showPreview = item.type === "image" && item.publicUrl;
             return (
               <div
                 key={item.id}
-                onClick={() => toggleSelect(item.id)}
-                className={`group relative rounded-xl border overflow-hidden cursor-pointer transition-all ${
+                className={`group relative rounded-xl border overflow-hidden transition-all ${
                   isSelected
                     ? "border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]"
                     : "border-[var(--color-ink-muted)] hover:border-[var(--color-ink-soft)] hover:-translate-y-0.5"
                 }`}
               >
-                {/* Thumbnail */}
-                <div className={`aspect-square bg-gradient-to-br ${getColorClass(item.type)} flex items-center justify-center`}>
-                  <Icon className="h-12 w-12 text-white/60" />
-                </div>
+                {/* Thumbnail / Preview */}
+                <div className={`aspect-square ${showPreview ? "bg-[var(--color-surface-dark)]" : `bg-gradient-to-br ${getColorClass(item.type)}`} flex items-center justify-center relative`}>
+                  {showPreview ? (
+                    <img
+                      src={item.publicUrl}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Icon className="h-12 w-12 text-white/60" />
+                  )}
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                  <div className="flex gap-1">
-                    <button className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30" onClick={(e) => { e.stopPropagation(); }}>
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                    <button className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30" onClick={(e) => { e.stopPropagation(); }}>
-                      <Download className="h-3.5 w-3.5" />
-                    </button>
-                    <button className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30" onClick={(e) => { e.stopPropagation(); deleteItems([item.id]); }}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                  {/* Overlay actions */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="flex gap-1">
+                      <button
+                        className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); handleCopyUrl(item.publicUrl, item.id); }}
+                        title="Copy URL"
+                      >
+                        {copiedId === item.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </button>
+                      <button
+                        className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
+                        title="Use in post"
+                      >
+                        <ImagePlus className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-red-400/30 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); deleteItems([item.id]); }}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Selection Check */}
-                {isSelected && (
-                  <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-primary)]">
-                    <Check className="h-3.5 w-3.5 text-white" />
-                  </div>
-                )}
+                <div
+                  onClick={() => toggleSelect(item.id)}
+                  className={`absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full border-2 cursor-pointer transition-all ${
+                    isSelected
+                      ? "bg-[var(--color-primary)] border-[var(--color-primary)]"
+                      : "border-white/60 bg-black/20"
+                  }`}
+                >
+                  {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                </div>
 
                 {/* Info */}
                 <div className="p-2.5 bg-[var(--color-surface-dark-elevated)]">
@@ -214,11 +378,19 @@ export default function MediaPage() {
                     <span className="text-micro text-[var(--color-on-dark-muted)]">
                       {item.size}
                     </span>
-                    {item.usedIn > 0 && (
-                      <span className="text-micro text-[var(--color-on-dark-muted)]">
-                        Used {item.usedIn}x
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {item.usedIn > 0 && (
+                        <span className="text-micro text-[var(--color-on-dark-muted)]">
+                          Used {item.usedIn}x
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
+                        className="text-micro text-[var(--color-accent)] hover:text-[var(--color-primary-light)] transition-colors font-medium"
+                      >
+                        Use
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -267,8 +439,16 @@ export default function MediaPage() {
                     <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{item.createdAt}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]" onClick={(e) => e.stopPropagation()}><Copy className="h-3.5 w-3.5" /></button>
-                        <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]" onClick={(e) => e.stopPropagation()}><Download className="h-3.5 w-3.5" /></button>
+                        <button
+                          className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-primary-light)]"
+                          onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
+                          title="Use in post"
+                        >
+                          <ImagePlus className="h-3.5 w-3.5" />
+                        </button>
+                        <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]" onClick={(e) => { e.stopPropagation(); handleCopyUrl(item.publicUrl, item.id); }}>
+                          {copiedId === item.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
                         <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-error)]" onClick={(e) => { e.stopPropagation(); deleteItems([item.id]); }}><Trash2 className="h-3.5 w-3.5" /></button>
                       </div>
                     </td>
@@ -280,10 +460,28 @@ export default function MediaPage() {
         </div>
       )}
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && !isUploading && (
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center">
-          <ImageIcon className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)]" />
-          <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">No media files found</p>
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-primary)]/5">
+            <ImageIcon className="h-8 w-8 text-[var(--color-primary-light)]" />
+          </div>
+          <p className="mt-4 text-body-sm font-semibold text-[var(--color-on-dark)]">
+            {search ? "No matching media found" : "Your media library is empty"}
+          </p>
+          <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">
+            {search
+              ? "Try adjusting your search or filters"
+              : "Upload images, videos, audio, or documents to get started"}
+          </p>
+          {!search && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-white hover:bg-[var(--color-primary-hover)] transition-all"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Media
+            </button>
+          )}
         </div>
       )}
     </div>
