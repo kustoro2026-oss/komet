@@ -58,7 +58,7 @@ export default function DashboardPage() {
   const [countUp, setCountUp] = useState(false);
   const t = useTranslations("dashboard");
 
-  const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 5 });
+  const { data: postsData, isLoading: postsLoading } = usePosts();
   const { data: accountsData, isLoading: accountsLoading } = useAccounts();
   const { data: usageData, isLoading: usageLoading } = useUsageStats();
 
@@ -77,6 +77,16 @@ export default function DashboardPage() {
   const scheduledPostsData = allPosts.filter((p) => p.status === "scheduled");
   const draftPosts = allPosts.filter((p) => p.status === "draft");
   const totalEngagement = publishedPosts.reduce((s, p) => s + (p.engagement || 0), 0);
+
+  // Posts published this month (filtered from actual data for accuracy)
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const postsThisMonth = publishedPosts.filter((p) => {
+    if (!p.createdAt) return false;
+    const d = new Date(p.createdAt);
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+  }).length;
   const allAccounts = accountsData ?? [];
 
   // Platform statuses derived from real accounts
@@ -169,7 +179,7 @@ export default function DashboardPage() {
             <CalendarCheck className="h-5 w-5 text-[var(--color-primary-light)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-            {countUp ? <AnimatedNumber value={usageData?.postsThisMonth ?? publishedPosts.length} /> : (usageData?.postsThisMonth ?? publishedPosts.length)}
+            {countUp ? <AnimatedNumber value={usageData?.postsThisMonth ?? postsThisMonth} /> : (usageData?.postsThisMonth ?? postsThisMonth)}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">{t("thisMonth")}</p>
         </div>
