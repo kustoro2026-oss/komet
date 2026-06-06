@@ -189,7 +189,7 @@ export default function PlatformAnalyticsPage() {
           >
             <ArrowLeft className="h-4 w-4" /> Back to Analytics
           </Link>
-          <h1 className="mt-2 inline-flex items-center gap-2 font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
+          <h1 className="mt-6 inline-flex items-center gap-2 font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
             <PlatformIcon platform={platform as Platform} className="h-7 w-7" />
             {platformLabel} Analytics
           </h1>
