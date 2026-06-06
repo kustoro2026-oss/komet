@@ -215,7 +215,7 @@ export async function getPost(postId: string) {
 
 export async function updatePost(postId: string, data: UpdatePostData) {
   return request<{ id: string; status: string }>(`/posts/${postId}`, {
-    method: "PATCH",
+    method: "PUT",
     body: data,
   });
 }

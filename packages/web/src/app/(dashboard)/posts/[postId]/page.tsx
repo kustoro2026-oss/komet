@@ -51,6 +51,7 @@ export default function PostDetailPage() {
     if (post) {
       setEditTitle(post.title || "");
       setEditContent(post.content);
+      setEditHashtags(post.tags || []);
     }
   }, [post]);
 

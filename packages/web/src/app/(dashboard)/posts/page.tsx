@@ -159,11 +159,7 @@ function PostCard({
   const statusStyle = STATUS_STYLES[post.status] || STATUS_STYLES.draft;
 
   const primaryAction = () => {
-    if (post.status === "draft") {
-      router.push(`/posts/create?edit=${post.id}`);
-    } else {
-      router.push(`/posts/${post.id}`);
-    }
+    router.push(`/posts/${post.id}`);
   };
 
   return (
@@ -216,7 +212,7 @@ function PostCard({
                   View Details
                 </button>
                 <button
-                  onClick={() => { setMenuOpen(false); router.push(`/posts/create?edit=${post.id}`); }}
+                  onClick={() => { setMenuOpen(false); router.push(`/posts/${post.id}`); }}
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-body-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
                 >
                   <Edit3 className="h-4 w-4 text-[var(--color-primary-light)]" />
@@ -311,7 +307,7 @@ function PostCard({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  router.push(`/posts/create?edit=${post.id}`);
+                  router.push(`/posts/${post.id}`);
                 }}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-on-dark)] transition-colors"
                 title="Edit"
