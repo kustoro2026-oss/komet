@@ -162,7 +162,12 @@
     "followers": "Pengikut",
     "post": "Posting",
     "analytics": "Analitik",
-    "availablePlatforms": "Platform Tersedia"
+    "availablePlatforms": "Platform Tersedia",
+    "deleteTitle": "Hapus Akun",
+    "deleteWarning": "Tindakan ini tidak bisa dibatalkan",
+    "deleteConfirm": "Yakin ingin menghapus",
+    "cancel": "Batal",
+    "delete": "Hapus"
   },
   "analyticsPage": {
     "title": "Analitik",

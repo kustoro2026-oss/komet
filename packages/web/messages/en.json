@@ -162,7 +162,12 @@
     "followers": "Followers",
     "post": "Post",
     "analytics": "Analytics",
-    "availablePlatforms": "Available Platforms"
+    "availablePlatforms": "Available Platforms",
+    "deleteTitle": "Delete Account",
+    "deleteWarning": "This action cannot be undone",
+    "deleteConfirm": "Are you sure you want to delete",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "analyticsPage": {
     "title": "Analytics",

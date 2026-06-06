@@ -219,15 +219,15 @@ export default function AccountsPage() {
               </div>
               <div>
                 <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-                  {t("deleteTitle") || "Delete Account"}
+                  {t("deleteTitle")}
                 </h3>
                 <p className="text-caption text-[var(--color-on-dark-soft)]">
-                  {t("deleteWarning") || "This action cannot be undone"}
+                  {t("deleteWarning")}
                 </p>
               </div>
             </div>
             <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
-              {t("deleteConfirm") || "Are you sure you want to delete"}{" "}
+              {t("deleteConfirm")}{" "}
               <span className="font-medium text-[var(--color-on-dark)]">
                 {accounts.find((a) => a.id === deleteTarget)?.displayName}
               </span>
@@ -238,13 +238,13 @@ export default function AccountsPage() {
                 onClick={() => setDeleteTarget(null)}
                 className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
               >
-                {t("cancel") || "Cancel"}
+                {t("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
                 className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90"
               >
-                {t("delete") || "Delete"}
+                {t("delete")}
               </button>
             </div>
           </div>
