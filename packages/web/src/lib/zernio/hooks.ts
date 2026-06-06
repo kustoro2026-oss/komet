@@ -92,7 +92,8 @@ export function useDeletePost() {
 export function useUnpublishPost() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: zernio.unpublishPost,
+    mutationFn: ({ postId, platform }: { postId: string; platform: string }) =>
+      zernio.unpublishPost(postId, platform),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["zernio", "posts"] });
     },

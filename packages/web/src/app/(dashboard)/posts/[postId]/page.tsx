@@ -18,6 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
   published: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
   failed: "bg-red-500/10 text-red-400 border border-red-500/20",
   partial: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  cancelled: "bg-neutral-500/10 text-neutral-400 border border-neutral-500/20",
 };
 
 type Tab = "preview" | "edit" | "history";
@@ -82,9 +83,14 @@ export default function PostDetailPage() {
 
   // Unpublish handler
   const handleUnpublish = async () => {
+    if (!post) return;
     setIsUnpublishing(true);
     try {
-      await unpublishPostMutation.mutateAsync(postId);
+      // Unpublish from each supported platform (Instagram/TikTok/Snapchat not supported)
+      const platforms = unpublishablePlatforms;
+      for (const platform of platforms) {
+        await unpublishPostMutation.mutateAsync({ postId, platform });
+      }
       setShowUnpublishConfirm(false);
       setIsUnpublishing(false);
     } catch (err) {
@@ -184,6 +190,10 @@ export default function PostDetailPage() {
   // Platforms that support editing published posts
   const EDITABLE_PLATFORMS = ["twitter", "discord"];
 
+  // Platforms that DO NOT support unpublishing published posts
+  // API docs: "Not supported on Instagram, TikTok, or Snapchat"
+  const UNPUBLISH_BLOCKED_PLATFORMS = ["instagram", "tiktok", "snapchat"];
+
   // Derive platform details from post data
   const platformAccounts = post.platforms || [];
 
@@ -203,6 +213,21 @@ export default function PostDetailPage() {
 
   // Determine if this is a published post (needs the edit endpoint instead of update)
   const isPublished = post.status === "published";
+
+  // Does the published post have any platforms that support unpublishing?
+  const hasUnpublishablePlatforms = isPublished
+    ? platformAccounts.some((p: string) => !UNPUBLISH_BLOCKED_PLATFORMS.includes(p))
+    : false;
+
+  // Platforms that can actually be unpublished (excluding blocked ones)
+  const unpublishablePlatforms = isPublished
+    ? platformAccounts.filter((p: string) => !UNPUBLISH_BLOCKED_PLATFORMS.includes(p))
+    : [];
+
+  // Platforms that are blocked from unpublishing
+  const blockedUnpublishPlatforms = isPublished
+    ? platformAccounts.filter((p: string) => UNPUBLISH_BLOCKED_PLATFORMS.includes(p))
+    : [];
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -268,10 +293,26 @@ export default function PostDetailPage() {
               <div className="flex-1">
                 <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">Unpublish Post</h3>
                 <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                  This will unpublish the post from all platforms. After unpublishing, the post status will change to draft and you will be able to edit or delete it.
+                  This will delete this post from the following platforms. The post status will change to <strong>cancelled</strong>.
                 </p>
+                {unpublishablePlatforms.length > 0 && (
+                  <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                    <p className="text-body-sm text-amber-300 font-medium">Will unpublish from:</p>
+                    <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                      {unpublishablePlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}
+                    </p>
+                  </div>
+                )}
+                {blockedUnpublishPlatforms.length > 0 && (
+                  <div className="mt-2 rounded-lg border border-neutral-500/20 bg-neutral-500/5 p-3">
+                    <p className="text-body-sm text-neutral-300 font-medium">Cannot unpublish from:</p>
+                    <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                      {blockedUnpublishPlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")} — not supported by Zernio API
+                    </p>
+                  </div>
+                )}
                 {post.title && (
-                  <p className="mt-2 text-body-sm text-[var(--color-on-dark)] font-medium">
+                  <p className="mt-3 text-body-sm text-[var(--color-on-dark)] font-medium">
                     &quot;{post.title}&quot;
                   </p>
                 )}
@@ -346,7 +387,7 @@ export default function PostDetailPage() {
               Delete
             </button>
           )}
-          {isPublished && (
+          {isPublished && hasUnpublishablePlatforms && (
             <button
               onClick={() => setShowUnpublishConfirm(true)}
               className="flex items-center gap-2 rounded-lg border border-amber-500/20 px-3 py-2 text-button-sm text-amber-400 hover:bg-amber-500/10"

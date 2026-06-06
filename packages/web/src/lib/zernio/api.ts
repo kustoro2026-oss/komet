@@ -233,9 +233,10 @@ export async function deletePost(postId: string) {
   });
 }
 
-export async function unpublishPost(postId: string) {
+export async function unpublishPost(postId: string, platform: string) {
   return request<{ id: string; status: string }>(`/posts/${postId}/unpublish`, {
     method: "POST",
+    body: { platform },
   });
 }
 
