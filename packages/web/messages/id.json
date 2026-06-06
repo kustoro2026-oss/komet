@@ -183,9 +183,20 @@
     "platform": "Platform",
     "impressions": "Tayangan",
     "engagement": "Engagement",
+    "comments": "Komentar",
+    "shares": "Bagikan",
+    "newFollowers": "Pengikut Baru",
+    "engagementRate": "Engagement Rate",
     "followers": "Pengikut",
     "change": "Perubahan",
-    "topPosts": "Postingan Teratas"
+    "accounts": "akun",
+    "posts": "postingan",
+    "status": "Status",
+    "noData": "Belum ada data analitik",
+    "noDataDesc": "Hubungkan akun dan publikasikan postingan untuk melihat analitik Anda di sini.",
+    "connectAccount": "Hubungkan Akun",
+    "topPosts": "Postingan Teratas",
+    "noPosts": "Belum ada postingan dengan data engagement"
   },
   "inboxPage": {
     "title": "Kotak Masuk",

@@ -183,9 +183,20 @@
     "platform": "Platform",
     "impressions": "Impressions",
     "engagement": "Engagement",
+    "comments": "Comments",
+    "shares": "Shares",
+    "newFollowers": "New Followers",
+    "engagementRate": "Engagement Rate",
     "followers": "Followers",
     "change": "Change",
-    "topPosts": "Top Posts"
+    "accounts": "accounts",
+    "posts": "posts",
+    "status": "Status",
+    "noData": "No analytics data yet",
+    "noDataDesc": "Connect accounts and publish posts to see your analytics here.",
+    "connectAccount": "Connect Account",
+    "topPosts": "Top Posts",
+    "noPosts": "No posts with engagement data yet"
   },
   "inboxPage": {
     "title": "Inbox",
