@@ -11,6 +11,7 @@ import {
   BarChart3,
   Calendar,
   FileText,
+  AlertCircle,
 } from "lucide-react";
 
 interface Message {
@@ -38,7 +39,9 @@ export default function AiAgentPage() {
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,6 +50,8 @@ export default function AiAgentPage() {
   const handleSend = async (text?: string) => {
     const content = text || input;
     if (!content.trim() || isLoading) return;
+
+    setError(null);
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -59,17 +64,43 @@ export default function AiAgentPage() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    // Build context from recent messages
+    const recentMessages = messages
+      .filter((m) => m.id !== "welcome")
+      .slice(-6)
+      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+      .join("\n");
+
+    try {
+      const res = await fetch("/api/ai/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: content.trim(),
+          context: recentMessages || "New conversation",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "AI agent failed" }));
+        throw new Error(err.error || `Error: ${res.status}`);
+      }
+
+      const data = await res.json();
+
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         role: "assistant",
-        content: generateResponse(content),
+        content: data.reply || "I'm not sure how to respond to that.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+      inputRef.current?.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -81,6 +112,7 @@ export default function AiAgentPage() {
 
   const clearChat = () => {
     setMessages([WELCOME_MESSAGE]);
+    setError(null);
   };
 
   return (
@@ -108,6 +140,14 @@ export default function AiAgentPage() {
           New Chat
         </button>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-[var(--color-error)]/10 border border-[var(--color-error)]/20 px-4 py-3">
+          <AlertCircle className="h-4 w-4 text-[var(--color-error)] shrink-0" />
+          <p className="text-body-sm text-[var(--color-error)]">{error}</p>
+        </div>
+      )}
 
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* Chat Area */}
@@ -139,7 +179,7 @@ export default function AiAgentPage() {
                       : "bg-[var(--color-surface-dark)] text-[var(--color-on-dark)]"
                   }`}
                 >
-                  <p className="text-body-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-body-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   <p className="mt-1 text-micro opacity-50">
                     {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -169,6 +209,7 @@ export default function AiAgentPage() {
           <div className="border-t border-[var(--color-ink-muted)] p-4">
             <div className="flex gap-2">
               <textarea
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -218,21 +259,4 @@ export default function AiAgentPage() {
       </div>
     </div>
   );
-}
-
-function generateResponse(input: string): string {
-  const lower = input.toLowerCase();
-  if (lower.includes("hashtag") || lower.includes("hashtags")) {
-    return "Here are some relevant hashtags:\n\n#SocialMediaMarketing #ContentStrategy #DigitalMarketing #GrowthHacking #ContentCreation\n\n**High-frequency:** #Marketing #SocialMedia\n**Niche:** #SMMStrategy #ContentCalendar\n\nWould you like me to generate more specific ones for your content?";
-  }
-  if (lower.includes("thread") || lower.includes("twitter thread")) {
-    return "Here's a Twitter thread outline:\n\n1/ 🧵 **The ultimate guide to social media scheduling**\n\n2/ Most people think posting randomly works. It doesn't. \n\n3/ Consistency is key. Here's why scheduling matters...\n\n4/ Tools like Komet make it easy to plan, schedule, and publish across all platforms.\n\n5/ What's your biggest scheduling challenge? Let me know! 👇";
-  }
-  if (lower.includes("engagement") || lower.includes("analytics")) {
-    return "**Tips to improve engagement:**\n\n1. **Post consistently** - Aim for 4-5x per week\n2. **Use visuals** - Posts with images get 2.3x more engagement\n3. **Ask questions** - Encourage comments and discussion\n4. **Post at optimal times** - Check your analytics for peak hours\n5. **Respond to comments** - Build community through interaction\n\nWould you like me to analyze your current performance?";
-  }
-  if (lower.includes("content") || lower.includes("plan")) {
-    return "**Weekly Content Plan for Instagram:**\n\n**Monday:** Motivational quote + branded graphic\n**Tuesday:** Behind-the-scenes photo\n**Wednesday:** Educational carousel post\n**Thursday:** User-generated content feature\n**Friday:** Product showcase + CTA\n**Saturday:** Lifestyle/culture post\n**Sunday:** Engaging question for audience\n\nWant me to write the captions for any of these?";
-  }
-  return "That's a great question! I can help you with:\n\n✨ **Content Creation** - Write posts, captions, and threads\n🏷️ **Hashtag Generation** - Find the best hashtags\n📊 **Analytics** - Understand your performance\n📅 **Content Planning** - Build your content calendar\n\nWhat specific area would you like to explore?";
 }

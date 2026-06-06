@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Copy,
   ChevronRight,
+  Check,
 } from "lucide-react";
 
 const AI_FEATURES = [
@@ -40,22 +41,74 @@ const AI_FEATURES = [
   },
 ];
 
-const GENERATED_POSTS = [
-  { id: "1", content: "🚀 Big news! Our latest update brings you smarter analytics, seamless scheduling, and AI-powered content suggestions. The future of social media management is here.", tone: "Professional", platform: "LinkedIn" },
-  { id: "2", content: "Just dropped a fresh update with game-changing features! 🎉 Better analytics, easier scheduling, and AI that actually gets you. Check it out! 🔥", tone: "Casual", platform: "Twitter" },
-  { id: "3", content: "✨ New Update Alert! We've been working hard to bring you:\n\n📊 Smarter Analytics\n📅 Seamless Scheduling\n🤖 AI Content Assistant\n\nYour social media game just got a serious upgrade!", tone: "Enthusiastic", platform: "Instagram" },
-];
+interface GeneratedPost {
+  id: string;
+  content: string;
+}
 
 export default function AIPage() {
   const [prompt, setPrompt] = useState("");
   const [tone, setTone] = useState("professional");
+  const [length, setLength] = useState("medium");
+  const [platform, setPlatform] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [generatedPosts, setGeneratedPosts] = useState<GeneratedPost[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim() || isGenerating) return;
+
     setIsGenerating(true);
-    // Simulate generation
-    setTimeout(() => setIsGenerating(false), 2000);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          tone,
+          length,
+          platform: platform || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Generation failed" }));
+        throw new Error(err.error || `Error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.content) {
+        setGeneratedPosts((prev) => [
+          { id: `gen-${Date.now()}`, content: data.content },
+          ...prev,
+        ]);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCopy = async (id: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // fallback
+      const textarea = document.createElement("textarea");
+      textarea.value = content;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   };
 
   return (
@@ -133,7 +186,11 @@ export default function AIPage() {
           </div>
           <div>
             <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Length</label>
-            <select className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
+            <select
+              value={length}
+              onChange={(e) => setLength(e.target.value)}
+              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            >
               <option value="short">Short</option>
               <option value="medium">Medium</option>
               <option value="long">Long</option>
@@ -141,8 +198,12 @@ export default function AIPage() {
           </div>
           <div>
             <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Platform</label>
-            <select className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-              <option value="all">Auto-detect</option>
+            <select
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            >
+              <option value="">Auto-detect</option>
               <option value="twitter">Twitter / X</option>
               <option value="instagram">Instagram</option>
               <option value="linkedin">LinkedIn</option>
@@ -169,6 +230,13 @@ export default function AIPage() {
             </button>
           </div>
         </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mt-3 rounded-lg bg-[var(--color-error)]/10 border border-[var(--color-error)]/20 px-4 py-3">
+            <p className="text-body-sm text-[var(--color-error)]">{error}</p>
+          </div>
+        )}
       </div>
 
       {/* Generated Results */}
@@ -176,42 +244,54 @@ export default function AIPage() {
         <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)] mb-4">
           Generated Content
         </h2>
-        <div className="space-y-3">
-          {GENERATED_POSTS.map((post) => (
-            <div
-              key={post.id}
-              className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="whitespace-pre-wrap text-body-sm text-[var(--color-on-dark)]">
-                    {post.content}
-                  </p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="rounded bg-[var(--color-primary)]/10 px-2 py-0.5 text-micro text-[var(--color-primary-light)]">
-                      {post.tone}
-                    </span>
-                    <span className="rounded bg-[var(--color-surface-dark)] px-2 py-0.5 text-micro text-[var(--color-on-dark-muted)]">
-                      {post.platform}
-                    </span>
+        {generatedPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-16">
+            <Sparkles className="h-10 w-10 text-[var(--color-on-dark-muted)] mb-3" />
+            <p className="text-body-sm text-[var(--color-on-dark-muted)]">
+              Your generated content will appear here
+            </p>
+            <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">
+              Enter a prompt above and click Generate
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {generatedPosts.map((post) => (
+              <div
+                key={post.id}
+                className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4 hover:border-[var(--color-ink-soft)] transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="whitespace-pre-wrap text-body-sm text-[var(--color-on-dark)] leading-relaxed">
+                      {post.content}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => handleCopy(post.id, post.content)}
+                      className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)] transition-colors"
+                      title="Copy"
+                    >
+                      {copiedId === post.id ? (
+                        <Check className="h-4 w-4 text-[var(--color-success)]" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                    <a
+                      href="/posts/create"
+                      className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-accent)] transition-colors"
+                      title="Use in post"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </a>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title="Copy">
-                    <Copy className="h-4 w-4" />
-                  </button>
-                  <a
-                    href="/posts/create"
-                    className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-accent)]"
-                    title="Use in post"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </a>
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
