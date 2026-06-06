@@ -211,7 +211,21 @@
     "delete": "Hapus",
     "markRead": "Tandai dibaca",
     "comment": "komentar",
-    "message": "pesan"
+    "message": "pesan",
+    "allPlatforms": "Semua Platform",
+    "loading": "Memuat kotak masuk...",
+    "error": "Gagal memuat kotak masuk",
+    "replyTitle": "Balas Komentar",
+    "replyPlaceholder": "Ketik balasan Anda...",
+    "cancel": "Batal",
+    "sending": "Mengirim...",
+    "sendReply": "Kirim Balasan",
+    "retry": "Coba Lagi",
+    "confirmDelete": "Hapus komentar ini?",
+    "deleteWarning": "Tindakan ini tidak dapat dibatalkan.",
+    "deleteSuccess": "Komentar berhasil dihapus",
+    "replySuccess": "Balasan berhasil dikirim",
+    "totalComments": "{count} {count, plural, one {komentar} other {komentar}} dari semua platform"
   },
   "settings": {
     "title": "Pengaturan",

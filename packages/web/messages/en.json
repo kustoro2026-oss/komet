@@ -211,7 +211,21 @@
     "delete": "Delete",
     "markRead": "Mark as read",
     "comment": "comment",
-    "message": "message"
+    "message": "message",
+    "allPlatforms": "All Platforms",
+    "loading": "Loading inbox...",
+    "error": "Failed to load inbox",
+    "replyTitle": "Reply to Comment",
+    "replyPlaceholder": "Type your reply...",
+    "cancel": "Cancel",
+    "sending": "Sending...",
+    "sendReply": "Send Reply",
+    "retry": "Retry",
+    "confirmDelete": "Delete this comment?",
+    "deleteWarning": "This action cannot be undone.",
+    "deleteSuccess": "Comment deleted successfully",
+    "replySuccess": "Reply sent successfully",
+    "totalComments": "{count} {count, plural, one {comment} other {comments}} from all platforms"
   },
   "settings": {
     "title": "Settings",

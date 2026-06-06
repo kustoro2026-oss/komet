@@ -310,6 +310,147 @@ export async function getFollowerStats() {
   return request<{ accounts: { accountId: string; platform: string; followers: number; growth: number }[] }>("/accounts/follower-stats");
 }
 
+// ===== Comments / Inbox =====
+
+/** Post that has received comments (from listInboxComments) */
+export interface CommentedPost {
+  id: string;
+  platform: string;
+  accountId: string;
+  accountUsername: string;
+  content: string;
+  picture?: string;
+  permalink?: string;
+  createdTime: string;
+  commentCount: number;
+  likeCount: number;
+}
+
+/** Individual comment on a post (from getInboxPostComments) */
+export interface InboxComment {
+  id: string;
+  message: string;
+  createdTime: string;
+  from: { id?: string; name: string; picture?: string };
+  likeCount: number;
+  replyCount: number;
+  platform: string;
+  url?: string;
+  canReply: boolean;
+  canDelete: boolean;
+  canHide: boolean;
+  isHidden?: boolean;
+  replies?: InboxComment[];
+}
+
+/** List all posts that have received comments */
+export async function listCommentedPosts() {
+  interface RawPost {
+    id?: string;
+    platform?: string;
+    account_id?: string;
+    account_username?: string;
+    content?: string;
+    picture?: string;
+    permalink?: string;
+    created_time?: string;
+    comment_count?: number;
+    like_count?: number;
+  }
+  const raw = await request<{ data: RawPost[]; pagination?: unknown }>("/inbox/comments");
+  const items: CommentedPost[] = (raw.data || []).map((p) => ({
+    id: p.id || "",
+    platform: p.platform || "",
+    accountId: p.account_id || "",
+    accountUsername: p.account_username || "",
+    content: p.content || "",
+    picture: p.picture,
+    permalink: p.permalink,
+    createdTime: p.created_time || "",
+    commentCount: p.comment_count || 0,
+    likeCount: p.like_count || 0,
+  }));
+  return { posts: items };
+}
+
+/** Fetch comments for a specific post */
+export async function getPostComments(
+  postId: string,
+  params?: { accountId?: string; limit?: number; cursor?: string }
+) {
+  interface RawComment {
+    id?: string;
+    message?: string;
+    created_time?: string;
+    from?: { id?: string; name?: string; picture?: string };
+    like_count?: number;
+    reply_count?: number;
+    platform?: string;
+    url?: string;
+    can_reply?: boolean;
+    can_delete?: boolean;
+    can_hide?: boolean;
+    is_hidden?: boolean;
+    replies?: RawComment[];
+  }
+  const raw = await request<{
+    comments: RawComment[];
+    post?: { content?: string };
+    pagination?: { cursor?: string; hasMore?: boolean };
+  }>(`/inbox/comments/${postId}`, {
+    params: {
+      accountId: params?.accountId,
+      limit: params?.limit,
+      cursor: params?.cursor,
+    },
+  });
+  const normalize = (rc: RawComment): InboxComment => ({
+    id: rc.id || "",
+    message: rc.message || "",
+    createdTime: rc.created_time || "",
+    from: { name: rc.from?.name || "Unknown", id: rc.from?.id, picture: rc.from?.picture },
+    likeCount: rc.like_count || 0,
+    replyCount: rc.reply_count || 0,
+    platform: rc.platform || "",
+    url: rc.url,
+    canReply: rc.can_reply ?? false,
+    canDelete: rc.can_delete ?? false,
+    canHide: rc.can_hide ?? false,
+    isHidden: rc.is_hidden,
+    replies: (rc.replies || []).map(normalize),
+  });
+  return {
+    comments: (raw.comments || []).map(normalize),
+    postContent: raw.post?.content,
+    pagination: raw.pagination,
+  };
+}
+
+/** Reply to a comment on a post */
+export async function replyToComment(
+  postId: string,
+  accountId: string,
+  commentId: string,
+  message: string
+) {
+  return request<void>(`/inbox/comments/${postId}`, {
+    method: "POST",
+    body: { accountId, commentId, message },
+  });
+}
+
+/** Delete a comment on a post */
+export async function deleteComment(
+  postId: string,
+  accountId: string,
+  commentId: string
+) {
+  return request<void>(`/inbox/comments/${postId}`, {
+    method: "DELETE",
+    params: { accountId, commentId },
+  });
+}
+
 // ===== Usage =====
 export async function getUsageStats() {
   try {

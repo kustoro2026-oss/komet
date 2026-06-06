@@ -138,3 +138,47 @@ export function useFollowerStats() {
     queryFn: zernio.getFollowerStats,
   });
 }
+
+// ===== Comments / Inbox =====
+
+/** List all posts that have received comments */
+export function useCommentedPosts() {
+  return useQuery({
+    queryKey: ["zernio", "inbox", "commented-posts"],
+    queryFn: zernio.listCommentedPosts,
+  });
+}
+
+/** Fetch comments for a specific post */
+export function usePostComments(
+  postId: string | undefined,
+  params?: { accountId?: string; limit?: number; cursor?: string }
+) {
+  return useQuery({
+    queryKey: ["zernio", "inbox", "post-comments", postId, params],
+    queryFn: () => zernio.getPostComments(postId!, params),
+    enabled: !!postId,
+  });
+}
+
+export function useReplyToComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, accountId, commentId, message }: { postId: string; accountId: string; commentId: string; message: string }) =>
+      zernio.replyToComment(postId, accountId, commentId, message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "inbox"] });
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, accountId, commentId }: { postId: string; accountId: string; commentId: string }) =>
+      zernio.deleteComment(postId, accountId, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "inbox"] });
+    },
+  });
+}
