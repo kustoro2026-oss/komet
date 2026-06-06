@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-const RULES_FILE = path.join(process.cwd(), "auto-reply-rules.json");
+// Use /tmp for Vercel serverless compatibility (only /tmp is writable)
+const RULES_FILE = path.join("/tmp", "auto-reply-rules.json");
 
 export async function GET() {
   try {

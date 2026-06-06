@@ -108,10 +108,10 @@ export const handleAutoReplyCheck = inngest.createFunction(
       }
 
       try {
-        // Load server-side rules configuration (auto-reply-rules.json in project root)
+        // Load server-side rules from /tmp (Vercel-compatible writable directory)
         const fs = await import("fs/promises");
         const path = await import("path");
-        const rulesPath = path.join(process.cwd(), "auto-reply-rules.json");
+        const rulesPath = path.join("/tmp", "auto-reply-rules.json");
         
         let serverRules: {
           id: string;
