@@ -156,25 +156,51 @@ export default function CreatePostPage() {
         }));
       }
 
-      // Convert data URI images to Files and add to media
+      // Handle media URLs from AI Studio (data URIs) and Media Library (HTTP URLs)
       if (incomingMediaUrls?.length) {
-        incomingMediaUrls.forEach((url) => {
-          if (url.startsWith("data:")) {
-            const file = dataUriToFile(url, `ai-generated-${Date.now()}.png`);
-            const mediaFile: MediaFile = {
-              id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
-              file,
-              type: "image",
-              status: "pending",
-              progress: 0,
-            };
-            setForm((prev) => ({
-              ...prev,
-              media: [...prev.media, mediaFile],
-            }));
-            uploadMediaFile(mediaFile);
+        const processUrls = async () => {
+          for (const url of incomingMediaUrls) {
+            if (url.startsWith("data:")) {
+              // AI-generated image in data URI format
+              const file = dataUriToFile(url, `ai-generated-${Date.now()}.png`);
+              const mediaFile: MediaFile = {
+                id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+                file,
+                type: "image",
+                status: "pending",
+                progress: 0,
+              };
+              setForm((prev) => ({
+                ...prev,
+                media: [...prev.media, mediaFile],
+              }));
+              uploadMediaFile(mediaFile);
+            } else if (url.startsWith("http://") || url.startsWith("https://")) {
+              // Media Library URL — fetch the file and upload
+              try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const filename = url.split("/").pop()?.split("?")[0] || `media-${Date.now()}`;
+                const file = new File([blob], filename, { type: blob.type || "image/png" });
+                const mediaFile: MediaFile = {
+                  id: crypto.randomUUID?.() || Math.random().toString(36).slice(2),
+                  file,
+                  type: file.type.startsWith("video/") ? "video" : "image",
+                  status: "pending",
+                  progress: 0,
+                };
+                setForm((prev) => ({
+                  ...prev,
+                  media: [...prev.media, mediaFile],
+                }));
+                uploadMediaFile(mediaFile);
+              } catch (err) {
+                console.error("Failed to fetch media URL:", url, err);
+              }
+            }
           }
-        });
+        };
+        processUrls();
       }
 
       clearComposer();
