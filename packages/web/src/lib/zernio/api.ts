@@ -282,14 +282,32 @@ export async function getMediaPresignedUrl(filename: string, contentType: string
 }
 
 // ===== Analytics =====
-export async function getAccountAnalytics(
+/** Get daily aggregated metrics for an account */
+export async function getDailyMetrics(
   accountId: string,
   platform: string,
   dateRange?: { from: string; to: string }
 ) {
-  return request<ZernioAnalytics>(`/analytics/account/${accountId}`, {
-    params: { platform, startDate: dateRange?.from, endDate: dateRange?.to },
+  return request<ZernioAnalytics>(`/analytics/daily-metrics`, {
+    params: {
+      accountId,
+      platform,
+      startDate: dateRange?.from,
+      endDate: dateRange?.to,
+    },
   });
+}
+
+/** Get post analytics (engagement metrics for a specific post) */
+export async function getPostAnalytics(postId: string, platform?: string) {
+  return request<ZernioAnalytics>(`/analytics`, {
+    params: { postId, platform },
+  });
+}
+
+/** Get aggregated follower stats across all accounts */
+export async function getFollowerStats() {
+  return request<{ accounts: { accountId: string; platform: string; followers: number; growth: number }[] }>("/accounts/follower-stats");
 }
 
 // ===== Usage =====

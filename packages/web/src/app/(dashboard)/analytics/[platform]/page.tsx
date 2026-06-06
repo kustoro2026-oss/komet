@@ -17,10 +17,11 @@ import {
   ExternalLink,
   TrendingUp,
   RefreshCw,
+  Activity,
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { useAccounts, useAccountAnalytics, usePosts } from "@/lib/zernio/hooks";
+import { useAccounts, useDailyMetrics, usePosts, useFollowerStats } from "@/lib/zernio/hooks";
 
 // Helper: format large numbers compactly
 function fmt(n: number): string {
@@ -67,6 +68,7 @@ export default function PlatformAnalyticsPage() {
 
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
   const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 100 });
+  const { data: followerStats } = useFollowerStats();
 
   // Find the first connected account for this platform
   const account = useMemo(() => {
@@ -78,12 +80,13 @@ export default function PlatformAnalyticsPage() {
     [dateRange]
   );
 
+  // Try daily-metrics API — if it 404s we fall back gracefully
   const {
     data: analytics,
     isLoading: analyticsLoading,
     isError: analyticsError,
     error: analyticsErrorObj,
-  } = useAccountAnalytics(account?.id, platform, dateRangeParam);
+  } = useDailyMetrics(account?.id, platform, dateRangeParam);
 
   // Filter posts for this platform
   const platformPosts = useMemo(() => {
@@ -103,7 +106,7 @@ export default function PlatformAnalyticsPage() {
       (sum, p) => sum + (p.engagement ?? 0),
       0
     );
-    const publishedPosts = platformPosts.filter(
+    const published = platformPosts.filter(
       (p) => p.status === "published" || p.status === "partial"
     );
     return {
@@ -114,93 +117,50 @@ export default function PlatformAnalyticsPage() {
       shares: Math.round(totalEngagement * 0.08),
       followers: 0,
       totalPosts: platformPosts.length,
-      publishedPosts: publishedPosts.length,
+      publishedPosts: published.length,
     };
   }, [platformPosts]);
+
+  // Get follower count from follower-stats API
+  const accountFollowerInfo = useMemo(() => {
+    if (!followerStats?.accounts || !account) return null;
+    return followerStats.accounts.find(
+      (a: { accountId: string }) => a.accountId === account.id
+    );
+  }, [followerStats, account]);
 
   const isLoading = accountsLoading || postsLoading;
   const platformLabel = PLATFORM_LABELS[platform as Platform] || platform;
   const hasAccount = !!account;
-  const errorMessage =
-    analyticsErrorObj instanceof Error
-      ? analyticsErrorObj.message
-      : "Analytics data is temporarily unavailable";
 
-  // Decide which metrics to show
-  const useAnalyticsData = !!analytics && !analyticsError && !analyticsLoading;
-  const showFallback = hasAccount && (analyticsError || (!analyticsLoading && !analytics));
+  const useApiData = !!analytics && !analyticsError && !analyticsLoading;
+  const showFallback = hasAccount && !analyticsLoading && (analyticsError || !analytics);
+  const isNotFound =
+    analyticsErrorObj instanceof Error &&
+    analyticsErrorObj.message.includes("404");
 
-  const metrics = useAnalyticsData
+  // Build the 6 metric cards from whichever data source is available
+  const metrics = useApiData
     ? [
-        {
-          label: "Impressions",
-          value: fmt(analytics.impressions ?? 0),
-          icon: Eye,
-          color: "text-sky-400",
-        },
-        {
-          label: "Engagement",
-          value: fmt(analytics.engagement ?? 0),
-          icon: Heart,
-          color: "text-rose-400",
-        },
-        {
-          label: "Likes",
-          value: fmt(analytics.likes ?? 0),
-          icon: TrendingUp,
-          color: "text-pink-400",
-        },
-        {
-          label: "Comments",
-          value: fmt(analytics.comments ?? 0),
-          icon: MessageCircle,
-          color: "text-emerald-400",
-        },
-        {
-          label: "Shares",
-          value: fmt(analytics.shares ?? 0),
-          icon: Share2,
-          color: "text-violet-400",
-        },
+        { label: "Impressions", value: fmt(analytics.impressions ?? 0), icon: Eye, color: "text-sky-400" },
+        { label: "Engagement", value: fmt(analytics.engagement ?? 0), icon: Heart, color: "text-rose-400" },
+        { label: "Likes", value: fmt(analytics.likes ?? 0), icon: TrendingUp, color: "text-pink-400" },
+        { label: "Comments", value: fmt(analytics.comments ?? 0), icon: MessageCircle, color: "text-emerald-400" },
+        { label: "Shares", value: fmt(analytics.shares ?? 0), icon: Share2, color: "text-violet-400" },
         {
           label: "Followers",
-          value: fmt(analytics.followers ?? 0),
+          value: fmt(accountFollowerInfo?.followers ?? analytics.followers ?? 0),
           icon: Users,
           color: "text-amber-400",
         },
       ]
     : showFallback
       ? [
-          {
-            label: "Impressions*",
-            value: fmt(fallbackMetrics.impressions),
-            icon: Eye,
-            color: "text-sky-400",
-          },
-          {
-            label: "Engagement*",
-            value: fmt(fallbackMetrics.engagement),
-            icon: Heart,
-            color: "text-rose-400",
-          },
-          {
-            label: "Likes*",
-            value: fmt(fallbackMetrics.likes),
-            icon: TrendingUp,
-            color: "text-pink-400",
-          },
-          {
-            label: "Comments*",
-            value: fmt(fallbackMetrics.comments),
-            icon: MessageCircle,
-            color: "text-emerald-400",
-          },
-          {
-            label: "Shares*",
-            value: fmt(fallbackMetrics.shares),
-            icon: Share2,
-            color: "text-violet-400",
-          },
+          { label: "Impressions*", value: fmt(fallbackMetrics.impressions), icon: Eye, color: "text-sky-400" },
+          { label: "Engagement*", value: fmt(fallbackMetrics.engagement), icon: Heart, color: "text-rose-400" },
+          { label: "Likes*", value: fmt(fallbackMetrics.likes), icon: TrendingUp, color: "text-pink-400" },
+          { label: "Comments*", value: fmt(fallbackMetrics.comments), icon: MessageCircle, color: "text-emerald-400" },
+          { label: "Shares*", value: fmt(fallbackMetrics.shares), icon: Share2, color: "text-violet-400" },
           {
             label: "Posts",
             value: String(fallbackMetrics.totalPosts),
@@ -210,21 +170,13 @@ export default function PlatformAnalyticsPage() {
         ]
       : [];
 
-  // Determine error type for better messaging
-  const isNotFound =
-    analyticsErrorObj instanceof Error &&
-    analyticsErrorObj.message.includes("404");
-
-  // Compute performance summary text
-  const performanceText = useAnalyticsData
+  const performanceText = useApiData
     ? analytics.engagement > 0
-      ? `${fmt(analytics.engagement)} total engagements in this period`
+      ? `${fmt(analytics.engagement)} total engagements this period`
       : "Engagement data will appear here"
-    : showFallback
-      ? fallbackMetrics.engagement > 0
-        ? `${fmt(fallbackMetrics.engagement)} total engagements from ${fallbackMetrics.publishedPosts} posts`
-        : "No engagement data yet for this platform"
-      : null;
+    : showFallback && fallbackMetrics.engagement > 0
+      ? `${fmt(fallbackMetrics.engagement)} total engagements from ${fallbackMetrics.publishedPosts} posts`
+      : "No engagement data yet for this platform";
 
   return (
     <div className="space-y-6">
@@ -266,9 +218,9 @@ export default function PlatformAnalyticsPage() {
       </div>
 
       {!hasAccount ? (
-        /* No account connected — elegant empty state */
+        /* ——— No account connected ——— */
         <div className="relative overflow-hidden rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)]">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)]/5 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 to-transparent" />
           <div className="relative flex flex-col items-center py-24 px-6">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400/20 to-amber-600/20 mb-6 ring-1 ring-amber-400/20">
               <AlertTriangle className="h-7 w-7 text-amber-400" />
@@ -288,8 +240,8 @@ export default function PlatformAnalyticsPage() {
             </Link>
           </div>
         </div>
-      ) : isLoading || analyticsLoading ? (
-        /* Loading — skeleton cards */
+      ) : isLoading ? (
+        /* ——— Loading skeletons ——— */
         <div className="space-y-6">
           <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 animate-pulse">
             <div className="flex items-center gap-4">
@@ -309,7 +261,7 @@ export default function PlatformAnalyticsPage() {
         </div>
       ) : (
         <>
-          {/* Account Info Card — always shown when account exists */}
+          {/* ——— Account Info Card ——— */}
           <div className="relative overflow-hidden rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5">
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary)]/5 to-transparent" />
             <div className="relative flex items-center justify-between">
@@ -330,10 +282,10 @@ export default function PlatformAnalyticsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {useAnalyticsData && analytics.followers != null && (
+                {accountFollowerInfo && (
                   <div className="text-right">
                     <p className="text-heading-sm font-bold text-[var(--color-on-dark)]">
-                      {fmt(analytics.followers)}
+                      {fmt(accountFollowerInfo.followers)}
                     </p>
                     <p className="text-micro text-[var(--color-on-dark-muted)]">
                       Followers
@@ -352,20 +304,21 @@ export default function PlatformAnalyticsPage() {
               </div>
             </div>
 
-            {/* Error banner shown above metrics when API fails */}
+            {/* Fallback warning banner */}
             {showFallback && (
               <div className="relative mt-4 flex items-start gap-3 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-3">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                 <div className="min-w-0">
                   <p className="text-caption font-medium text-amber-300">
                     {isNotFound
-                      ? "Analytics API unavailable for this platform"
+                      ? "Analytics API not enabled for this plan"
                       : "Analytics temporarily unavailable"}
                   </p>
                   <p className="mt-0.5 text-micro text-[var(--color-on-dark-soft)]">
+                    Showing estimated metrics based on your published posts.
                     {isNotFound
-                      ? "Showing estimated metrics based on your posts. Try again later for precise data."
-                      : `${errorMessage}. Showing estimated metrics.`}
+                      ? " Upgrade your plan or contact support to enable analytics."
+                      : ""}
                   </p>
                 </div>
                 <button
@@ -379,7 +332,7 @@ export default function PlatformAnalyticsPage() {
             )}
           </div>
 
-          {/* Metrics Grid */}
+          {/* ——— Metrics Grid ——— */}
           {metrics.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {metrics.map((metric) => (
@@ -403,8 +356,9 @@ export default function PlatformAnalyticsPage() {
             </div>
           )}
 
+          {/* ——— Charts & Top Posts ——— */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Chart / Performance Section */}
+            {/* Performance chart area */}
             <div className="lg:col-span-2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
@@ -419,21 +373,19 @@ export default function PlatformAnalyticsPage() {
                 </span>
               </div>
               <p className="text-body-sm text-[var(--color-on-dark-soft)]">
-                Engagement trend for {platformLabel}
+                Activity overview for {platformLabel}
               </p>
               <div className="mt-6 flex h-64 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-surface-dark)] to-[var(--color-surface-dark-raised)] border border-[var(--color-ink-muted)]/50">
                 <div className="text-center px-6">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-primary)]/5 mb-4">
-                    <BarChart3 className="h-7 w-7 text-[var(--color-primary-light)]" />
+                    <Activity className="h-7 w-7 text-[var(--color-primary-light)]" />
                   </div>
                   <p className="text-body-sm text-[var(--color-on-dark)] font-medium">
                     {platformLabel} Performance
                   </p>
-                  {performanceText && (
-                    <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">
-                      {performanceText}
-                    </p>
-                  )}
+                  <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">
+                    {performanceText}
+                  </p>
                   {showFallback && (
                     <p className="mt-3 text-micro text-amber-400/70">
                       *Estimated from post data

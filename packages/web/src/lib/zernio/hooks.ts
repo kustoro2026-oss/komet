@@ -119,14 +119,22 @@ export function useUsageStats() {
 }
 
 // ===== Analytics =====
-export function useAccountAnalytics(
+export function useDailyMetrics(
   accountId: string | undefined,
   platform: string,
   dateRange?: { from: string; to: string }
 ) {
   return useQuery({
-    queryKey: ["zernio", "analytics", "account", accountId, dateRange],
-    queryFn: () => zernio.getAccountAnalytics(accountId!, platform, dateRange),
+    queryKey: ["zernio", "analytics", "daily", accountId, dateRange],
+    queryFn: () => zernio.getDailyMetrics(accountId!, platform, dateRange),
     enabled: !!accountId,
+    retry: false,
+  });
+}
+
+export function useFollowerStats() {
+  return useQuery({
+    queryKey: ["zernio", "analytics", "followers"],
+    queryFn: zernio.getFollowerStats,
   });
 }
