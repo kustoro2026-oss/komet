@@ -337,15 +337,21 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
       >
         {mounted && (
           <>
-            {/* Theme + Language row */}
+            {/* Language + Theme row */}
             <div className="flex items-center gap-1">
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <LanguageSwitcher collapsed={false} />
+                </div>
+              )}
+
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-fast flex-1",
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-fast",
                   "text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]",
                   "light:text-[var(--color-ink-soft)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)]",
-                  collapsed && "justify-center flex-none w-full"
+                  collapsed ? "justify-center w-full" : "shrink-0"
                 )}
                 title={theme === "dark" ? tc("lightMode") : tc("darkMode")}
               >
@@ -356,12 +362,6 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
                 )}
                 {!collapsed && <span>{theme === "dark" ? tc("lightMode") : tc("darkMode")}</span>}
               </button>
-
-              {!collapsed && (
-                <div className="shrink-0">
-                  <LanguageSwitcher collapsed={false} />
-                </div>
-              )}
             </div>
 
             {collapsed && (
