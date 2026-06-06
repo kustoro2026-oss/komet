@@ -1,81 +1,107 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import { ArrowLeft, Activity, Edit3, RefreshCw, Trash2, BarChart3 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Activity, Edit3, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-
-const MOCK_ACCOUNT = {
-  id: "acc1",
-  platform: "twitter" as Platform,
-  username: "komet_app",
-  displayName: "Komet",
-  avatarUrl: null,
-  isActive: true,
-  connectedAt: "2026-01-15T10:00:00Z",
-  stats: { followers: 12500, following: 845, posts: 342, engagement: 3.2 },
-  recentPosts: [
-    { id: "p1", content: "Excited to announce our new feature! 🚀", engagement: 1234, publishedAt: "2026-06-04T10:00:00Z" },
-    { id: "p2", content: "Behind the scenes of our latest photoshoot... 📸", engagement: 892, publishedAt: "2026-06-02T14:00:00Z" },
-    { id: "p3", content: "Happy Monday! Here's your weekly dose of motivation ✨", engagement: 567, publishedAt: "2026-05-30T09:00:00Z" },
-  ],
-};
+import { useAccounts, useDeleteAccount } from "@/lib/zernio/hooks";
+import { PlatformIcon } from "@/components/ui/platform-icon";
 
 export default function AccountDetailPage() {
-  useParams();
+  const params = useParams();
+  const router = useRouter();
+  const accountId = params.accountId as string;
+
+  const { data: accounts, isLoading } = useAccounts();
+  const deleteAccountMutation = useDeleteAccount();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeView, setActiveView] = useState<"overview" | "posts">("overview");
+
+  // Find the account from real API data
+  const account = accounts?.find((a) => a.id === accountId);
+
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-4xl flex items-center justify-center py-24">
+        <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
+      </div>
+    );
+  }
+
+  if (!account) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-6">
+        <button onClick={() => router.push("/accounts")} className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
+          <ArrowLeft className="h-4 w-4" /> Back to Accounts
+        </button>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-24">
+          <AlertTriangle className="h-12 w-12 text-amber-400 mb-4" />
+          <p className="text-body-md text-[var(--color-on-dark)] font-medium">Account not found</p>
+          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">The account you&apos;re looking for doesn&apos;t exist or has been disconnected.</p>
+          <button
+            onClick={() => router.push("/accounts")}
+            className="mt-6 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+          >
+            Go to Accounts
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteAccountMutation.mutateAsync(accountId);
+      router.push("/accounts");
+    } catch (err) {
+      console.error("Failed to delete account:", err);
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <a href="/accounts" className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
+      {/* Back button */}
+      <button onClick={() => router.push("/accounts")} className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
         <ArrowLeft className="h-4 w-4" /> Back to Accounts
-      </a>
+      </button>
 
       {/* Account Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-[var(--color-primary)]/20 text-heading-lg font-bold text-[var(--color-primary-light)]">
-            {MOCK_ACCOUNT.displayName[0]}
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-[var(--color-primary)]/20">
+            {account.avatarUrl ? (
+              <img src={account.avatarUrl} alt={account.displayName} className="h-16 w-16 rounded-xl object-cover" />
+            ) : (
+              <PlatformIcon platform={account.platform as Platform} className="h-8 w-8 text-[var(--color-primary-light)]" />
+            )}
           </div>
           <div>
-            <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{MOCK_ACCOUNT.displayName}</h1>
-            <p className="text-body-sm text-[var(--color-on-dark-soft)]">@{MOCK_ACCOUNT.username} &middot; {PLATFORM_LABELS[MOCK_ACCOUNT.platform]}</p>
+            <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{account.displayName}</h1>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)]">@{account.username} &middot; {PLATFORM_LABELS[account.platform as Platform] || account.platform}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-caption font-medium ${MOCK_ACCOUNT.isActive ? "bg-[var(--color-success)]/10 text-[var(--color-success)]" : "bg-[var(--color-error)]/10 text-[var(--color-error)]"}`}>
-            {MOCK_ACCOUNT.isActive ? "Active" : "Disconnected"}
+          <span className={`rounded-full px-3 py-1 text-caption font-medium ${account.isActive ? "bg-[var(--color-success)]/10 text-[var(--color-success)]" : "bg-[var(--color-warning)]/10 text-[var(--color-warning)]"}`}>
+            {account.isActive ? "Active" : "Expired"}
           </span>
-          <button className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
+          <a
+            href="/accounts/connect"
+            className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+          >
             <RefreshCw className="h-4 w-4" />
-          </button>
-          <button className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
-            <Edit3 className="h-4 w-4" />
-          </button>
-          <button className="rounded-lg border border-[var(--color-error)]/30 px-3 py-2 text-button-sm text-[var(--color-error)] hover:bg-[var(--color-error)]/10">
+          </a>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+            className="rounded-lg border border-[var(--color-error)]/30 px-3 py-2 text-button-sm text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-50"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Followers</p>
-          <p className="mt-1 text-heading-lg font-bold text-[var(--color-on-dark)]">{MOCK_ACCOUNT.stats.followers.toLocaleString()}</p>
-        </div>
-        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Following</p>
-          <p className="mt-1 text-heading-lg font-bold text-[var(--color-on-dark)]">{MOCK_ACCOUNT.stats.following.toLocaleString()}</p>
-        </div>
-        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Posts</p>
-          <p className="mt-1 text-heading-lg font-bold text-[var(--color-on-dark)]">{MOCK_ACCOUNT.stats.posts}</p>
-        </div>
-        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Engagement</p>
-          <p className="mt-1 text-heading-lg font-bold text-[var(--color-on-dark)]">{MOCK_ACCOUNT.stats.engagement}%</p>
         </div>
       </div>
 
@@ -103,41 +129,73 @@ export default function AccountDetailPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Platform</p>
-                <p className="text-body-sm text-[var(--color-on-dark)]">{PLATFORM_LABELS[MOCK_ACCOUNT.platform]}</p>
+                <p className="text-body-sm text-[var(--color-on-dark)]">{PLATFORM_LABELS[account.platform as Platform] || account.platform}</p>
               </div>
               <div>
                 <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Username</p>
-                <p className="text-body-sm text-[var(--color-on-dark)]">@{MOCK_ACCOUNT.username}</p>
+                <p className="text-body-sm text-[var(--color-on-dark)]">@{account.username}</p>
               </div>
               <div>
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Connected Since</p>
-                <p className="text-body-sm text-[var(--color-on-dark)]">{new Date(MOCK_ACCOUNT.connectedAt).toLocaleDateString()}</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Account ID</p>
+                <p className="text-body-sm text-[var(--color-on-dark)] font-mono text-caption">{account.id}</p>
               </div>
               <div>
                 <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Status</p>
-                <p className="text-body-sm text-[var(--color-on-dark)]">{MOCK_ACCOUNT.isActive ? "Active" : "Disconnected"}</p>
+                <p className="text-body-sm text-[var(--color-on-dark)]">{account.isActive ? "Active" : "Expired"}</p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">Recent Posts</h3>
-            {MOCK_ACCOUNT.recentPosts.map((post) => (
-              <a
-                key={post.id}
-                href={`/posts/${post.id}`}
-                className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4 hover:border-[var(--color-ink-soft)] transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-body-sm text-[var(--color-on-dark)] truncate">{post.content}</p>
-                  <span className="text-caption text-[var(--color-on-dark-muted)]">{new Date(post.publishedAt).toLocaleDateString()}</span>
-                </div>
-                <span className="ml-4 text-caption font-medium text-[var(--color-primary-light)]">{post.engagement.toLocaleString()} eng.</span>
-              </a>
-            ))}
+          <div className="flex flex-col items-center justify-center py-12">
+            <BarChart3 className="h-12 w-12 text-[var(--color-on-dark-muted)] mb-3" />
+            <p className="text-body-sm text-[var(--color-on-dark)] font-medium">Post history available soon</p>
+            <p className="mt-1 text-caption text-[var(--color-on-dark-soft)]">View published posts from this account in the Posts section.</p>
+            <button
+              onClick={() => router.push("/posts")}
+              className="mt-4 flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+            >
+              <ExternalLink className="h-4 w-4" /> View Posts
+            </button>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50" onClick={() => !isDeleting && setShowDeleteConfirm(false)} />
+          <div className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 shadow-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-error)]/10">
+                <AlertTriangle className="h-5 w-5 text-[var(--color-error)]" />
+              </div>
+              <div>
+                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">Disconnect Account</h3>
+                <p className="text-caption text-[var(--color-on-dark-soft)]">This action will disconnect the account from Zernio.</p>
+              </div>
+            </div>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
+              Are you sure you want to disconnect <span className="font-medium text-[var(--color-on-dark)]">{account.displayName}</span>?
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90 disabled:opacity-50"
+              >
+                {isDeleting ? "Disconnecting..." : "Disconnect"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

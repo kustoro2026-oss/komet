@@ -6,7 +6,7 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
-import { useAccounts } from "@/lib/zernio/hooks";
+import { useAccounts, useDeleteAccount } from "@/lib/zernio/hooks";
 
 interface ConnectedAccount {
   id: string;
@@ -38,12 +38,21 @@ export default function AccountsPage() {
   const [localAccounts, setLocalAccounts] = useState<ConnectedAccount[] | null>(null);
   const [showExpiredBanner, setShowExpiredBanner] = useState(true);
   const { data: apiAccounts } = useAccounts();
+  const deleteAccountMutation = useDeleteAccount();
+  const [isDeleting, setIsDeleting] = useState(false);
   const t = useTranslations("accountsPage");
   const accounts: ConnectedAccount[] = localAccounts ?? ((apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS);
 
-  const handleDelete = (id: string) => {
-    setLocalAccounts((prev) => (prev ?? accounts).filter((a) => a.id !== id));
-    setDeleteTarget(null);
+  const handleDelete = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      await deleteAccountMutation.mutateAsync(id);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error("Failed to delete account:", err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const filtered = accounts.filter(
@@ -163,7 +172,8 @@ export default function AccountsPage() {
                 </button>
                 <button
                   onClick={() => setDeleteTarget(account.id)}
-                  className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] transition-colors"
+                  disabled={isDeleting}
+                  className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] disabled:opacity-50 transition-colors"
                   title="Delete account"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -279,9 +289,10 @@ export default function AccountsPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90"
+                disabled={isDeleting}
+                className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90 disabled:opacity-50"
               >
-                {t("delete")}
+                {isDeleting ? "Deleting..." : t("delete")}
               </button>
             </div>
           </div>

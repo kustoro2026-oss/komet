@@ -29,6 +29,16 @@ export function useAccounts(profileId?: string) {
   });
 }
 
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: zernio.deleteAccount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "accounts"] });
+    },
+  });
+}
+
 // ===== Posts =====
 export function usePosts(params?: { status?: string; page?: number; limit?: number }) {
   return useQuery({

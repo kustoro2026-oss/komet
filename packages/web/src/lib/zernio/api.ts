@@ -258,6 +258,12 @@ export async function connectBluesky(
   });
 }
 
+export async function deleteAccount(accountId: string) {
+  return request<{ message: string }>(`/accounts/${accountId}`, {
+    method: "DELETE",
+  });
+}
+
 // ===== Media =====
 export interface PresignedUrlResult {
   uploadUrl: string;
