@@ -32,10 +32,9 @@ export default function DashboardLayout({
           "min-h-screen transition-all duration-normal",
           // Mobile: offset for top nav + bottom nav
           "pt-14 pb-14",
-          // Tablet (md): offset for collapsed sidebar
-          "md:ml-[72px] md:pb-0 md:pt-0",
-          // Desktop (lg): offset depends on collapsed state
-          collapsed ? "lg:ml-[72px]" : "lg:ml-[264px]",
+          // Tablet (md) & Desktop (lg): offset depends on collapsed state
+          "md:pb-0 md:pt-0",
+          collapsed ? "md:ml-[72px] lg:ml-[72px]" : "md:ml-[264px] lg:ml-[264px]",
           // Content styling
           "mx-auto max-w-[1280px] p-6",
           "bg-[var(--color-surface-dark)]"
