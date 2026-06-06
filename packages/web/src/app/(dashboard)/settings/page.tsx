@@ -778,8 +778,8 @@ export default function SettingsPage() {
           <p className="px-3 pb-2 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
             Settings
           </p>
-          {SETTINGS_GROUPS.map((group) => (
-            <div key={group.label}>
+          {SETTINGS_GROUPS.map((group, idx) => (
+            <div key={group.label} className={idx > 0 ? "border-t border-[var(--color-ink-muted)] mt-1" : ""}>
               <p className="px-3 pt-3 pb-1.5 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
                 {group.label}
               </p>
