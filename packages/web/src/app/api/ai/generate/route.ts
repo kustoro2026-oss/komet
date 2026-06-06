@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, tone = "professional", length = "medium", platform, systemPrompt } = body;
+    const { prompt, mode, tone = "professional", length = "medium", platform, systemPrompt } = body;
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
@@ -18,6 +18,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Image generation mode — use DALL-E 3
+    if (mode === "image") {
+      const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "dall-e-3",
+          prompt: prompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard",
+          response_format: "b64_json",
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        const err = await imageResponse.json().catch(() => ({}));
+        return NextResponse.json(
+          { error: err.error?.message || "Image generation failed" },
+          { status: imageResponse.status }
+        );
+      }
+
+      const imageData = await imageResponse.json();
+      const b64Json = imageData.data?.[0]?.b64_json;
+      const revisedPrompt = imageData.data?.[0]?.revised_prompt || "";
+
+      if (!b64Json) {
+        return NextResponse.json(
+          { error: "No image data returned" },
+          { status: 500 }
+        );
+      }
+
+      const dataUri = `data:image/png;base64,${b64Json}`;
+
+      return NextResponse.json({
+        content: revisedPrompt || prompt,
+        imageUrl: dataUri,
+        type: "image",
+        usage: imageData.usage,
+      });
+    }
+
+    // Text generation mode — use GPT-4o-mini
     const lengthGuide = {
       short: "1-2 sentences, concise",
       medium: "3-5 sentences, informative",
@@ -66,6 +114,7 @@ Return only the post content, no explanations or quotes.`,
 
     return NextResponse.json({
       content: generatedPost,
+      type: "text",
       usage: data.usage,
     });
   } catch (error) {

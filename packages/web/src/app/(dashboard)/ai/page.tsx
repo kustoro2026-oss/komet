@@ -62,6 +62,8 @@ interface GeneratedResult {
   id: string;
   content: string;
   mode: FeatureMode;
+  imageUrl?: string;
+  type?: "text" | "image";
 }
 
 const FEATURE_HEADERS: Record<FeatureMode, { title: string; icon: typeof Sparkles; desc: string }> = {
@@ -130,8 +132,10 @@ export default function AIPage() {
         }
         return `${instruction}\n\nContent to rewrite:\n${rewriteText}`;
       }
-      case "image":
-        return `Suggest visual content ideas and image concepts for a post about: ${prompt}. Platform: ${platform || "social media"}. Return 5 specific visual ideas with: 1) Image type (photo/illustration/graphic/meme), 2) Description of what to show, 3) Color palette suggestion, 4) Composition tips. Format each idea clearly.`;
+      case "image": {
+        const platformStyle = platform ? `in the visual style, aspect ratio, and aesthetic typical of ${platform}` : "in a modern, professional social-media-friendly style";
+        return `Create a visually striking, high-quality social media image ${platformStyle}. The topic is: "${prompt}". The image should be clean, eye-catching with good composition, vibrant but tasteful colors, and suitable for marketing purposes.`;
+      }
       default:
         return prompt;
     }
@@ -186,6 +190,7 @@ export default function AIPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: buildPrompt(),
+          mode,
           tone,
           length,
           platform: platform || undefined,
@@ -201,7 +206,13 @@ export default function AIPage() {
       const data = await res.json();
       if (data.content) {
         setResults((prev) => [
-          { id: `gen-${Date.now()}`, content: data.content, mode },
+          {
+            id: `gen-${Date.now()}`,
+            content: data.content,
+            mode,
+            imageUrl: data.imageUrl,
+            type: data.type || "text",
+          },
           ...prev,
         ]);
       }
@@ -492,10 +503,25 @@ export default function AIPage() {
                     </span>
                   </div>
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="whitespace-pre-wrap text-body-sm text-[var(--color-on-dark)] leading-relaxed">
-                        {result.content}
-                      </p>
+      <div className="flex-1 min-w-0">
+                      {result.type === "image" && result.imageUrl ? (
+                        <div className="space-y-3">
+                          <div className="relative aspect-square max-w-sm rounded-lg overflow-hidden border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
+                            <img
+                              src={result.imageUrl}
+                              alt={result.content}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <p className="text-caption text-[var(--color-on-dark-soft)] italic">
+                            {result.content}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap text-body-sm text-[var(--color-on-dark)] leading-relaxed">
+                          {result.content}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button
