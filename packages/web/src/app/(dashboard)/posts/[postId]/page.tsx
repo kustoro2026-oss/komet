@@ -162,11 +162,22 @@ export default function PostDetailPage() {
     );
   }
 
+  // Platforms that support editing published posts
+  const EDITABLE_PLATFORMS = ["twitter", "discord"];
+
   // Derive platform details from post data
   const platformAccounts = post.platforms || [];
 
-  // Can the post be edited? All statuses can be edited now (published uses edit endpoint)
-  const canEdit = post.status === "draft" || post.status === "scheduled" || post.status === "published";
+  // Does the published post have supported platforms for editing?
+  const hasEditablePlatforms = platformAccounts.some((p: string) =>
+    EDITABLE_PLATFORMS.includes(p)
+  );
+
+  // Can the post be edited? Published posts need supported platforms
+  const canEdit =
+    post.status === "draft" ||
+    post.status === "scheduled" ||
+    (post.status === "published" && hasEditablePlatforms);
 
   // Determine if this is a published post (needs the edit endpoint instead of update)
   const isPublished = post.status === "published";
@@ -384,24 +395,36 @@ export default function PostDetailPage() {
         {activeTab === "edit" && (
           <div className="space-y-6">
             {/* Published post warning */}
-            {!canEdit && (
+            {!canEdit && !isPublished && (
               <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
                 <div>
                   <p className="text-body-sm font-medium text-amber-400">Post cannot be edited</p>
                   <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-                    Only draft, scheduled, or published posts can be modified. Failed or partial posts cannot be edited.
+                    Failed or partial posts cannot be modified.
                   </p>
                 </div>
               </div>
             )}
-            {isPublished && (
+            {isPublished && !hasEditablePlatforms && (
+              <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+                <div>
+                  <p className="text-body-sm font-medium text-amber-400">Editing not supported for this platform</p>
+                  <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
+                    Published posts can only be edited for: Twitter/X and Discord. This post was published to:
+                    {platformAccounts.length === 0 ? " none" : platformAccounts.map((p: string) => ` ${p}`)}
+                  </p>
+                </div>
+              </div>
+            )}
+            {isPublished && hasEditablePlatforms && (
               <div className="flex items-start gap-3 rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-sky-400" />
                 <div>
                   <p className="text-body-sm font-medium text-sky-400">Editing published post</p>
                   <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-                    Changes will be applied to the published post. Some platform restrictions may apply.
+                    Changes will be applied to the published post. Editing is supported for: Twitter/X and Discord.
                   </p>
                 </div>
               </div>
