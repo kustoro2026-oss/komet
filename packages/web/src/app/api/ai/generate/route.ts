@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
           n: 1,
           size: "1024x1024",
           quality: "standard",
-          response_format: "b64_json",
         }),
       });
 
@@ -45,23 +44,20 @@ export async function POST(request: NextRequest) {
       }
 
       const imageData = await imageResponse.json();
-      const b64Json = imageData.data?.[0]?.b64_json;
+      const imageUrl = imageData.data?.[0]?.url;
       const revisedPrompt = imageData.data?.[0]?.revised_prompt || "";
 
-      if (!b64Json) {
+      if (!imageUrl) {
         return NextResponse.json(
-          { error: "No image data returned" },
+          { error: "No image URL returned" },
           { status: 500 }
         );
       }
 
-      const dataUri = `data:image/png;base64,${b64Json}`;
-
       return NextResponse.json({
         content: revisedPrompt || prompt,
-        imageUrl: dataUri,
+        imageUrl: imageUrl,
         type: "image",
-        usage: imageData.usage,
       });
     }
 
