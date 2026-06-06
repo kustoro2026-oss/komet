@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search } from "lucide-react";
+import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2 } from "lucide-react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
@@ -34,9 +34,16 @@ const FALLBACK_ACCOUNTS = MOCK_ACCOUNTS;
 
 export default function AccountsPage() {
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [localAccounts, setLocalAccounts] = useState<ConnectedAccount[] | null>(null);
   const { data: apiAccounts } = useAccounts();
   const t = useTranslations("accountsPage");
-  const accounts: ConnectedAccount[] = (apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS;
+  const accounts: ConnectedAccount[] = localAccounts ?? ((apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS);
+
+  const handleDelete = (id: string) => {
+    setLocalAccounts((prev) => (prev ?? accounts).filter((a) => a.id !== id));
+    setDeleteTarget(null);
+  };
 
   const filtered = accounts.filter(
     (a) =>
@@ -122,9 +129,18 @@ export default function AccountsPage() {
                 )}
                 {account.isActive ? t("active") : t("expired")}
               </span>
-              <button className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)]">
-                <ExternalLink className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)]">
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setDeleteTarget(account.id)}
+                  className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] transition-colors"
+                  title="Delete account"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Account Info */}
@@ -191,6 +207,49 @@ export default function AccountsPage() {
           ))}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteTarget && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setDeleteTarget(null)} />
+          <div className="fixed left-1/2 top-1/2 z-50 w-80 -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 shadow-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-error)]/10">
+                <AlertTriangle className="h-5 w-5 text-[var(--color-error)]" />
+              </div>
+              <div>
+                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
+                  {t("deleteTitle") || "Delete Account"}
+                </h3>
+                <p className="text-caption text-[var(--color-on-dark-soft)]">
+                  {t("deleteWarning") || "This action cannot be undone"}
+                </p>
+              </div>
+            </div>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
+              {t("deleteConfirm") || "Are you sure you want to delete"}{" "}
+              <span className="font-medium text-[var(--color-on-dark)]">
+                {accounts.find((a) => a.id === deleteTarget)?.displayName}
+              </span>
+              ?
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+              >
+                {t("cancel") || "Cancel"}
+              </button>
+              <button
+                onClick={() => handleDelete(deleteTarget)}
+                className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90"
+              >
+                {t("delete") || "Delete"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
