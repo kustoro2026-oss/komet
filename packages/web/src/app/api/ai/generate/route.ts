@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, tone = "professional", length = "medium", platform } = body;
+    const { prompt, tone = "professional", length = "medium", platform, systemPrompt } = body;
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: "system",
-            content: `You are a professional social media content creator. Generate engaging social media posts. 
+            content: systemPrompt || `You are a professional social media content creator. Generate engaging social media posts. 
 Tone: ${tone}. Length: ${lengthGuide}. ${platformGuide}
 Return only the post content, no explanations or quotes.`,
           },
