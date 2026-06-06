@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2 } from "lucide-react";
+import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2, RefreshCw, X } from "lucide-react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
@@ -36,6 +36,7 @@ export default function AccountsPage() {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [localAccounts, setLocalAccounts] = useState<ConnectedAccount[] | null>(null);
+  const [showExpiredBanner, setShowExpiredBanner] = useState(true);
   const { data: apiAccounts } = useAccounts();
   const t = useTranslations("accountsPage");
   const accounts: ConnectedAccount[] = localAccounts ?? ((apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS);
@@ -50,6 +51,8 @@ export default function AccountsPage() {
       a.displayName.toLowerCase().includes(search.toLowerCase()) ||
       a.username.toLowerCase().includes(search.toLowerCase())
   );
+
+  const expiredCount = accounts.filter((a) => !a.isActive).length;
 
   return (
     <div className="space-y-6">
@@ -96,7 +99,7 @@ export default function AccountsPage() {
         </div>
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
           <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("inactive")}</p>
-          <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-warning)]">{accounts.filter((a) => !a.isActive).length}</p>
+          <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-warning)]">{expiredCount}</p>
         </div>
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
           <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("totalReach")}</p>
@@ -105,6 +108,31 @@ export default function AccountsPage() {
           </p>
         </div>
       </div>
+
+      {/* Expired Accounts Warning Banner */}
+      {showExpiredBanner && expiredCount > 0 && (
+        <div className="rounded-xl border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/5 px-5 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-warning)]" />
+              <div>
+                <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                  {expiredCount} {t("expiredAccounts")}
+                </p>
+                <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
+                  {t("expiredBannerDesc")}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowExpiredBanner(false)}
+              className="shrink-0 rounded-md p-1 text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Accounts Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -171,15 +199,24 @@ export default function AccountsPage() {
 
             {/* Actions */}
             <div className="mt-3 flex gap-2">
-              <button
-                disabled={!account.isActive}
-                className="flex-1 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {t("post")}
-              </button>
-              <button className="flex-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
-                {t("analytics")}
-              </button>
+              {account.isActive ? (
+                <>
+                  <button className="flex-1 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]">
+                    {t("post")}
+                  </button>
+                  <button className="flex-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
+                    {t("analytics")}
+                  </button>
+                </>
+              ) : (
+                <a
+                  href="/accounts/connect"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--color-warning)]/10 px-3 py-1.5 text-button-sm font-medium text-[var(--color-warning)] hover:bg-[var(--color-warning)]/20 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  {t("reconnect")}
+                </a>
+              )}
             </div>
           </div>
         ))}

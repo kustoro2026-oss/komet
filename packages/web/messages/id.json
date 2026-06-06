@@ -167,7 +167,10 @@
     "deleteWarning": "Tindakan ini tidak bisa dibatalkan",
     "deleteConfirm": "Yakin ingin menghapus",
     "cancel": "Batal",
-    "delete": "Hapus"
+    "delete": "Hapus",
+    "reconnect": "Hubungkan Ulang",
+    "expiredAccounts": "akun perlu dihubungkan ulang",
+    "expiredBannerDesc": "Akun-akun ini memiliki token yang kedaluwarsa. Hubungkan ulang untuk melanjutkan posting."
   },
   "analyticsPage": {
     "title": "Analitik",

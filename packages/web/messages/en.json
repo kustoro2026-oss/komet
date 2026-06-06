@@ -167,7 +167,10 @@
     "deleteWarning": "This action cannot be undone",
     "deleteConfirm": "Are you sure you want to delete",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reconnect": "Reconnect",
+    "expiredAccounts": "accounts need reconnection",
+    "expiredBannerDesc": "These accounts have expired tokens. Reconnect them to continue posting."
   },
   "analyticsPage": {
     "title": "Analytics",
