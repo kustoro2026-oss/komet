@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Image generation mode — use DALL-E 3
+    // Image generation mode — use GPT Image model (gpt-image-1)
     if (mode === "image") {
       const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
         method: "POST",
@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "dall-e-3",
+          model: "gpt-image-1",
           prompt: prompt,
           n: 1,
           size: "1024x1024",
-          quality: "standard",
+          quality: "medium",
         }),
       });
 
@@ -44,19 +44,21 @@ export async function POST(request: NextRequest) {
       }
 
       const imageData = await imageResponse.json();
-      const imageUrl = imageData.data?.[0]?.url;
+      const b64Json = imageData.data?.[0]?.b64_json;
       const revisedPrompt = imageData.data?.[0]?.revised_prompt || "";
 
-      if (!imageUrl) {
+      if (!b64Json) {
         return NextResponse.json(
-          { error: "No image URL returned" },
+          { error: "No image data returned" },
           { status: 500 }
         );
       }
 
+      const dataUri = `data:image/png;base64,${b64Json}`;
+
       return NextResponse.json({
         content: revisedPrompt || prompt,
-        imageUrl: imageUrl,
+        imageUrl: dataUri,
         type: "image",
       });
     }
