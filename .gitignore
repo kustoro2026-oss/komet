@@ -33,6 +33,9 @@ yarn-error.log*
 .vercel
 .vercel-tmp
 
+# auto-reply runtime data
+auto-reply-rules.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

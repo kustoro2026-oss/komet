@@ -166,6 +166,47 @@ export interface ZernioMediaUploadResult {
   key: string;
 }
 
+// ===== Zernio Inbox / Comments Types =====
+export interface ZernioComment {
+  id: string;
+  postId: string;
+  accountId: string;
+  platform: Platform;
+  text: string;
+  authorName: string;
+  authorId: string;
+  authorAvatarUrl?: string;
+  createdAt: string;
+  isReply: boolean;
+  parentId?: string;
+  likeCount?: number;
+}
+
+export interface ZernioInboxPost {
+  id: string;
+  platform: Platform;
+  content: string;
+  accountId: string;
+  commentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ===== Auto-Reply Types =====
+export interface AutoReplyLogEntry {
+  id: string;
+  ruleId: string;
+  ruleName: string;
+  commentId: string;
+  commentText: string;
+  authorName: string;
+  platform: Platform;
+  replyText: string;
+  timestamp: string;
+  status: "sent" | "failed" | "skipped";
+  error?: string;
+}
+
 // ===== Workspace Types =====
 export type WorkspaceRole = "admin" | "editor" | "viewer";
 

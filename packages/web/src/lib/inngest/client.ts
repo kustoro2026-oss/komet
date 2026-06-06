@@ -35,6 +35,10 @@ export interface AccountExpiringPayload {
   daysUntilExpiry: number;
 }
 
+export interface AutoReplyCheckPayload {
+  timestamp: string;
+}
+
 // ===== Functions =====
 export const handlePostScheduled = inngest.createFunction(
   { id: "handle-post-scheduled", name: "Publish scheduled post" },
@@ -89,5 +93,81 @@ export const handleAccountExpiring = inngest.createFunction(
         `[Inngest] Account ${accountId} (${platform}) expires in ${daysUntilExpiry} days`
       );
     });
+  }
+);
+
+// ===== Cron Jobs =====
+export const handleAutoReplyCheck = inngest.createFunction(
+  { id: "auto-reply-check", name: "Process auto-reply rules" },
+  { cron: "*/15 * * * *" },
+  async ({ step }) => {
+    const result = await step.run("process-auto-replies", async () => {
+      const apiKey = process.env.ZERNIO_API_KEY;
+      if (!apiKey) {
+        return { status: "skipped", reason: "Zernio API key not configured" };
+      }
+
+      try {
+        // Load server-side rules configuration (auto-reply-rules.json in project root)
+        const fs = await import("fs/promises");
+        const path = await import("path");
+        const rulesPath = path.join(process.cwd(), "auto-reply-rules.json");
+        
+        let serverRules: {
+          id: string;
+          name: string;
+          trigger: { type: string; keywords?: string[] };
+          reply: string;
+          platforms: string[];
+          source: string;
+          isActive: boolean;
+          createdAt: string;
+        }[] = [];
+        try {
+          const raw = await fs.readFile(rulesPath, "utf-8");
+          serverRules = JSON.parse(raw);
+        } catch {
+          return {
+            status: "skipped",
+            reason: "No server-side rules configured. Create rules via the Auto-Reply dashboard or add auto-reply-rules.json",
+          };
+        }
+
+        if (!serverRules.length) {
+          return { status: "skipped", reason: "No active rules to process" };
+        }
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const { ZernioClient } = await import("@komet/zernio-client");
+        const client = new ZernioClient(apiKey);
+
+        // Get connected accounts
+        const accounts = await client.listAccounts().catch(() => []);
+        const accountIds = accounts.map((a: { id: string }) => a.id);
+
+        const response = await fetch(`${appUrl}/api/auto-reply/process`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rules: serverRules,
+            accountIds,
+          }),
+        });
+
+        const data = await response.json();
+        return {
+          status: "completed",
+          repliesSent: data.totalProcessed || 0,
+          log: data.log || [],
+        };
+      } catch (err) {
+        return {
+          status: "error",
+          error: err instanceof Error ? err.message : "Unknown error",
+        };
+      }
+    });
+
+    return result;
   }
 );

@@ -375,6 +375,27 @@ export class ZernioClient {
   }
 
   // ===== COMMENTS & INBOX =====
+  async listInboxPosts(params?: {
+    platform?: string;
+    accountId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ posts: any[]; pagination: ZernioPagination }> {
+    return this.request("/inbox/posts", { params: params as any });
+  }
+
+  async listInboxComments(postId: string, params?: { accountId?: string; page?: number; limit?: number }): Promise<{ comments: any[]; pagination: ZernioPagination }> {
+    return this.request(`/inbox/comments/${postId}`, { params: params as any });
+  }
+
+  async replyToInboxComment(postId: string, accountId: string, commentId: string, message: string): Promise<void> {
+    return this.request(`/inbox/comments/${postId}`, { method: "POST", body: { accountId, commentId, message } });
+  }
+
+  async hideInboxComment(postId: string, commentId: string, accountId: string): Promise<void> {
+    return this.request(`/inbox/comments/${postId}/${commentId}/hide`, { method: "POST", body: { accountId } });
+  }
+
   async listComments(params?: {
     platform?: string;
     postId?: string;
