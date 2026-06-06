@@ -5,11 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import {
   ArrowLeft, Calendar, Clock, Edit3, Eye, History, Save, Send, Trash2,
-  Check, AlertTriangle, Loader2, Hash, X
+  Check, AlertTriangle, Loader2, Hash, X, MinusCircle
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { usePost, useUpdatePost, useEditPost, useDeletePost } from "@/lib/zernio/hooks";
+import { usePost, useUpdatePost, useEditPost, useDeletePost, useUnpublishPost } from "@/lib/zernio/hooks";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
@@ -32,6 +32,7 @@ export default function PostDetailPage() {
   const updatePostMutation = useUpdatePost();
   const editPostMutation = useEditPost();
   const deletePostMutation = useDeletePost();
+  const unpublishPostMutation = useUnpublishPost();
 
   // UI State
   const [activeTab, setActiveTab] = useState<Tab>("preview");
@@ -46,6 +47,10 @@ export default function PostDetailPage() {
   // Delete state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Unpublish state
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
+  const [isUnpublishing, setIsUnpublishing] = useState(false);
 
   // Sync edit state when post loads
   useEffect(() => {
@@ -72,6 +77,20 @@ export default function PostDetailPage() {
       console.error("Failed to delete post:", err);
       setIsDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  };
+
+  // Unpublish handler
+  const handleUnpublish = async () => {
+    setIsUnpublishing(true);
+    try {
+      await unpublishPostMutation.mutateAsync(postId);
+      setShowUnpublishConfirm(false);
+      setIsUnpublishing(false);
+    } catch (err) {
+      console.error("Failed to unpublish post:", err);
+      setIsUnpublishing(false);
+      setShowUnpublishConfirm(false);
     }
   };
 
@@ -237,6 +256,53 @@ export default function PostDetailPage() {
         </div>
       )}
 
+      {/* Unpublish Confirmation Dialog */}
+      {showUnpublishConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isUnpublishing && setShowUnpublishConfirm(false)} />
+          <div className="relative z-10 mx-4 w-full max-w-md rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6 shadow-2xl">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
+                <MinusCircle className="h-5 w-5 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">Unpublish Post</h3>
+                <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                  This will unpublish the post from all platforms. After unpublishing, the post status will change to draft and you will be able to edit or delete it.
+                </p>
+                {post.title && (
+                  <p className="mt-2 text-body-sm text-[var(--color-on-dark)] font-medium">
+                    &quot;{post.title}&quot;
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowUnpublishConfirm(false)}
+                disabled={isUnpublishing}
+                className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUnpublish}
+                disabled={isUnpublishing}
+                className="rounded-lg bg-amber-500 px-4 py-2 text-button-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+              >
+                {isUnpublishing ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Unpublishing...
+                  </span>
+                ) : (
+                  "Unpublish"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Back button */}
       <a
         href="/posts"
@@ -278,6 +344,15 @@ export default function PostDetailPage() {
             >
               <Trash2 className="h-4 w-4" />
               Delete
+            </button>
+          )}
+          {isPublished && (
+            <button
+              onClick={() => setShowUnpublishConfirm(true)}
+              className="flex items-center gap-2 rounded-lg border border-amber-500/20 px-3 py-2 text-button-sm text-amber-400 hover:bg-amber-500/10"
+            >
+              <MinusCircle className="h-4 w-4" />
+              Unpublish
             </button>
           )}
         </div>

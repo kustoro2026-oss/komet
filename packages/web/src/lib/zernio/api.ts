@@ -233,6 +233,12 @@ export async function deletePost(postId: string) {
   });
 }
 
+export async function unpublishPost(postId: string) {
+  return request<{ id: string; status: string }>(`/posts/${postId}/unpublish`, {
+    method: "POST",
+  });
+}
+
 // ===== OAuth =====
 export async function startOAuth(platform: string, profileId: string, redirectUrl?: string) {
   return request<{ authUrl: string; state: string }>(`/connect/${platform}`, {

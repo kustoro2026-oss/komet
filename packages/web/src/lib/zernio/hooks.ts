@@ -89,6 +89,16 @@ export function useDeletePost() {
   });
 }
 
+export function useUnpublishPost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: zernio.unpublishPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "posts"] });
+    },
+  });
+}
+
 // ===== Usage =====
 export function useUsageStats() {
   return useQuery({
