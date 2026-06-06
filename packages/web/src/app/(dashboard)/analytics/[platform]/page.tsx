@@ -182,14 +182,14 @@ export default function PlatformAnalyticsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="flex items-center gap-6">
           <Link
             href="/analytics"
             className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Analytics
           </Link>
-          <h1 className="mt-6 inline-flex items-center gap-2 font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
+          <h1 className="inline-flex items-center gap-2 font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
             <PlatformIcon platform={platform as Platform} className="h-7 w-7" />
             {platformLabel} Analytics
           </h1>
