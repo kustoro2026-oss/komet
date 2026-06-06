@@ -751,7 +751,7 @@ export default function SettingsPage() {
   const showSave = EDITABLE_TABS.has(activeTab);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col md:flex-row gap-6">
       {/* ── MOBILE (< md): Horizontal tab chips ── */}
       <div className="md:hidden -mx-4 px-4 pb-1 overflow-x-auto scrollbar-none">
         <div className="flex gap-1.5 min-w-max">
