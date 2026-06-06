@@ -179,6 +179,9 @@ export default function PostDetailPage() {
     post.status === "scheduled" ||
     (post.status === "published" && hasEditablePlatforms);
 
+  // Can the post be deleted? Published posts cannot be deleted via API
+  const canDelete = post.status !== "published";
+
   // Determine if this is a published post (needs the edit endpoint instead of update)
   const isPublished = post.status === "published";
 
@@ -196,7 +199,10 @@ export default function PostDetailPage() {
               <div className="flex-1">
                 <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">Delete Post</h3>
                 <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                  Are you sure you want to delete this post? This action cannot be undone.
+                  {isPublished
+                    ? "Published posts cannot be deleted. Please unpublish the post first before deleting."
+                    : "Are you sure you want to delete this post? This action cannot be undone."
+                  }
                 </p>
                 {post.title && (
                   <p className="mt-2 text-body-sm text-[var(--color-on-dark)] font-medium">
@@ -265,13 +271,15 @@ export default function PostDetailPage() {
             <Edit3 className="h-4 w-4" />
             Edit
           </button>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="flex items-center gap-2 rounded-lg border border-red-500/20 px-3 py-2 text-button-sm text-red-400 hover:bg-red-500/10"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 rounded-lg border border-red-500/20 px-3 py-2 text-button-sm text-red-400 hover:bg-red-500/10"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
