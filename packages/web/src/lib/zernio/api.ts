@@ -287,8 +287,8 @@ export async function getAccountAnalytics(
   platform: string,
   dateRange?: { from: string; to: string }
 ) {
-  return request<ZernioAnalytics>(`/analytics/accounts/${accountId}`, {
-    params: { platform, dateFrom: dateRange?.from, dateTo: dateRange?.to },
+  return request<ZernioAnalytics>(`/analytics/account/${accountId}`, {
+    params: { platform, startDate: dateRange?.from, endDate: dateRange?.to },
   });
 }
 
