@@ -4,7 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
-// Use /tmp for Vercel serverless compatibility (only /tmp is writable)
+// Force dynamic — Vercel static routes reject PUT
+// Also use /tmp for Vercel serverless (only /tmp is writable)
+export const dynamic = "force-dynamic";
 const RULES_FILE = path.join("/tmp", "auto-reply-rules.json");
 
 export async function GET() {
