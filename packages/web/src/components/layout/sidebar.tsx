@@ -72,7 +72,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
-    } catch (_) {
+    } catch {
       // proceed to redirect even if signOut fails
     }
     router.push("/login");
