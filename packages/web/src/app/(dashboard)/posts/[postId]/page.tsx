@@ -70,6 +70,10 @@ export default function PostDetailPage() {
 
   // Delete handler
   const handleDelete = async () => {
+    if (!post || (post.status !== "draft" && post.status !== "scheduled")) {
+      setShowDeleteConfirm(false);
+      return;
+    }
     setIsDeleting(true);
     try {
       await deletePostMutation.mutateAsync(postId);
@@ -208,8 +212,8 @@ export default function PostDetailPage() {
     post.status === "scheduled" ||
     (post.status === "published" && hasEditablePlatforms);
 
-  // Can the post be deleted? Published posts cannot be deleted via API
-  const canDelete = post.status !== "published";
+  // Can the post be deleted? Only draft and scheduled posts can be deleted via API
+  const canDelete = post.status === "draft" || post.status === "scheduled";
 
   // Determine if this is a published post (needs the edit endpoint instead of update)
   const isPublished = post.status === "published";

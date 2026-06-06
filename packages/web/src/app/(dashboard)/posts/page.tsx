@@ -237,13 +237,15 @@ function PostCard({
                   </button>
                 )}
                 <div className="mx-3 my-1 h-px bg-[var(--color-ink-muted)]" />
-                <button
-                  onClick={() => { setMenuOpen(false); onDelete(post.id); }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-body-sm text-red-400 hover:bg-red-500/10"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Post
-                </button>
+                {(post.status === "draft" || post.status === "scheduled") && (
+                  <button
+                    onClick={() => { setMenuOpen(false); onDelete(post.id); }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-body-sm text-red-400 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Post
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -315,16 +317,18 @@ function PostCard({
                 <Edit3 className="h-3.5 w-3.5" />
               </button>
             )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(post.id);
-              }}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-on-dark-muted)] hover:bg-red-500/10 hover:text-red-400 transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            {(post.status === "draft" || post.status === "scheduled") && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(post.id);
+                }}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-on-dark-muted)] hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -429,6 +433,11 @@ export default function PostsPage() {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
+    const targetPost = allPostsRaw.find((p) => p.id === deleteTarget);
+    if (targetPost && targetPost.status !== "draft" && targetPost.status !== "scheduled") {
+      setDeleteTarget(null);
+      return;
+    }
     try {
       await deletePostMutation.mutateAsync(deleteTarget);
     } catch (err) {
