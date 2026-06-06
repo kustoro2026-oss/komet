@@ -220,6 +220,13 @@ export async function updatePost(postId: string, data: UpdatePostData) {
   });
 }
 
+export async function editPost(postId: string, data: UpdatePostData) {
+  return request<{ id: string; status: string }>(`/posts/${postId}/edit`, {
+    method: "POST",
+    body: data,
+  });
+}
+
 export async function deletePost(postId: string) {
   return request<{ success: boolean }>(`/posts/${postId}`, {
     method: "DELETE",

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { usePost, useUpdatePost, useDeletePost } from "@/lib/zernio/hooks";
+import { usePost, useUpdatePost, useEditPost, useDeletePost } from "@/lib/zernio/hooks";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
@@ -30,6 +30,7 @@ export default function PostDetailPage() {
   // Data
   const { data: post, isLoading, isError, error } = usePost(postId);
   const updatePostMutation = useUpdatePost();
+  const editPostMutation = useEditPost();
   const deletePostMutation = useDeletePost();
 
   // UI State
@@ -82,15 +83,27 @@ export default function PostDetailPage() {
     setSaveSuccess(false);
 
     try {
-      await updatePostMutation.mutateAsync({
-        postId,
-        data: {
-          title: editTitle || undefined,
-          content: editContent,
-          hashtags: editHashtags.length > 0 ? editHashtags : undefined,
-          publishNow,
-        },
-      });
+      if (isPublished) {
+        await editPostMutation.mutateAsync({
+          postId,
+          data: {
+            title: editTitle || undefined,
+            content: editContent,
+            hashtags: editHashtags.length > 0 ? editHashtags : undefined,
+            publishNow,
+          },
+        });
+      } else {
+        await updatePostMutation.mutateAsync({
+          postId,
+          data: {
+            title: editTitle || undefined,
+            content: editContent,
+            hashtags: editHashtags.length > 0 ? editHashtags : undefined,
+            publishNow,
+          },
+        });
+      }
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -151,6 +164,12 @@ export default function PostDetailPage() {
 
   // Derive platform details from post data
   const platformAccounts = post.platforms || [];
+
+  // Can the post be edited? All statuses can be edited now (published uses edit endpoint)
+  const canEdit = post.status === "draft" || post.status === "scheduled" || post.status === "published";
+
+  // Determine if this is a published post (needs the edit endpoint instead of update)
+  const isPublished = post.status === "published";
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -364,6 +383,30 @@ export default function PostDetailPage() {
         {/* ===== Edit Tab ===== */}
         {activeTab === "edit" && (
           <div className="space-y-6">
+            {/* Published post warning */}
+            {!canEdit && (
+              <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+                <div>
+                  <p className="text-body-sm font-medium text-amber-400">Post cannot be edited</p>
+                  <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
+                    Only draft, scheduled, or published posts can be modified. Failed or partial posts cannot be edited.
+                  </p>
+                </div>
+              </div>
+            )}
+            {isPublished && (
+              <div className="flex items-start gap-3 rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-sky-400" />
+                <div>
+                  <p className="text-body-sm font-medium text-sky-400">Editing published post</p>
+                  <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
+                    Changes will be applied to the published post. Some platform restrictions may apply.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Title */}
             <div>
               <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">Title</label>
@@ -372,7 +415,8 @@ export default function PostDetailPage() {
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Post title (optional)"
-                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                disabled={!canEdit}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -383,8 +427,9 @@ export default function PostDetailPage() {
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 rows={8}
+                disabled={!canEdit}
                 placeholder="Write your post content here..."
-                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-y min-h-[200px]"
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-y min-h-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] text-right">
                 {editContent.length} characters
@@ -404,29 +449,33 @@ export default function PostDetailPage() {
                     className="inline-flex items-center gap-1 rounded-full bg-[var(--color-primary)]/10 px-2.5 py-1 text-caption text-[var(--color-primary-light)]"
                   >
                     #{tag}
-                    <button onClick={() => removeHashtag(tag)} className="hover:text-red-400 transition-colors">
-                      <X className="h-3 w-3" />
-                    </button>
+                    {canEdit && (
+                      <button onClick={() => removeHashtag(tag)} className="hover:text-red-400 transition-colors">
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </span>
                 ))}
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={editHashtagInput}
-                  onChange={(e) => setEditHashtagInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addHashtag())}
-                  placeholder="Add hashtag..."
-                  className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                />
-                <button
-                  onClick={addHashtag}
-                  disabled={!editHashtagInput.trim()}
-                  className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
-                >
-                  Add
-                </button>
-              </div>
+              {canEdit && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editHashtagInput}
+                    onChange={(e) => setEditHashtagInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addHashtag())}
+                    placeholder="Add hashtag..."
+                    className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  />
+                  <button
+                    onClick={addHashtag}
+                    disabled={!editHashtagInput.trim()}
+                    className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Save status */}
@@ -444,34 +493,36 @@ export default function PostDetailPage() {
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--color-ink-muted)]">
-              <button
-                onClick={() => handleSave(false)}
-                disabled={isSaving}
-                className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save Changes
-              </button>
-              {post.status === "draft" && (
+            {canEdit && (
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--color-ink-muted)]">
                 <button
-                  onClick={() => handleSave(true)}
+                  onClick={() => handleSave(false)}
                   disabled={isSaving}
-                  className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
                 >
                   {isSaving ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Send className="h-4 w-4" />
+                    <Save className="h-4 w-4" />
                   )}
-                  Save &amp; Publish
+                  Save Changes
                 </button>
-              )}
-            </div>
+                {post.status === "draft" && (
+                  <button
+                    onClick={() => handleSave(true)}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    Save &amp; Publish
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 

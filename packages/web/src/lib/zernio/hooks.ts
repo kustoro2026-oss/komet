@@ -67,6 +67,17 @@ export function useUpdatePost() {
   });
 }
 
+export function useEditPost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, data }: { postId: string; data: zernio.UpdatePostData }) =>
+      zernio.editPost(postId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["zernio", "posts"] });
+    },
+  });
+}
+
 export function useDeletePost() {
   const queryClient = useQueryClient();
   return useMutation({
