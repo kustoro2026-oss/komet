@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       customHeaders: w.customHeaders as Record<string, string> | undefined,
       isActive: w.isActive,
       failureCount: w.failureCount,
-      lastFiredAt: w.lastDeliveryAt?.toISOString(),
+      lastFiredAt: (w.lastDeliveryAt as Date | null)?.toISOString(),
     }));
 
     return NextResponse.json({ webhooks: mapped });
