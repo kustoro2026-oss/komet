@@ -2,7 +2,7 @@
 // GET  /api/team/invitation/[token] → validate invitation (check status, expired?)
 // POST /api/team/invitation/[token] → accept invitation
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 
 export const dynamic = "force-dynamic";

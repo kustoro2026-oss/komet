@@ -2,7 +2,7 @@
 // PATCH  /api/team/[memberId] → change role
 // DELETE /api/team/[memberId] → remove member
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 
 export const dynamic = "force-dynamic";

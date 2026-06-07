@@ -2,7 +2,7 @@
 // GET  /api/team?workspaceId=xxx → list members
 // POST /api/team → invite new member
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 import { emailService } from "@komet/email";
 import { randomUUID } from "crypto";
