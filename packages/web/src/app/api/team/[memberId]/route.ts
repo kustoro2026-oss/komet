@@ -27,6 +27,10 @@ async function getAuthenticatedUserId(request: NextRequest): Promise<string | nu
   }
 }
 
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { memberId: string } }
