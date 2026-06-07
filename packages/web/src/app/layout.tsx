@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/lib/query-provider";
+import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -29,6 +30,31 @@ export const metadata: Metadata = {
   title: "Komet — Social Media Scheduling Platform",
   description:
     "Your content blasts to every platform in a flash. A 3-in-1 social media scheduling platform for creators, teams, and developers.",
+  manifest: "/manifest.json",
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Komet",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/komet-icon.svg",
+    other: [
+      {
+        rel: "apple-touch-icon-precomposed",
+        url: "/komet-icon.svg",
+      },
+    ],
+  },
+  openGraph: {
+    title: "Komet — Social Media Scheduling Platform",
+    description:
+      "Your content blasts to every platform in a flash. A 3-in-1 social media scheduling platform for creators, teams, and developers.",
+    siteName: "Komet",
+    type: "website",
+  },
 };
 
 export default async function RootLayout({
@@ -48,6 +74,7 @@ export default async function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             <AuthProvider>
               <QueryProvider>
+                <ServiceWorkerRegister />
                 {children}
               </QueryProvider>
             </AuthProvider>

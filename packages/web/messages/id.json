@@ -83,7 +83,9 @@
     "mostPopular": "Paling Populer",
     "getStarted": "Mulai",
     "perMonth": "/bln",
-    "allRightsReserved": "Hak cipta dilindungi."
+    "allRightsReserved": "Hak cipta dilindungi.",
+    "mobileApp": "Aplikasi Mobile",
+    "mobileAppDesc": "Instal Komet di ponsel Anda untuk pengalaman seperti aplikasi native"
   },
   "dashboard": {
     "title": "Beranda",
@@ -239,6 +241,10 @@
     "apiKeys": "Kunci API",
     "billing": "Penagihan",
     "webhooks": "Webhooks",
+    "mobileApp": "Aplikasi Mobile",
+    "installApp": "Instal Aplikasi",
+    "installAppDesc": "Instal Komet sebagai aplikasi",
+    "addToHomeScreen": "Tambah ke Layar Utama",
     "profileSettings": "Pengaturan Profil",
     "saveChanges": "Simpan Perubahan"
   },
@@ -255,6 +261,10 @@
     "filter": "Filter",
     "noData": "Tidak ada data",
     "comingSoon": "Segera Hadir",
+    "installApp": "Instal Aplikasi",
+    "app": "Aplikasi",
+    "mobileFeatures": "Fitur Mobile",
+    "pwa": "PWA",
     "newWorkspace": "Workspace Baru",
     "lightMode": "Mode Terang",
     "darkMode": "Mode Gelap",

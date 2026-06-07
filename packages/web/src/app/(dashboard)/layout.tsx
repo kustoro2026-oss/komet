@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopNav } from "@/components/layout/top-nav";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { PwaInstallBanner } from "@/components/layout/pwa-install-banner";
 import { useSidebarStore } from "@/stores/sidebar-store";
 
 export default function DashboardLayout({
@@ -42,6 +43,9 @@ export default function DashboardLayout({
       >
         {children}
       </main>
+
+      {/* PWA Install Banner */}
+      <PwaInstallBanner />
 
       {/* Bottom Navigation - Mobile only */}
       <BottomNav />

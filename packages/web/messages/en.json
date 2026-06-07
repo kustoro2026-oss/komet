@@ -83,7 +83,9 @@
     "mostPopular": "Most Popular",
     "getStarted": "Get Started",
     "perMonth": "/mo",
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "All rights reserved.",
+   "mobileApp": "Mobile App",
+    "mobileAppDesc": "Install Komet on your phone for a native-like experience"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -239,6 +241,10 @@
     "apiKeys": "API Keys",
     "billing": "Billing",
     "webhooks": "Webhooks",
+   "mobileApp": "Mobile App",
+    "installApp": "Install App",
+    "installAppDesc": "Install Komet as an app",
+    "addToHomeScreen": "Add to Home Screen",
     "profileSettings": "Profile Settings",
     "saveChanges": "Save Changes"
   },
@@ -255,6 +261,10 @@
     "filter": "Filter",
     "noData": "No data available",
     "comingSoon": "Coming Soon",
+   "installApp": "Install App",
+    "app": "App",
+    "mobileFeatures": "Mobile Features",
+    "pwa": "PWA",
     "newWorkspace": "New Workspace",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
