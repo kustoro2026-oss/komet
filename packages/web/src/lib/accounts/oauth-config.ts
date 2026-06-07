@@ -146,7 +146,7 @@ register({
   authorizeUrl: "https://www.facebook.com/dialog/oauth",
   tokenUrl: "https://graph.facebook.com/v19.0/oauth/access_token",
   profileUrl: "https://graph.facebook.com/v19.0/me",
-  scopes: ["pages_manage_posts", "pages_read_engagement", "pages_show_list", "public_profile"],
+  scopes: ["public_profile", "email"],
   tokenAuth: "body",
   clientIdEnv: "FACEBOOK_CLIENT_ID",
   clientSecretEnv: "FACEBOOK_CLIENT_SECRET",
