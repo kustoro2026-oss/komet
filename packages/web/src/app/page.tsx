@@ -406,11 +406,11 @@ export default function LandingPage() {
             <SectionLabel>Integrations</SectionLabel>
             <h2 className="mt-4 font-display text-2xl sm:text-3xl font-bold text-[var(--color-on-dark)]">Connect your favorite platforms</h2>
           </motion.div>
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-10 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 md:grid-cols-5">
             {allPlatforms.map((p, i) => (
-              <motion.div key={p.id} variants={fadeUp} custom={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 transition-colors hover:border-white/[0.12]">
-                <PlatformIcon platform={p.id} className="h-5 w-5 shrink-0" />
-                <span className="truncate text-sm text-[var(--color-on-dark-soft)]">{p.label}</span>
+              <motion.div key={p.id} variants={fadeUp} custom={i} className="flex items-center gap-2 sm:gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-2.5 sm:px-4 py-3 sm:py-3.5 transition-colors hover:border-white/[0.12] min-w-0">
+                <PlatformIcon platform={p.id} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                <span className="truncate text-xs sm:text-sm text-[var(--color-on-dark-soft)]">{p.label}</span>
               </motion.div>
             ))}
           </motion.div>
