@@ -66,7 +66,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Map to match the shape expected by analytics pages
-    const mappedAccounts = socialAccounts.map((a) => ({
+    const mappedAccounts = (socialAccounts as Array<{
+      id: string;
+      platform: string;
+      username: string;
+      displayName: string | null;
+      avatarUrl: string | null;
+      isActive: boolean;
+    }>).map((a) => ({
       id: a.id,
       platform: a.platform,
       username: a.username,
@@ -75,7 +82,16 @@ export async function GET(request: NextRequest) {
       isActive: a.isActive,
     }));
 
-    const mappedPosts = posts.map((p) => ({
+    const mappedPosts = (posts as Array<{
+      id: string;
+      content: string;
+      title: string | null;
+      status: string;
+      scheduledFor: Date | null;
+      createdAt: Date;
+      tags: unknown;
+      platforms: Array<{ platform: string }>;
+    }>).map((p) => ({
       id: p.id,
       content: p.content,
       title: p.title || undefined,
