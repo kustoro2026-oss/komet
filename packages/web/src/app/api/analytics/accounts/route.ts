@@ -40,7 +40,14 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const mappedAccounts = socialAccounts.map((a) => ({
+    const mappedAccounts = (socialAccounts as Array<{
+      id: string;
+      platform: string;
+      username: string;
+      displayName: string | null;
+      avatarUrl: string | null;
+      isActive: boolean;
+    }>).map((a) => ({
       id: a.id,
       platform: a.platform,
       username: a.username,
