@@ -11,7 +11,6 @@
   "scripts": {},
   "dependencies": {
     "@komet/shared": "workspace:*",
-    "@komet/zernio-client": "workspace:*",
     "@komet/db": "workspace:*",
     "@komet/auth": "workspace:*"
   }

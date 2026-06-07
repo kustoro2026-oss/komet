@@ -1,0 +1,101 @@
+﻿  Γû▓ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/(dashboard)/accounts/[accountId]/page.tsx
+78:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/ai/page.tsx
+522:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/page.tsx
+302:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/posts/create/page.tsx
+184:6  Warning: React Hook useEffect has missing dependencies: 'composerState.hashtags' and 'composerState.platforms'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+node : 
+At line:1 char:62
++ ... ackages\web'; 
+node node_modules\next
+\dist\bin\next build 
+2>&1 | Out-F ...
++                   ~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (:String) [   
+ ], RemoteExceptio    
+n
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+> Build error occurred
+Error: ENOENT: no 
+such file or 
+directory, open 'C:\Us
+ers\FSD\Downloads\tool
+\project\komet\package
+s\web\.next\server\pag
+es-manifest.json'
+    at async open (nod
+e:internal/fs/promises
+:642:25)
+    at async 
+Object.readFile (node:
+internal/fs/promises:1
+279:14)
+    at async 
+readManifest (C:\Users
+\FSD\Downloads\tool\pr
+oject\komet\node_modul
+es\.pnpm\next@14.2.35_
+@opentelemetry_c9b05f6
+af5e11bd2cceb5cc818a25
+3d7\node_modules\next\
+dist\build\index.js:16
+5:23)
+    at async C:\Users\
+FSD\Downloads\tool\pro
+ject\komet\node_module
+s\.pnpm\next@14.2.35_@
+opentelemetry_c9b05f6a
+f5e11bd2cceb5cc818a253
+d7\node_modules\next\d
+ist\build\index.js:104
+3:35
+    at async 
+Span.traceAsyncFn (C:\
+Users\FSD\Downloads\to
+ol\project\komet\node_
+modules\.pnpm\next@14.
+2.35_@opentelemetry_c9
+b05f6af5e11bd2cceb5cc8
+18a253d7\node_modules\
+next\dist\trace\trace.
+js:154:20)
+    at async build (C:
+\Users\FSD\Downloads\t
+ool\project\komet\node
+_modules\.pnpm\next@14
+.2.35_@opentelemetry_c
+9b05f6af5e11bd2cceb5cc
+818a253d7\node_modules
+\next\dist\build\index
+.js:368:9) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\FS
+D\\Downloads\\tool\\pr
+oject\\komet\\packages
+\\web\\.next\\server\\
+pages-manifest.json'
+}

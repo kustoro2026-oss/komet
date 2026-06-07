@@ -32,9 +32,6 @@ importers:
       '@komet/shared':
         specifier: workspace:*
         version: link:../shared
-      '@komet/zernio-client':
-        specifier: workspace:*
-        version: link:../zernio-client
 
   packages/audit:
     dependencies:
@@ -134,9 +131,6 @@ importers:
       '@komet/shared':
         specifier: workspace:*
         version: link:../shared
-      '@komet/zernio-client':
-        specifier: workspace:*
-        version: link:../zernio-client
       '@radix-ui/react-switch':
         specifier: ^1.2.6
         version: 1.2.6(@types/react-dom@18.3.7(@types/react@18.3.30))(@types/react@18.3.30)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -246,12 +240,6 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@edge-runtime/vm@3.2.0)(@types/node@20.19.41)
-
-  packages/zernio-client:
-    dependencies:
-      '@komet/shared':
-        specifier: workspace:*
-        version: link:../shared
 
 packages:
 
