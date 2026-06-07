@@ -1,7 +1,7 @@
 // API Route: Team Invitations List
 // GET /api/team/invitation?workspaceId=xxx → list pending invitations
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@komet/db";
+import { prisma } from "@/lib/prisma";
 import { createSupabaseClient } from "@komet/auth";
 
 export const dynamic = "force-dynamic";
