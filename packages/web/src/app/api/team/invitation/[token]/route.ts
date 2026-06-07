@@ -2,7 +2,6 @@
 // GET  /api/team/invitation/[token] → validate invitation (check status, expired?)
 // POST /api/team/invitation/[token] → accept invitation
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +27,7 @@ export async function GET(
   const { token } = params;
 
   try {
+    const { prisma } = await import("@komet/db");
     const invitation = await prisma.teamInvitation.findUnique({
       where: { token },
       include: {
@@ -99,6 +99,7 @@ export async function POST(
   const { token } = params;
 
   try {
+    const { prisma } = await import("@komet/db");
     // Find the Komet user
     const user = await prisma.user.findUnique({
       where: { supabaseId },

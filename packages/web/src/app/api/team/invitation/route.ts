@@ -1,7 +1,6 @@
 // API Route: Team Invitations List
 // GET /api/team/invitation?workspaceId=xxx → list pending invitations
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +15,7 @@ async function getAuthenticatedUserId(request: NextRequest): Promise<string | nu
     const { data } = await supabase.auth.getUser(token);
     if (!data.user) return null;
 
+    const { prisma } = await import("@komet/db");
     const user = await prisma.user.findUnique({
       where: { supabaseId: data.user.id },
       select: { id: true },
@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { prisma } = await import("@komet/db");
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: { workspaceId, userId },

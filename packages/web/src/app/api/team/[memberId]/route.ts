@@ -2,7 +2,6 @@
 // PATCH  /api/team/[memberId] → change role
 // DELETE /api/team/[memberId] → remove member
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +16,7 @@ async function getAuthenticatedUserId(request: NextRequest): Promise<string | nu
     const { data } = await supabase.auth.getUser(token);
     if (!data.user) return null;
 
+    const { prisma } = await import("@komet/db");
     const user = await prisma.user.findUnique({
       where: { supabaseId: data.user.id },
       select: { id: true },
@@ -43,6 +43,7 @@ export async function PATCH(
   const { memberId } = params;
 
   try {
+    const { prisma } = await import("@komet/db");
     const body = await request.json();
     const { role } = body as { role: string };
 
@@ -101,6 +102,7 @@ export async function DELETE(
   const { memberId } = params;
 
   try {
+    const { prisma } = await import("@komet/db");
     // Get the target member to check workspace
     const targetMember = await prisma.workspaceMember.findUnique({
       where: { id: memberId },

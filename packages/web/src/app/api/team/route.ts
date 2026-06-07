@@ -2,7 +2,6 @@
 // GET  /api/team?workspaceId=xxx → list members
 // POST /api/team → invite new member
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 import { emailService } from "@komet/email";
 import { randomUUID } from "crypto";
@@ -20,7 +19,7 @@ async function getAuthenticatedUserId(request: NextRequest): Promise<string | nu
     const { data } = await supabase.auth.getUser(token);
     if (!data.user) return null;
 
-    // Find Komet user by Supabase ID
+    const { prisma } = await import("@komet/db");
     const user = await prisma.user.findUnique({
       where: { supabaseId: data.user.id },
       select: { id: true },
@@ -45,6 +44,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const { prisma } = await import("@komet/db");
     // Verify user is a member of this workspace
     const membership = await prisma.workspaceMember.findUnique({
       where: {
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const { prisma } = await import("@komet/db");
     const body = await request.json();
     const { workspaceId, email, role } = body as {
       workspaceId: string;
