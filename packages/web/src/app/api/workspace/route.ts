@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,66 +8,53 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = getSupabaseAdmin();
+    const { prisma } = await import("@komet/db");
+
+    const kometUser = await prisma.user.findUnique({
+      where: { supabaseId: user.id },
+      select: { id: true },
+    });
+
+    if (!kometUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
     // Workspaces where user is owner
-    const { data: owned, error: ownedErr } = await supabase
-      .from("workspaces")
-      .select("id, name, slug, created_at")
-      .eq("owner_id", user.id)
-      .eq("is_deleted", false)
-      .order("created_at", { ascending: false });
-
-    if (ownedErr) {
-      console.error("Failed to fetch owned workspaces:", ownedErr);
-      return NextResponse.json({ error: "Failed to fetch workspaces" }, { status: 500 });
-    }
+    const owned = await prisma.workspace.findMany({
+      where: { ownerId: kometUser.id, isDeleted: false },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, slug: true },
+    });
 
     // Workspaces where user is a member (but not owner)
-    const { data: memberRows, error: memberErr } = await supabase
-      .from("workspace_members")
-      .select("workspace_id, role")
-      .eq("user_id", user.id);
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId: kometUser.id },
+      select: {
+        workspaceId: true,
+        role: true,
+        workspace: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
+    });
 
-    if (memberErr) {
-      console.error("Failed to fetch workspace members:", memberErr);
-      return NextResponse.json({ error: "Failed to fetch workspaces" }, { status: 500 });
-    }
-
-    const ownedIds = new Set((owned || []).map((w) => w.id));
-    const memberWorkspaceIds = (memberRows || [])
-      .filter((m) => !ownedIds.has(m.workspace_id))
-      .map((m) => m.workspace_id);
-
-    let memberWorkspaces: { id: string; name: string; slug: string; created_at: string }[] = [];
-    if (memberWorkspaceIds.length > 0) {
-      const { data: mws, error: mwsErr } = await supabase
-        .from("workspaces")
-        .select("id, name, slug, created_at")
-        .in("id", memberWorkspaceIds)
-        .eq("is_deleted", false)
-        .order("created_at", { ascending: false });
-
-      if (!mwsErr) memberWorkspaces = mws || [];
-    }
-
-    // Build role map
-    const roleMap = new Map<string, string>();
-    (memberRows || []).forEach((m) => roleMap.set(m.workspace_id, m.role));
+    const ownedIds = new Set(owned.map((w) => w.id));
 
     const allWorkspaces = [
-      ...(owned || []).map((w) => ({
+      ...owned.map((w) => ({
         id: w.id,
         name: w.name,
         slug: w.slug,
         role: "admin" as const,
       })),
-      ...memberWorkspaces.map((w) => ({
-        id: w.id,
-        name: w.name,
-        slug: w.slug,
-        role: (roleMap.get(w.id) || "viewer") as "admin" | "editor" | "viewer",
-      })),
+      ...memberships
+        .filter((m) => !ownedIds.has(m.workspaceId))
+        .map((m) => ({
+          id: m.workspace.id,
+          name: m.workspace.name,
+          slug: m.workspace.slug,
+          role: (m.role || "viewer") as "admin" | "editor" | "viewer",
+        })),
     ];
 
     return NextResponse.json({ workspaces: allWorkspaces });
@@ -84,6 +71,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { prisma } = await import("@komet/db");
+
+    const kometUser = await prisma.user.findUnique({
+      where: { supabaseId: user.id },
+      select: { id: true },
+    });
+
+    if (!kometUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const body = await request.json().catch(() => null);
     if (!body || typeof body.name !== "string" || !body.name.trim()) {
       return NextResponse.json({ error: "Workspace name is required" }, { status: 400 });
@@ -96,52 +94,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid workspace name" }, { status: 400 });
     }
 
-    const supabase = getSupabaseAdmin();
-
-    // Insert workspace
-    const { data: workspace, error: insertErr } = await supabase
-      .from("workspaces")
-      .insert({ name, slug, owner_id: user.id })
-      .select("id, name, slug")
-      .single();
-
-    if (insertErr) {
-      if (insertErr.code === "23505") {
-        // unique violation on slug
-        const uniqueSlug = `${slug}-${Date.now().toString(36)}`;
-        const { data: retry, error: retryErr } = await supabase
-          .from("workspaces")
-          .insert({ name, slug: uniqueSlug, owner_id: user.id })
-          .select("id, name, slug")
-          .single();
-
-        if (retryErr) {
-          console.error("Failed to create workspace (retry):", retryErr);
-          return NextResponse.json({ error: "Failed to create workspace" }, { status: 500 });
-        }
-
-        // Add owner as member
-        await supabase.from("workspace_members").insert({
-          workspace_id: retry.id,
-          user_id: user.id,
-          role: "admin",
-        });
-
-        return NextResponse.json(
-          { workspace: { id: retry.id, name: retry.name, slug: retry.slug, role: "admin" } },
-          { status: 201 }
-        );
-      }
-
-      console.error("Failed to create workspace:", insertErr);
-      return NextResponse.json({ error: "Failed to create workspace" }, { status: 500 });
-    }
-
-    // Add owner as member
-    await supabase.from("workspace_members").insert({
-      workspace_id: workspace.id,
-      user_id: user.id,
-      role: "admin",
+    // Create workspace with owner as admin member
+    const workspace = await prisma.workspace.create({
+      data: {
+        name,
+        slug,
+        ownerId: kometUser.id,
+        members: {
+          create: {
+            userId: kometUser.id,
+            role: "admin",
+          },
+        },
+      },
+      select: { id: true, name: true, slug: true },
     });
 
     return NextResponse.json(
