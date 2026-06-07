@@ -20,12 +20,13 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  workspaces   Workspace[]
-  apiKeys      ApiKey[]
-  subscription Subscription?
-  posts        Post[]
-  media        Media[]
-  notifications Notification[]
+  workspaces        Workspace[]
+  workspaceMembers   WorkspaceMember[]
+  apiKeys           ApiKey[]
+  subscription      Subscription?
+  posts             Post[]
+  media             Media[]
+  notifications     Notification[]
 
   @@index([email])
   @@index([supabaseId])
@@ -44,6 +45,7 @@ model Workspace {
 
   profiles        Profile[]
   members         WorkspaceMember[]
+  invitations      TeamInvitation[]
   autoReplyRules  AutoReplyRule[]
   aiTemplates     AiTemplate[]
   webhookEndpoints WebhookEndpoint[]
@@ -63,6 +65,23 @@ model WorkspaceMember {
   role        String   // admin, editor, viewer
 
   @@unique([workspaceId, userId])
+}
+
+model TeamInvitation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  email       String
+  role        String   // admin, editor, viewer
+  invitedBy   String   // userId who invited
+  token       String   @unique // UUID token for invitation link
+  status      String   @default("pending") // pending, accepted, expired
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([email])
+  @@index([token])
 }
 
 // ===== PROFILES & SOCIAL ACCOUNTS =====
@@ -195,6 +214,7 @@ model Media {
 model AutoReplyRule {
   id           String   @id @default(cuid())
   workspaceId  String
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   profileId    String
   name         String
   triggerType  String   // keyword, exact, regex, ai
@@ -211,6 +231,7 @@ model AutoReplyRule {
 model AiTemplate {
   id          String   @id @default(cuid())
   workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   name        String
   type        String   // caption, reply, thread, hashtag
   prompt      String
@@ -254,6 +275,7 @@ model Subscription {
 model WebhookEndpoint {
   id              String    @id @default(cuid())
   workspaceId     String
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   url             String
   secret          String?
   events          Json      @default("[]")
@@ -299,6 +321,7 @@ model ActivityLog {
   id          String   @id @default(cuid())
   userId      String?
   workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   action      String
   entityType  String
   entityId    String?
@@ -319,6 +342,7 @@ model ActivityLog {
 model ReportSchedule {
   id             String   @id @default(cuid())
   workspaceId    String
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   name           String
   type           String   // weekly, monthly, custom
   cronExpression String
