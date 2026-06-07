@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 
 /* ───────── All 33 webhook event types ───────── */
-const ZERNIO_EVENTS = [
+const WEBHOOK_EVENTS = [
   // Post events
   "post.published",
   "post.failed",
@@ -51,7 +51,7 @@ const ZERNIO_EVENTS = [
   "webhook.test",
 ] as const;
 
-type WebhookEventType = (typeof ZERNIO_EVENTS)[number];
+type WebhookEventType = (typeof WEBHOOK_EVENTS)[number];
 
 /* ───────── Event storage path (Vercel-compatible /tmp) ───────── */
 const EVENTS_FILE = path.join("/tmp", "webhook-events.json");
@@ -121,15 +121,15 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
 
     const signature =
-      request.headers.get("x-zernio-signature") ||
+      request.headers.get("x-webhook-signature") ||
       request.headers.get("x-late-signature");
 
     const eventId =
-      request.headers.get("x-zernio-event-id") ||
+      request.headers.get("x-webhook-event-id") ||
       request.headers.get("x-late-event-id");
 
     // ── Signature verification (if secret configured) ──
-    const secret = process.env.ZERNIO_WEBHOOK_SECRET;
+    const secret = process.env.WEBHOOK_SECRET;
     if (secret) {
       if (!signature) {
         return NextResponse.json(
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
     const eventType = body.event as string | undefined;
     const id = (body.id as string) || eventId;
 
-    if (!eventType || !ZERNIO_EVENTS.includes(eventType as WebhookEventType)) {
+    if (!eventType || !WEBHOOK_EVENTS.includes(eventType as WebhookEventType)) {
       console.warn(`[Webhook Events] Unknown or missing event: ${eventType}`);
       return NextResponse.json({ received: true, warning: "Unknown event type" });
     }

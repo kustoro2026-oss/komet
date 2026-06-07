@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { usePost, useUpdatePost, useEditPost, useDeletePost, useUnpublishPost } from "@/lib/zernio/hooks";
+import { usePost, useUpdatePost, useDeletePost, useUnpublishPost } from "@/lib/posts/hooks";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
@@ -31,7 +31,7 @@ export default function PostDetailPage() {
   // Data
   const { data: post, isLoading, isError, error } = usePost(postId);
   const updatePostMutation = useUpdatePost();
-  const editPostMutation = useEditPost();
+  const editPostMutation = useUpdatePost();
   const deletePostMutation = useDeletePost();
   const unpublishPostMutation = useUnpublishPost();
 

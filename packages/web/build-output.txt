@@ -1,0 +1,100 @@
+﻿  Γû▓ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/(dashboard)/accounts/[accountId]/page.tsx
+78:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/ai/page.tsx
+522:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/media/page.tsx
+302:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/(dashboard)/posts/create/page.tsx
+184:6  Warning: React Hook useEffect has missing dependencies: 'composerState.hashtags' and 'composerState.platforms'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/41) ...
+   Generating static pages (10/41) 
+   Generating static pages (20/41) 
+   Generating static pages (30/41) 
+ Γ£ô Generating static pages (41/41)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Γöî ╞Æ /                                    6.95 kB         120 kB
+Γö£ ╞Æ /_not-found                          877 B          88.2 kB
+Γö£ ╞Æ /accounts                            9.26 kB         131 kB
+Γö£ ╞Æ /accounts/[accountId]                9.68 kB         106 kB
+Γö£ ╞Æ /accounts/connect                    11.5 kB         145 kB
+Γö£ ╞Æ /ai                                  6.85 kB        94.2 kB
+Γö£ ╞Æ /ai/agent                            4.21 kB        91.5 kB
+Γö£ ╞Æ /ai/templates                        3.99 kB        91.3 kB
+Γö£ ╞Æ /analytics                           2.89 kB         130 kB
+Γö£ ╞Æ /analytics/[platform]                4.91 kB         115 kB
+Γö£ ╞Æ /api/accounts                        0 B                0 B
+Γö£ ╞Æ /api/ai/agent                        0 B                0 B
+Γö£ ╞Æ /api/ai/generate                     0 B                0 B
+Γö£ ╞Æ /api/analytics/accounts              0 B                0 B
+Γö£ ╞Æ /api/analytics/overview              0 B                0 B
+Γö£ ╞Æ /api/auto-reply/process              0 B                0 B
+Γö£ ╞Æ /api/auto-reply/rules                0 B                0 B
+Γö£ Γùï /api/health                          0 B                0 B
+Γö£ ╞Æ /api/inbox/comments                  0 B                0 B
+Γö£ ╞Æ /api/inbox/comments/[postId]         0 B                0 B
+Γö£ ╞Æ /api/inngest                         0 B                0 B
+Γö£ ╞Æ /api/media/proxy                     0 B                0 B
+Γö£ ╞Æ /api/media/upload                    0 B                0 B
+Γö£ ╞Æ /api/posts                           0 B                0 B
+Γö£ ╞Æ /api/posts/[postId]/unpublish        0 B                0 B
+Γö£ ╞Æ /api/profiles                        0 B                0 B
+Γö£ ╞Æ /api/public-api/v1/[...path]         0 B                0 B
+Γö£ ╞Æ /api/publish                         0 B                0 B
+Γö£ ╞Æ /api/team                            0 B                0 B
+Γö£ ╞Æ /api/team/[memberId]                 0 B                0 B
+Γö£ ╞Æ /api/team/invitation                 0 B                0 B
+Γö£ ╞Æ /api/team/invitation/[token]         0 B                0 B
+Γö£ ╞Æ /api/webhooks/events                 0 B                0 B
+Γö£ ╞Æ /api/webhooks/manage                 0 B                0 B
+Γö£ ╞Æ /api/workspace                       0 B                0 B
+Γö£ ╞Æ /api/workspace/[id]                  0 B                0 B
+Γö£ ╞Æ /auth/callback                       0 B                0 B
+Γö£ ╞Æ /auto-reply                          14.8 kB         112 kB
+Γö£ ╞Æ /calendar                            7.13 kB         125 kB
+Γö£ ╞Æ /dashboard                           4.95 kB         161 kB
+Γö£ ╞Æ /forgot-password                     1.67 kB         179 kB
+Γö£ ╞Æ /inbox                               10.4 kB         124 kB
+Γö£ ╞Æ /inbox/comments                      7.03 kB        94.4 kB
+Γö£ ╞Æ /inbox/messages                      7.15 kB        94.5 kB
+Γö£ ╞Æ /invite/[token]                      2.69 kB         157 kB
+Γö£ ╞Æ /login                               2.05 kB         180 kB
+Γö£ ╞Æ /media                               7.19 kB        94.5 kB
+Γö£ ╞Æ /notifications                       9.08 kB        96.4 kB
+Γö£ ╞Æ /onboarding                          4.07 kB         100 kB
+Γö£ ╞Æ /posts                               8.08 kB         126 kB
+Γö£ ╞Æ /posts/[postId]                      8.28 kB         109 kB
+Γö£ ╞Æ /posts/bulk                          3.13 kB        90.5 kB
+Γö£ ╞Æ /posts/create                        16.2 kB         117 kB
+Γö£ ╞Æ /posts/drafts                        6.86 kB        94.2 kB
+Γö£ ╞Æ /register                            1.84 kB         179 kB
+Γö£ ╞Æ /settings                            8.05 kB         113 kB
+Γö£ ╞Æ /settings/account                    161 B          87.5 kB
+Γö£ ╞Æ /settings/api-keys                   161 B          87.5 kB
+Γö£ ╞Æ /settings/billing                    161 B          87.5 kB
+Γö£ ╞Æ /settings/webhooks                   161 B          87.5 kB
+Γö£ ╞Æ /settings/workspace                  161 B          87.5 kB
+Γöö ╞Æ /team                                4.96 kB         160 kB
++ First Load JS shared by all            87.3 kB
+  Γö£ chunks/9272-19b4820904aec733.js      31.7 kB
+  Γö£ chunks/f6a2ed99-cbedaa4f497023db.js  53.6 kB
+  Γöö other shared chunks (total)          1.97 kB
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

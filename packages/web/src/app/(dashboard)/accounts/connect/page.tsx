@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, ExternalLink, Check, Loader2, Search, Shield, Globe, MessageSquare, Video, ChevronRight, X } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
-import { startOAuth, connectBluesky, createProfile } from "@/lib/zernio/api";
-import { useProfiles, useAccounts } from "@/lib/zernio/hooks";
+import { useProfiles, useAccounts } from "@/lib/accounts/hooks";
+import { startOAuth, connectBluesky } from "@/lib/accounts/connect";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -74,7 +74,12 @@ export default function ConnectAccountPage() {
       if (profiles.length > 0) {
         setProfileId(profiles[0].id);
       } else {
-        createProfile("Default")
+        fetch("/api/profiles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Default" }),
+        })
+          .then((res) => res.json())
           .then((p) => setProfileId(p.id))
           .catch((err: Error) => setError(err.message || "Failed to create profile"));
       }
@@ -95,7 +100,7 @@ export default function ConnectAccountPage() {
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
       } else {
-        const result = await startOAuth(selectedPlatform, profileId, `${window.location.origin}/accounts`);
+        const result = await startOAuth(selectedPlatform);
         if (result.authUrl) {
           window.location.href = result.authUrl;
           return;

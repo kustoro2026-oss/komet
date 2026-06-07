@@ -7,8 +7,9 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { usePosts, useAccounts, useUsageStats } from "@/lib/zernio/hooks";
-import type { PostItem } from "@/lib/zernio/api";
+import { usePosts } from "@/lib/posts/hooks";
+import { useAccounts } from "@/lib/accounts/hooks";
+import type { PostItem } from "@/lib/posts/hooks";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
@@ -60,7 +61,6 @@ export default function DashboardPage() {
 
   const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 1000 });
   const { data: accountsData, isLoading: accountsLoading } = useAccounts();
-  const { data: usageData, isLoading: usageLoading } = useUsageStats();
 
   useEffect(() => {
     setCountUp(true);
@@ -129,7 +129,7 @@ export default function DashboardPage() {
     { label: "Thu", posts: 0, engagement: 0 },
   ];
 
-  const isLoading = postsLoading || accountsLoading || usageLoading;
+  const isLoading = postsLoading || accountsLoading;
 
   return (
     <motion.div className="space-y-8" variants={container} initial="hidden" animate="show">
@@ -179,7 +179,7 @@ export default function DashboardPage() {
             <CalendarCheck className="h-5 w-5 text-[var(--color-primary-light)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-            {countUp ? <AnimatedNumber value={postsThisMonth || usageData?.postsThisMonth || 0} /> : (postsThisMonth || usageData?.postsThisMonth || 0)}
+            {countUp ? <AnimatedNumber value={postsThisMonth} /> : postsThisMonth.toLocaleString()}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">{t("thisMonth")}</p>
         </div>
@@ -199,10 +199,10 @@ export default function DashboardPage() {
             <Users className="h-5 w-5 text-[var(--color-accent)]" />
           </div>
           <p className="mt-2 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-            {allAccounts.length > 0 ? allAccounts.length : (usageData?.connectedAccounts ?? 0)}
+            {allAccounts.length}
           </p>
           <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-            {usageData && usageData.accountLimit > 0 ? `${allAccounts.length > 0 ? allAccounts.length : usageData.connectedAccounts}/${usageData.accountLimit}` : t("active")}
+            {t("active")}
           </p>
         </div>
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-warning)]/50 hover:-translate-y-0.5">

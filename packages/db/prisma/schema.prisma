@@ -104,22 +104,27 @@ model Profile {
 }
 
 model SocialAccount {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   zernioAccountId  String?
   profileId        String
-  profile          Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile          Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   platform         String
+  platformAccountId String?
   username         String
   displayName      String
   avatarUrl        String?
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
+  accessToken      String?
+  refreshToken     String?
+  tokenExpiresAt   DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
 
   posts PostPlatform[]
 
   @@index([platform])
   @@index([profileId])
   @@index([isActive])
+  @@index([platformAccountId])
 }
 
 // ===== POSTS =====
@@ -276,10 +281,13 @@ model WebhookEndpoint {
   id              String    @id @default(cuid())
   workspaceId     String
   workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name            String
   url             String
   secret          String?
   events          Json      @default("[]")
+  customHeaders   Json      @default("{}")
   isActive        Boolean   @default(true)
+  failureCount    Int       @default(0)
   lastDeliveryAt  DateTime?
   createdAt       DateTime  @default(now())
 }

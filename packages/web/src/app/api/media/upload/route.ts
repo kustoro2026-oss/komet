@@ -1,18 +1,18 @@
-// API Route: Media Upload via Zernio
-// POST: accepts multipart form with a file, uploads via Zernio presigned URL
+// API Route: Media Upload via Supabase Storage
+// POST: accepts multipart form with a file, uploads directly to Supabase Storage
 import { NextRequest, NextResponse } from "next/server";
-import { ZernioClient } from "@komet/zernio-client";
+import { getSupabaseAdmin, getUserFromRequest } from "@/lib/supabase-admin";
+import { prisma } from "@komet/db";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.ZERNIO_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "Zernio API key not configured" },
-        { status: 503 }
-      );
+    // Authenticate user via session cookie
+    const { user, error } = await getUserFromRequest(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -45,24 +45,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = new ZernioClient(apiKey);
+    const supabase = getSupabaseAdmin();
+    const fileExt = file.name.split(".").pop() || "bin";
+    const fileName = `${randomUUID()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
 
-    // Get presigned upload URL from Zernio (pass size for pre-validation, max 5GB)
-    const presigned = await client.getPresignedUrl(file.name, file.type, file.size);
+    // Upload file to Supabase Storage bucket "media"
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { error: uploadError } = await supabase.storage
+      .from("media")
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    // Upload file to presigned URL
-    const uploadResponse = await fetch(presigned.uploadUrl, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": file.type },
-    });
-
-    if (!uploadResponse.ok) {
+    if (uploadError) {
+      console.error("Supabase upload error:", uploadError);
       return NextResponse.json(
-        { error: `Upload failed with status ${uploadResponse.status}` },
-        { status: 502 }
+        { error: `Upload failed: ${uploadError.message}` },
+        { status: 500 }
       );
     }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from("media")
+      .getPublicUrl(filePath);
 
     // Determine media type category
     const category = file.type.startsWith("image/")
@@ -73,6 +81,18 @@ export async function POST(request: NextRequest) {
           ? "audio"
           : "document";
 
+    // Save media record to database
+    const mediaRecord = await prisma.media.create({
+      data: {
+        userId: user.id,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        url: publicUrlData.publicUrl,
+        type: category,
+      },
+    });
+
     const formatSize = (bytes: number): string => {
       if (bytes < 1024) return `${bytes} B`;
       if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -82,15 +102,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       media: {
-        id: presigned.key || crypto.randomUUID(),
+        id: mediaRecord.id,
         name: file.name,
         type: category,
         mimeType: file.type,
         size: formatSize(file.size),
         sizeBytes: file.size,
-        publicUrl: presigned.publicUrl,
-        key: presigned.key,
-        createdAt: new Date().toISOString(),
+        publicUrl: publicUrlData.publicUrl,
+        key: filePath,
+        createdAt: mediaRecord.createdAt.toISOString(),
       },
     });
   } catch (error) {

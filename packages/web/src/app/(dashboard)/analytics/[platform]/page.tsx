@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { useAccounts, useDailyMetrics, usePosts, useFollowerStats } from "@/lib/zernio/hooks";
+import { useAnalyticsAccounts, useDailyMetrics, useFollowerStats, usePlatformPosts } from "@/lib/analytics/hooks";
 
 // Helper: format large numbers compactly
 function fmt(n: number): string {
@@ -66,8 +66,8 @@ export default function PlatformAnalyticsPage() {
   const platform = params.platform as string;
   const [dateRange, setDateRange] = useState("30d");
 
-  const { data: accounts, isLoading: accountsLoading } = useAccounts();
-  const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 100 });
+  const { data: accounts, isLoading: accountsLoading } = useAnalyticsAccounts();
+  const { data: platformPosts, isLoading: postsLoading } = usePlatformPosts(platform);
   const { data: followerStats } = useFollowerStats();
 
   // Find the first connected account for this platform
@@ -80,25 +80,13 @@ export default function PlatformAnalyticsPage() {
     [dateRange]
   );
 
-  // Try daily-metrics API — if it 404s we fall back gracefully
+  // Try daily-metrics API — returns empty data since we use local DB
   const {
     data: analytics,
     isLoading: analyticsLoading,
     isError: analyticsError,
     error: analyticsErrorObj,
   } = useDailyMetrics(account?.id, platform, dateRangeParam);
-
-  // Filter posts for this platform
-  const platformPosts = useMemo(() => {
-    const posts = postsData?.posts ?? [];
-    return posts
-      .filter((p) => (p.platforms ?? []).includes(platform))
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      .slice(0, 10);
-  }, [postsData, platform]);
 
   // Compute fallback metrics from actual posts
   const fallbackMetrics = useMemo(() => {

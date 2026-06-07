@@ -7,7 +7,7 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
-import { useAccounts, useDeleteAccount } from "@/lib/zernio/hooks";
+import { useAccounts, useDeleteAccount } from "@/lib/accounts/hooks";
 
 interface ConnectedAccount {
   id: string;

@@ -7,10 +7,10 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
-import { useCreatePost, useProfiles, useAccounts } from "@/lib/zernio/hooks";
+import { useCreatePost, uploadMedia } from "@/lib/posts/hooks";
+import { useProfiles, useAccounts } from "@/lib/accounts/hooks";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { usePostStore } from "@/stores/post-store";
-import { createProfile, getMediaPresignedUrl } from "@/lib/zernio/api";
 
 type ComposerStep = "content" | "platforms" | "schedule" | "review";
 
@@ -84,36 +84,7 @@ export default function CreatePostPage() {
     }));
 
     try {
-      const { uploadUrl, publicUrl } = await getMediaPresignedUrl(
-        mediaFile.file.name,
-        mediaFile.file.type
-      );
-
-      // Upload the file directly to the presigned URL
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", uploadUrl);
-      xhr.setRequestHeader("Content-Type", mediaFile.file.type);
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100);
-          setForm((prev) => ({
-            ...prev,
-            media: prev.media.map((m) =>
-              m.id === mediaFile.id ? { ...m, progress } : m
-            ),
-          }));
-        }
-      };
-
-      await new Promise<void>((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(`Upload failed with status ${xhr.status}`));
-        };
-        xhr.onerror = () => reject(new Error("Upload failed"));
-        xhr.send(mediaFile.file);
-      });
+      const { publicUrl } = await uploadMedia(mediaFile.file);
 
       setForm((prev) => ({
         ...prev,
@@ -279,7 +250,11 @@ export default function CreatePostPage() {
 
   useEffect(() => {
     if (profiles && profiles.length === 0) {
-      createProfile("Default").catch(() => {});
+      fetch("/api/profiles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Default" }),
+      }).catch(() => {});
     }
   }, [profiles]);
 
@@ -315,6 +290,7 @@ export default function CreatePostPage() {
       }
 
       await createPostMutation.mutateAsync({
+        profileId: profileId,
         content: form.content,
         title: form.title || undefined,
         platforms,

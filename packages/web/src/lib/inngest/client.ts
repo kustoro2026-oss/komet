@@ -102,11 +102,6 @@ export const handleAutoReplyCheck = inngest.createFunction(
   { cron: "*/15 * * * *" },
   async ({ step }) => {
     const result = await step.run("process-auto-replies", async () => {
-      const apiKey = process.env.ZERNIO_API_KEY;
-      if (!apiKey) {
-        return { status: "skipped", reason: "Zernio API key not configured" };
-      }
-
       try {
         // Load server-side rules from /tmp (Vercel-compatible writable directory)
         const fs = await import("fs/promises");
@@ -138,19 +133,12 @@ export const handleAutoReplyCheck = inngest.createFunction(
         }
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const { ZernioClient } = await import("@komet/zernio-client");
-        const client = new ZernioClient(apiKey);
-
-        // Get connected accounts
-        const accounts = await client.listAccounts().catch(() => []);
-        const accountIds = accounts.map((a: { id: string }) => a.id);
 
         const response = await fetch(`${appUrl}/api/auto-reply/process`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             rules: serverRules,
-            accountIds,
           }),
         });
 
@@ -159,6 +147,7 @@ export const handleAutoReplyCheck = inngest.createFunction(
           status: "completed",
           repliesSent: data.totalProcessed || 0,
           log: data.log || [],
+          message: data.message,
         };
       } catch (err) {
         return {

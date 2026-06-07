@@ -18,7 +18,7 @@ import {
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
-import { useAccounts, usePosts } from "@/lib/zernio/hooks";
+import { useAnalyticsOverview } from "@/lib/analytics/hooks";
 
 // Helper: format large numbers compactly
 function fmt(n: number): string {
@@ -31,10 +31,9 @@ export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState("7d");
   const t = useTranslations("analyticsPage");
 
-  const { data: accountsData, isLoading: accountsLoading } = useAccounts();
-  const { data: postsData, isLoading: postsLoading } = usePosts({ limit: 1000 });
-
-  const isLoading = accountsLoading || postsLoading;
+  const { data: overviewData, isLoading } = useAnalyticsOverview();
+  const accountsData = useMemo(() => overviewData?.accounts ?? [], [overviewData]);
+  const postsData = useMemo(() => ({ posts: overviewData?.posts ?? [] }), [overviewData]);
 
   // Compute real metrics from data
   const metrics = useMemo(() => {

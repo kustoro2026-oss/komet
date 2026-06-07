@@ -1,67 +1,114 @@
 // API Route: Webhook Management
-// Proxies webhook management calls to the platform API
-// Routes: GET /api/webhooks/manage → list | POST → create | DELETE → delete | POST /test → test
+// Routes: GET /api/webhooks/manage → list | POST → create | PUT → update | DELETE → delete
+// All operations scoped to the authenticated user's workspace
 import { NextRequest, NextResponse } from "next/server";
-import { ZernioClient } from "@komet/zernio-client";
+import { getUserFromRequest } from "@/lib/supabase-admin";
+import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
-function getClient(): ZernioClient | null {
-  const apiKey = process.env.ZERNIO_API_KEY;
-  if (!apiKey) return null;
-  return new ZernioClient(apiKey);
-}
+// Helper: resolve workspace for the authenticated user
+async function resolveWorkspace(userId: string, workspaceId?: string | null) {
+  const { prisma } = await import("@komet/db");
 
-export async function GET() {
-  const client = getClient();
-  if (!client) {
-    return NextResponse.json(
-      { error: "Platform API key not configured" },
-      { status: 500 }
-    );
+  if (workspaceId) {
+    // Verify user has access to this workspace
+    const workspace = await prisma.workspace.findFirst({
+      where: {
+        id: workspaceId,
+        OR: [
+          { ownerId: userId },
+          { members: { some: { userId } } },
+        ],
+      },
+    });
+    return workspace;
   }
 
+  // Default to first workspace the user owns
+  return prisma.workspace.findFirst({
+    where: { ownerId: userId, isDeleted: false },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const result = await client.getWebhookSettings();
-    return NextResponse.json(result);
+    const { user, error } = await getUserFromRequest(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { prisma } = await import("@komet/db");
+
+    const kometUser = await prisma.user.findUnique({
+      where: { supabaseId: user.id },
+      select: { id: true },
+    });
+
+    if (!kometUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const workspaceId = searchParams.get("workspaceId");
+    const workspace = await resolveWorkspace(kometUser.id, workspaceId);
+
+    if (!workspace) {
+      return NextResponse.json({ webhooks: [] });
+    }
+
+    const webhooks = await prisma.webhookEndpoint.findMany({
+      where: { workspaceId: workspace.id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Map to match expected shape (similar to ZernioWebhook)
+    const mapped = webhooks.map((w) => ({
+      _id: w.id,
+      name: w.name,
+      url: w.url,
+      secret: w.secret,
+      events: w.events as string[],
+      customHeaders: w.customHeaders as Record<string, string> | undefined,
+      isActive: w.isActive,
+      failureCount: w.failureCount,
+      lastFiredAt: w.lastDeliveryAt?.toISOString(),
+    }));
+
+    return NextResponse.json({ webhooks: mapped });
   } catch (error: unknown) {
-    const err = error as { status?: number; message?: string };
+    const err = error as { message?: string };
     console.error("[Webhook Manage] GET error:", err.message || error);
     return NextResponse.json(
       { error: err.message || "Failed to fetch webhooks" },
-      { status: err.status || 500 }
+      { status: 500 }
     );
   }
 }
 
 export async function POST(request: NextRequest) {
-  const client = getClient();
-  if (!client) {
-    return NextResponse.json(
-      { error: "Platform API key not configured" },
-      { status: 500 }
-    );
-  }
-
   try {
+    const { user, error } = await getUserFromRequest(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { prisma } = await import("@komet/db");
+
+    const kometUser = await prisma.user.findUnique({
+      where: { supabaseId: user.id },
+      select: { id: true },
+    });
+
+    if (!kometUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const body = await request.json();
     const { name, url, events, secret, isActive, customHeaders } = body;
 
-    // Check if this is a test request (POST /test)
-    const urlPath = request.nextUrl.pathname;
-    if (urlPath.endsWith("/test")) {
-      const { webhookId } = body;
-      if (!webhookId) {
-        return NextResponse.json(
-          { error: "webhookId required for test" },
-          { status: 400 }
-        );
-      }
-      const result = await client.testWebhook(webhookId);
-      return NextResponse.json(result);
-    }
-
-    // Create webhook
+    // Validation
     if (!name || !url || !events || !Array.isArray(events) || events.length === 0) {
       return NextResponse.json(
         { error: "name, url, and events (with at least 1 event) are required" },
@@ -69,51 +116,169 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await client.createWebhookSettings({
-      name,
-      url,
-      events,
-      secret,
-      isActive,
-      customHeaders,
+    const { searchParams } = new URL(request.url);
+    const workspaceId = searchParams.get("workspaceId");
+    const workspace = await resolveWorkspace(kometUser.id, workspaceId);
+
+    if (!workspace) {
+      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
+    }
+
+    // Auto-generate secret if not provided
+    const webhookSecret = secret || crypto.randomBytes(32).toString("hex");
+
+    const webhook = await prisma.webhookEndpoint.create({
+      data: {
+        workspaceId: workspace.id,
+        name,
+        url,
+        secret: webhookSecret,
+        events,
+        customHeaders: customHeaders || {},
+        isActive: isActive ?? true,
+      },
     });
-    return NextResponse.json(result);
+
+    return NextResponse.json({
+      success: true,
+      webhook: {
+        _id: webhook.id,
+        name: webhook.name,
+        url: webhook.url,
+        secret: webhook.secret,
+        events: webhook.events as string[],
+        customHeaders: webhook.customHeaders as Record<string, string> | undefined,
+        isActive: webhook.isActive,
+        failureCount: webhook.failureCount,
+        lastFiredAt: webhook.lastDeliveryAt?.toISOString(),
+      },
+    });
   } catch (error: unknown) {
-    const err = error as { status?: number; message?: string };
+    const err = error as { message?: string };
     console.error("[Webhook Manage] POST error:", err.message || error);
     return NextResponse.json(
       { error: err.message || "Failed to create webhook" },
-      { status: err.status || 500 }
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { user, error } = await getUserFromRequest(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { prisma } = await import("@komet/db");
+
+    const kometUser = await prisma.user.findUnique({
+      where: { supabaseId: user.id },
+      select: { id: true },
+    });
+
+    if (!kometUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const { webhookId, name, url, events, secret, isActive, customHeaders } = body;
+
+    if (!webhookId) {
+      return NextResponse.json({ error: "webhookId required" }, { status: 400 });
+    }
+
+    // Verify webhook belongs to user's workspace
+    const existing = await prisma.webhookEndpoint.findUnique({
+      where: { id: webhookId },
+      include: { workspace: { select: { ownerId: true } } },
+    });
+
+    if (!existing || existing.workspace.ownerId !== kometUser.id) {
+      return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (url !== undefined) updateData.url = url;
+    if (events !== undefined) updateData.events = events;
+    if (secret !== undefined) updateData.secret = secret;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (customHeaders !== undefined) updateData.customHeaders = customHeaders;
+
+    const updated = await prisma.webhookEndpoint.update({
+      where: { id: webhookId },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      webhook: {
+        _id: updated.id,
+        name: updated.name,
+        url: updated.url,
+        secret: updated.secret,
+        events: updated.events as string[],
+        customHeaders: updated.customHeaders as Record<string, string> | undefined,
+        isActive: updated.isActive,
+        failureCount: updated.failureCount,
+        lastFiredAt: updated.lastDeliveryAt?.toISOString(),
+      },
+    });
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error("[Webhook Manage] PUT error:", err.message || error);
+    return NextResponse.json(
+      { error: err.message || "Failed to update webhook" },
+      { status: 500 }
     );
   }
 }
 
 export async function DELETE(request: NextRequest) {
-  const client = getClient();
-  if (!client) {
-    return NextResponse.json(
-      { error: "Platform API key not configured" },
-      { status: 500 }
-    );
-  }
-
   try {
-    const { webhookId } = await request.json();
-    if (!webhookId) {
-      return NextResponse.json(
-        { error: "webhookId required" },
-        { status: 400 }
-      );
+    const { user, error } = await getUserFromRequest(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await client.deleteWebhookSettings(webhookId);
-    return NextResponse.json(result);
+    const { prisma } = await import("@komet/db");
+
+    const kometUser = await prisma.user.findUnique({
+      where: { supabaseId: user.id },
+      select: { id: true },
+    });
+
+    if (!kometUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const { webhookId } = await request.json();
+    if (!webhookId) {
+      return NextResponse.json({ error: "webhookId required" }, { status: 400 });
+    }
+
+    // Verify webhook belongs to user's workspace
+    const existing = await prisma.webhookEndpoint.findUnique({
+      where: { id: webhookId },
+      include: { workspace: { select: { ownerId: true } } },
+    });
+
+    if (!existing || existing.workspace.ownerId !== kometUser.id) {
+      return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
+    }
+
+    await prisma.webhookEndpoint.delete({
+      where: { id: webhookId },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    const err = error as { status?: number; message?: string };
+    const err = error as { message?: string };
     console.error("[Webhook Manage] DELETE error:", err.message || error);
     return NextResponse.json(
       { error: err.message || "Failed to delete webhook" },
-      { status: err.status || 500 }
+      { status: 500 }
     );
   }
 }

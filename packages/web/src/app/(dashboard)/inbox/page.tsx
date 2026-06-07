@@ -18,7 +18,8 @@ import {
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useTranslations } from "next-intl";
-import { useCommentedPosts, usePostComments, useReplyToComment, useDeleteComment } from "@/lib/zernio/hooks";
+import type { CommentedPost } from "@/lib/inbox/hooks";
+import { useCommentedPosts, usePostComments, useReplyToComment, useDeleteComment } from "@/lib/inbox/hooks";
 
 function formatTimestamp(ts: string): string {
   if (!ts) return "";
@@ -58,17 +59,17 @@ export default function InboxPage() {
 
   // Filter posts by search
   const filteredPosts = useMemo(() => {
-    if (!search) return posts;
+    if (!search) return posts as CommentedPost[];
     const q = search.toLowerCase();
-    return posts.filter(
+    return (posts as CommentedPost[]).filter(
       (p) => p.content.toLowerCase().includes(q) || p.accountUsername.toLowerCase().includes(q)
     );
   }, [posts, search]);
 
-  const handleReply = async (postId: string, commentId: string, accountId: string) => {
+  const handleReply = async (postId: string, commentId: string) => {
     if (!replyText.trim()) return;
     try {
-      await replyMutation.mutateAsync({ postId, accountId, commentId, message: replyText.trim() });
+      await replyMutation.mutateAsync({ commentId, message: replyText.trim() });
       setReplyingTo(null);
       setReplyText("");
     } catch {
@@ -322,7 +323,7 @@ export default function InboxPage() {
                                             {t("cancel")}
                                           </button>
                                           <button
-                                            onClick={() => handleReply(post.id, comment.id, post.accountId)}
+                                            onClick={() => handleReply(post.id, comment.id)}
                                             disabled={!replyText.trim() || replyMutation.isPending}
                                             className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-caption text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
                                           >

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { useAccounts, useDeleteAccount } from "@/lib/zernio/hooks";
+import { useAccounts, useDeleteAccount } from "@/lib/accounts/hooks";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 
 export default function AccountDetailPage() {

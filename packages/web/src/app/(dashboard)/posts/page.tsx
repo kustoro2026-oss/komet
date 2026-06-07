@@ -11,7 +11,7 @@ import {
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
-import { usePosts, useDeletePost } from "@/lib/zernio/hooks";
+import { usePosts, useDeletePost } from "@/lib/posts/hooks";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 // ===== Styles =====
@@ -452,8 +452,15 @@ export default function PostsPage() {
 
   const handlePublish = async (id: string) => {
     try {
-      const { updatePost } = await import("@/lib/zernio/api");
-      await updatePost(id, { publishNow: true });
+      const res = await fetch("/api/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        console.error("Failed to publish post:", err.error || res.statusText);
+      }
     } catch (err) {
       console.error("Failed to publish post:", err);
     }

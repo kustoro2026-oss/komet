@@ -17,7 +17,7 @@ import {
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useTranslations } from "next-intl";
-import { usePosts } from "@/lib/zernio/hooks";
+import { usePosts } from "@/lib/posts/hooks";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
