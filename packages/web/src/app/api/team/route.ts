@@ -3,6 +3,7 @@
 // POST /api/team → invite new member
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@komet/db";
+import type { WorkspaceMember, User } from "@komet/db";
 import { createSupabaseClient } from "@komet/auth";
 import { emailService } from "@komet/email";
 import { randomUUID } from "crypto";
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const result = members.map((m) => ({
+    const result = members.map((m: WorkspaceMember & { user: Pick<User, "id" | "name" | "email" | "avatarUrl" | "createdAt"> }) => ({
       id: m.id,
       userId: m.user.id,
       name: m.user.name || m.user.email,
