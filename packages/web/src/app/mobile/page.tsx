@@ -313,7 +313,8 @@ export default function MobileAppPage() {
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-10 overflow-hidden rounded-2xl border border-white/[0.06]">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.02]">
                   <th className="p-4 text-left font-semibold text-[var(--color-on-dark)]">Feature</th>
@@ -346,6 +347,7 @@ export default function MobileAppPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -357,7 +359,7 @@ export default function MobileAppPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[var(--color-primary)]/[0.08] via-purple-600/[0.04] to-transparent p-12 text-center"
+            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[var(--color-primary)]/[0.08] via-purple-600/[0.04] to-transparent p-6 sm:p-12 text-center"
           >
             <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[100px]" />
             <div className="relative">

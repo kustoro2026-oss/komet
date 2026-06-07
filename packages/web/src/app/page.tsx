@@ -183,23 +183,23 @@ export default function LandingPage() {
               <span className="text-xs font-medium text-emerald-400/80">Now supporting 15+ platforms</span>
             </div>
 
-            <h1 className="font-display text-balance text-5xl font-bold leading-[1.1] text-[var(--color-on-dark)] sm:text-6xl md:text-7xl">
+            <h1 className="font-display text-balance text-4xl font-bold leading-[1.1] text-[var(--color-on-dark)] sm:text-5xl md:text-7xl">
               {t("heroTitle")}{" "}
               <span className="bg-gradient-to-r from-[var(--color-primary)] via-purple-400 to-pink-400 bg-clip-text text-transparent">
                 {t("heroEmphasis")}
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-[var(--color-on-dark-soft)] leading-relaxed">{t("heroSubtitle")}</p>
+            <p className="mx-auto mt-6 max-w-2xl px-2 text-base sm:text-lg text-[var(--color-on-dark-soft)] leading-relaxed">{t("heroSubtitle")}</p>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/register" className="group inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-8 py-3.5 text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-xl shadow-[var(--color-primary)]/25 hover:shadow-[var(--color-primary)]/35">
+              <Link href="/register" className="group inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-xl shadow-[var(--color-primary)]/25 hover:shadow-[var(--color-primary)]/35">
                 {t("startFree")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-8 py-3.5 text-base font-semibold text-[var(--color-on-dark-soft)] hover:bg-white/[0.04] hover:text-[var(--color-on-dark)] transition-all">{t("signIn")}</Link>
+              <Link href="/login" className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-[var(--color-on-dark-soft)] hover:bg-white/[0.04] hover:text-[var(--color-on-dark)] transition-all">{t("signIn")}</Link>
             </motion.div>
 
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-6 flex items-center justify-center gap-4 text-xs text-[var(--color-on-dark-muted)]">
+           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[var(--color-on-dark-muted)]">
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> No credit card</span>
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> Free forever plan</span>
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> Cancel anytime</span>
@@ -231,8 +231,8 @@ export default function LandingPage() {
       </section>
 
       {/* ===== SOCIAL PROOF STATS (like Buffer, Hootsuite) ===== */}
-      <section className="border-t border-white/[0.06] py-20">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="border-t border-white/[0.06] py-14 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>Trusted by creators & teams</SectionLabel>
           </motion.div>
@@ -248,11 +248,11 @@ export default function LandingPage() {
       </section>
 
       {/* ===== HOW IT WORKS (inspired by Buffer's simplicity) ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-24">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>How it works</SectionLabel>
-            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">Three simple steps</h2>
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">Three simple steps</h2>
             <p className="mx-auto mt-3 max-w-lg text-[var(--color-on-dark-soft)]">Connect your accounts, create content, and publish everywhere — all from one dashboard.</p>
           </motion.div>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-16 grid gap-8 md:grid-cols-3">
@@ -278,12 +278,12 @@ export default function LandingPage() {
       </section>
 
       {/* ===== CORE FEATURES (inspired by Sprout Social + Buffer) ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-24" id="features">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24" id="features">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>Features</SectionLabel>
-            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">Everything you need to</h2>
-            <h2 className="font-display text-4xl font-bold text-[var(--color-on-dark)]">
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">Everything you need to</h2>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">
               manage <span className="bg-gradient-to-r from-[var(--color-primary)] to-purple-400 bg-clip-text text-transparent">every platform</span>
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">{t("featuresSubtitle")}</p>
@@ -309,9 +309,9 @@ export default function LandingPage() {
       </section>
 
       {/* ===== DASHBOARD SHOWCASE with checklist (inspired by Hootsuite) ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-24">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
+          <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2">
             <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
               <SectionLabel>Analytics</SectionLabel>
               <h2 className="mt-4 font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">Measure what matters</h2>
@@ -343,11 +343,11 @@ export default function LandingPage() {
       </section>
 
       {/* ===== WHO IT'S FOR — Audience segments (inspired by Buffer) ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-24">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>Who it&apos;s for</SectionLabel>
-            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">Built for everyone</h2>
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">Built for everyone</h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">Whether you&apos;re a solo creator, a growing team, or an agency managing dozens of accounts.</p>
           </motion.div>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="mt-14 grid gap-6 md:grid-cols-3">
@@ -400,11 +400,11 @@ export default function LandingPage() {
       </section>
 
       {/* ===== ALL PLATFORMS (inspired by Buffer's platform grid) ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-20">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-14 sm:py-20">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>Integrations</SectionLabel>
-            <h2 className="mt-4 font-display text-3xl font-bold text-[var(--color-on-dark)]">Connect your favorite platforms</h2>
+            <h2 className="mt-4 font-display text-2xl sm:text-3xl font-bold text-[var(--color-on-dark)]">Connect your favorite platforms</h2>
           </motion.div>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
             {allPlatforms.map((p, i) => (
@@ -418,11 +418,11 @@ export default function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-24" id="pricing">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24" id="pricing">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>Pricing</SectionLabel>
-            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">{t("pricingTitle")}</h2>
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">{t("pricingTitle")}</h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">{t("pricingSubtitle")}</p>
           </motion.div>
           <div className="mt-16 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -463,10 +463,10 @@ export default function LandingPage() {
       </section>
 
       {/* ===== CTA ===== */}
-      <section className="border-t border-white/[0.06] px-6 py-24">
+      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24">
         <div className="mx-auto max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[var(--color-primary)]/[0.08] via-purple-600/[0.04] to-transparent p-12 text-center">
+            className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[var(--color-primary)]/[0.08] via-purple-600/[0.04] to-transparent p-6 sm:p-12 text-center">
             <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[100px]" />
             <div className="relative">
               <h2 className="font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">Ready to streamline your social media?</h2>
@@ -484,7 +484,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="border-t border-white/[0.06] px-6 py-12">
+      <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-10 sm:py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600">

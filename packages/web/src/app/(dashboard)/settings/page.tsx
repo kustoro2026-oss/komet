@@ -608,7 +608,8 @@ export default function SettingsPage() {
             </div>
 
             <div className="rounded-xl border border-[var(--color-ink-muted)] overflow-hidden">
-              <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--color-surface-dark)] border-b border-[var(--color-ink-muted)] text-caption font-semibold text-[var(--color-on-dark-muted)]">
+              {/* Desktop header */}
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--color-surface-dark)] border-b border-[var(--color-ink-muted)] text-caption font-semibold text-[var(--color-on-dark-muted)]">
                 <span className="col-span-4">Name</span>
                 <span className="col-span-4">Key</span>
                 <span className="col-span-2">Last used</span>
@@ -620,18 +621,23 @@ export default function SettingsPage() {
               ].map((apiKey) => (
                 <div
                   key={apiKey.key}
-                  className="grid grid-cols-12 gap-4 items-center px-4 py-3 border-b border-[var(--color-ink-muted)] last:border-b-0 hover:bg-[var(--color-surface-dark)] transition-colors"
+                  className="flex flex-col gap-1 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center px-4 py-3 border-b border-[var(--color-ink-muted)] last:border-b-0 hover:bg-[var(--color-surface-dark)] transition-colors"
                 >
-                  <span className="col-span-4 text-body-sm font-medium text-[var(--color-on-dark)]">
-                    {apiKey.name}
-                  </span>
-                  <span className="col-span-4 text-caption text-[var(--color-on-dark-soft)] font-mono">
+                  <div className="flex items-center justify-between sm:contents">
+                    <span className="text-body-sm font-medium text-[var(--color-on-dark)] sm:col-span-4">
+                      {apiKey.name}
+                    </span>
+                    <button className="sm:hidden text-caption font-medium text-[var(--color-error)] hover:underline">
+                      Revoke
+                    </button>
+                  </div>
+                  <span className="text-caption text-[var(--color-on-dark-soft)] font-mono sm:col-span-4">
                     {apiKey.key}
                   </span>
-                  <span className="col-span-2 text-caption text-[var(--color-on-dark-muted)]">
+                  <span className="text-caption text-[var(--color-on-dark-muted)] sm:col-span-2">
                     {apiKey.lastUsed}
                   </span>
-                  <span className="col-span-2 text-right">
+                  <span className="hidden sm:block sm:col-span-2 sm:text-right">
                     <button className="text-caption font-medium text-[var(--color-error)] hover:underline">
                       Revoke
                     </button>

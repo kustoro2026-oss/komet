@@ -37,7 +37,7 @@ export default function DashboardLayout({
           "md:pb-6",
           collapsed ? "md:ml-[72px] lg:ml-[72px]" : "md:ml-[264px] lg:ml-[264px]",
           // Content styling
-          "mx-auto max-w-[1280px] p-6 md:pt-8 lg:pt-10",
+          "mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 sm:py-6 md:pt-8 lg:pt-10",
           "bg-[var(--color-surface-dark)]"
         )}
       >

@@ -195,7 +195,7 @@ function PostCard({
         <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-on-dark-muted)] opacity-0 group-hover:opacity-100 hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-on-dark)] transition-all"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-on-dark-muted)] opacity-100 sm:opacity-0 group-hover:opacity-100 hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-on-dark)] transition-all"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
