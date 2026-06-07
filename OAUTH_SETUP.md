@@ -35,11 +35,12 @@ TWITTER_CLIENT_SECRET=client_secret_disini
 **URL:** https://developers.facebook.com/apps/
 
 1. Klik **Create App** → pilih **Business** → isi nama app
-2. Klik **Add Product** → pilih **Instagram Platform**
-3. Pilih **Instagram API with Instagram Login**
-4. Di **Business Login settings**, copy **Instagram App ID** dan **Instagram App Secret**
-5. **OAuth redirect URIs** → tambah `https://kontenmumelesat.com/api/oauth/callback`
-6. Scopes yang perlu diaktifkan:
+2. Pilih **Use Cases** → cari **Instagram API with Instagram Login** → ikuti setup
+3. Jika minta Business Portfolio, buat dulu di https://business.facebook.com/create
+4. Di dashboard, sidebar kiri klik **Instagram** → **API Setup with Instagram Business Login**
+5. Copy **Instagram App ID** dan **Instagram App Secret**
+6. **OAuth redirect URIs** → tambah `https://kontenmumelesat.com/api/oauth/callback`
+7. Scopes yang perlu diaktifkan:
    - `instagram_business_basic`
    - `instagram_business_content_publish`
    - `instagram_business_manage_comments`
