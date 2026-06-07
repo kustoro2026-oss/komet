@@ -10,7 +10,6 @@ import {
   Mail,
   Clock,
   Loader2,
-  X,
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";

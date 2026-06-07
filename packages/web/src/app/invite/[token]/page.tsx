@@ -29,7 +29,7 @@ export default function InviteAcceptPage({
   params: Promise<{ token: string }>;
 }) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [token, setToken] = useState<string>("");
   const [invitation, setInvitation] = useState<InvitationInfo | null>(null);
   const [loading, setLoading] = useState(true);
