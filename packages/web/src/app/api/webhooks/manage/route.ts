@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Map to match expected shape (similar to ZernioWebhook)
-    const mapped = webhooks.map((w) => ({
+    const mapped = (webhooks as Record<string, unknown>[]).map((w) => ({
       _id: w.id,
       name: w.name,
       url: w.url,
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     // Auto-generate secret if not provided
     const webhookSecret = secret || crypto.randomBytes(32).toString("hex");
 
-    const webhook = await prisma.webhookEndpoint.create({
+    const webhook = (await prisma.webhookEndpoint.create({
       data: {
         workspaceId: workspace.id,
         name,
@@ -137,20 +137,20 @@ export async function POST(request: NextRequest) {
         customHeaders: customHeaders || {},
         isActive: isActive ?? true,
       },
-    });
+    })) as Record<string, unknown>;
 
     return NextResponse.json({
       success: true,
       webhook: {
         _id: webhook.id,
-        name: webhook.name,
-        url: webhook.url,
-        secret: webhook.secret,
+        name: webhook.name as string,
+        url: webhook.url as string,
+        secret: webhook.secret as string | undefined,
         events: webhook.events as string[],
         customHeaders: webhook.customHeaders as Record<string, string> | undefined,
-        isActive: webhook.isActive,
-        failureCount: webhook.failureCount,
-        lastFiredAt: webhook.lastDeliveryAt?.toISOString(),
+        isActive: webhook.isActive as boolean,
+        failureCount: webhook.failureCount as number,
+        lastFiredAt: (webhook.lastDeliveryAt as Date | null)?.toISOString(),
       },
     });
   } catch (error: unknown) {
@@ -206,23 +206,23 @@ export async function PUT(request: NextRequest) {
     if (isActive !== undefined) updateData.isActive = isActive;
     if (customHeaders !== undefined) updateData.customHeaders = customHeaders;
 
-    const updated = await prisma.webhookEndpoint.update({
+    const updated = (await prisma.webhookEndpoint.update({
       where: { id: webhookId },
       data: updateData,
-    });
+    })) as Record<string, unknown>;
 
     return NextResponse.json({
       success: true,
       webhook: {
-        _id: updated.id,
-        name: updated.name,
-        url: updated.url,
-        secret: updated.secret,
+        _id: updated.id as string,
+        name: updated.name as string,
+        url: updated.url as string,
+        secret: updated.secret as string | undefined,
         events: updated.events as string[],
         customHeaders: updated.customHeaders as Record<string, string> | undefined,
-        isActive: updated.isActive,
-        failureCount: updated.failureCount,
-        lastFiredAt: updated.lastDeliveryAt?.toISOString(),
+        isActive: updated.isActive as boolean,
+        failureCount: updated.failureCount as number,
+        lastFiredAt: (updated.lastDeliveryAt as Date | null)?.toISOString(),
       },
     });
   } catch (error: unknown) {
