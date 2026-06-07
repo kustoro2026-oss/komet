@@ -20,6 +20,8 @@
     "@komet/email": "workspace:*",
     "@komet/notifications": "workspace:*",
     "@komet/shared": "workspace:*",
+    "@prisma/client": "^5.22.0",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^7.8.0",
     "@radix-ui/react-switch": "^1.2.6",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.46.1",
