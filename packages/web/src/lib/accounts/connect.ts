@@ -1,19 +1,22 @@
 // Account connection helpers (replacing Zernio OAuth flow)
-// Stub implementations — OAuth flow needs platform-specific implementation
 
 /** Start OAuth flow for a platform */
 export async function startOAuth(
-  platform: string
-): Promise<{ authUrl: string; state: string }> {
-  // For now, redirect to a placeholder that explains OAuth is being set up
-  // TODO: Implement direct OAuth flow for each platform
+  platform: string,
+  profileId?: string
+): Promise<{ authUrl: string }> {
+  const res = await fetch("/api/oauth/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ platform, profileId }),
+  });
 
-  // For Twitter/X, we'd need OAuth 2.0 PKCE flow
-  // For now, show a message
-  throw new Error(
-    `Direct OAuth for ${platform} is not yet configured. ` +
-    "Please configure the platform's OAuth credentials in your environment variables."
-  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || "Failed to start OAuth");
+  }
+
+  return res.json();
 }
 
 /** Connect Bluesky with identifier and app password */

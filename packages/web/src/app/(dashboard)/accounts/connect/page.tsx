@@ -100,7 +100,7 @@ export default function ConnectAccountPage() {
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
       } else {
-        const result = await startOAuth(selectedPlatform);
+        const result = await startOAuth(selectedPlatform, profileId);
         if (result.authUrl) {
           window.location.href = result.authUrl;
           return;
