@@ -17,6 +17,7 @@
     "@komet/auth": "workspace:*",
     "@komet/cache": "workspace:*",
     "@komet/db": "workspace:*",
+    "@komet/email": "workspace:*",
     "@komet/notifications": "workspace:*",
     "@komet/shared": "workspace:*",
     "@komet/zernio-client": "workspace:*",

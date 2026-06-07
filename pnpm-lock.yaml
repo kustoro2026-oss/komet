@@ -115,6 +115,9 @@ importers:
       '@komet/db':
         specifier: workspace:*
         version: link:../db
+      '@komet/email':
+        specifier: workspace:*
+        version: link:../email
       '@komet/notifications':
         specifier: workspace:*
         version: link:../notifications
