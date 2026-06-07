@@ -2,7 +2,6 @@
 // POST: accepts multipart form with a file, uploads directly to Supabase Storage
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, getUserFromRequest } from "@/lib/supabase-admin";
-import { prisma } from "@komet/db";
 import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +13,8 @@ export async function POST(request: NextRequest) {
     if (error || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { prisma } = await import("@komet/db");
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
