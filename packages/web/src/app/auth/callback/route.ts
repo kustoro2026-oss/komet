@@ -21,6 +21,36 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Get the authenticated user to sync with local DB
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (authUser) {
+        const email = authUser.email || "";
+        const name =
+          authUser.user_metadata?.full_name ||
+          authUser.user_metadata?.name ||
+          email.split("@")[0];
+
+        const { prisma } = await import("@komet/db");
+
+        await prisma.user.upsert({
+          where: { supabaseId: authUser.id },
+          update: {
+            email,
+            name,
+            lastSeenAt: new Date(),
+          },
+          create: {
+            supabaseId: authUser.id,
+            email,
+            name,
+            lastSeenAt: new Date(),
+          },
+        });
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

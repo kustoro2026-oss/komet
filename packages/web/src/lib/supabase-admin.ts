@@ -38,6 +38,33 @@ export async function getUserFromRequest(request: NextRequest) {
     return { user: null, error: "Unauthorized" };
   }
 
+  // Auto-sync user to Prisma database
+  try {
+    const { prisma } = await import("@komet/db");
+    const email = data.user.email || "";
+    const name =
+      data.user.user_metadata?.full_name ||
+      data.user.user_metadata?.name ||
+      email.split("@")[0];
+
+    await prisma.user.upsert({
+      where: { supabaseId: data.user.id },
+      update: {
+        email,
+        name,
+        lastSeenAt: new Date(),
+      },
+      create: {
+        supabaseId: data.user.id,
+        email,
+        name,
+        lastSeenAt: new Date(),
+      },
+    });
+  } catch (dbErr) {
+    console.error("Failed to sync user to database:", dbErr);
+  }
+
   return {
     user: {
       id: data.user.id,
