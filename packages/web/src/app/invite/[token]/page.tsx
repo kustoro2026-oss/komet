@@ -26,22 +26,17 @@ interface InvitationInfo {
 export default function InviteAcceptPage({
   params,
 }: {
-  params: Promise<{ token: string }>;
+  params: { token: string };
 }) {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const [token, setToken] = useState<string>("");
+  const token = params.token;
   const [invitation, setInvitation] = useState<InvitationInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [status, setStatus] = useState<"loading" | "valid" | "expired" | "accepted" | "not_found" | "error">("loading");
-
-  // Resolve params
-  useEffect(() => {
-    params.then((p) => setToken(p.token));
-  }, [params]);
 
   // Validate invitation
   useEffect(() => {

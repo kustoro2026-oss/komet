@@ -29,14 +29,14 @@ async function getAuthenticatedUserId(request: NextRequest): Promise<string | nu
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: { memberId: string } }
 ) {
   const userId = await getAuthenticatedUserId(request);
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { memberId } = await params;
+  const { memberId } = params;
 
   try {
     const body = await request.json();
@@ -87,14 +87,14 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ memberId: string }> }
+  { params }: { params: { memberId: string } }
 ) {
   const userId = await getAuthenticatedUserId(request);
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { memberId } = await params;
+  const { memberId } = params;
 
   try {
     // Get the target member to check workspace

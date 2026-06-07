@@ -23,9 +23,9 @@ async function getAuthenticatedSupabaseId(request: NextRequest): Promise<string 
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: { token: string } }
 ) {
-  const { token } = await params;
+  const { token } = params;
 
   try {
     const invitation = await prisma.teamInvitation.findUnique({
@@ -89,14 +89,14 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: { token: string } }
 ) {
   const supabaseId = await getAuthenticatedSupabaseId(request);
   if (!supabaseId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { token } = await params;
+  const { token } = params;
 
   try {
     // Find the Komet user
