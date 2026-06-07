@@ -1,12 +1,12 @@
-// API Route: Zernio Webhooks Receiver
-// Receives webhook events from Zernio per docs.zernio.com/webhooks
+// API Route: Webhook Events Receiver
+// Receives webhook events from the platform per docs
 // Handles all 33 event types, verifies signatures, stores events via /tmp
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-/* ───────── All 33 Zernio webhook event types ───────── */
+/* ───────── All 33 webhook event types ───────── */
 const ZERNIO_EVENTS = [
   // Post events
   "post.published",
@@ -51,15 +51,15 @@ const ZERNIO_EVENTS = [
   "webhook.test",
 ] as const;
 
-type ZernioEventType = (typeof ZERNIO_EVENTS)[number];
+type WebhookEventType = (typeof ZERNIO_EVENTS)[number];
 
 /* ───────── Event storage path (Vercel-compatible /tmp) ───────── */
-const EVENTS_FILE = path.join("/tmp", "zernio-webhook-events.json");
+const EVENTS_FILE = path.join("/tmp", "webhook-events.json");
 const EVENTS_MAX = 500; // keep last 500 events
 
 interface StoredEvent {
-  id: string; // Zernio event ID (deduplication key)
-  event: ZernioEventType;
+  id: string; // Event ID (deduplication key)
+  event: WebhookEventType;
   payload: unknown;
   receivedAt: string;
   isRead: boolean;
@@ -156,13 +156,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract event type — Zernio sends `event` at top level
+    // Extract event type — platform sends `event` at top level
     const body = payload as Record<string, unknown>;
     const eventType = body.event as string | undefined;
     const id = (body.id as string) || eventId;
 
-    if (!eventType || !ZERNIO_EVENTS.includes(eventType as ZernioEventType)) {
-      console.warn(`[Zernio Webhook] Unknown or missing event: ${eventType}`);
+    if (!eventType || !ZERNIO_EVENTS.includes(eventType as WebhookEventType)) {
+      console.warn(`[Webhook Events] Unknown or missing event: ${eventType}`);
       return NextResponse.json({ received: true, warning: "Unknown event type" });
     }
 
@@ -176,24 +176,24 @@ export async function POST(request: NextRequest) {
     // ── Idempotency check ──
     const existing = findExisting(id);
     if (existing) {
-      console.log(`[Zernio Webhook] Duplicate event ${id} (${eventType}), skipped`);
+      console.log(`[Webhook Events] Duplicate event ${id} (${eventType}), skipped`);
       return NextResponse.json({ received: true, deduplicated: true });
     }
 
     // ── Log and store ──
     console.log(
-      `[Zernio Webhook] ${eventType} | id=${id} | ${Date.now() - start}ms`
+      `[Webhook Events] ${eventType} | id=${id} | ${Date.now() - start}ms`
     );
 
     appendEvent({
       id,
-      event: eventType as ZernioEventType,
+      event: eventType as WebhookEventType,
       payload: body,
       receivedAt: new Date().toISOString(),
       isRead: false,
     });
 
-    // ── Respond fast (Zernio expects 2xx within 5s) ──
+    // ── Respond fast (platform expects 2xx within 5s) ──
     return NextResponse.json({
       received: true,
       event: eventType,
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       processedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[Zernio Webhook] Error:", error);
+    console.error("[Webhook Events] Error:", error);
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }

@@ -15,7 +15,7 @@ export interface NotificationItem {
   receivedAt: string;
 }
 
-/* ───────── Zernio event → label, icon, color mapping ───────── */
+/* ───────── Webhook event → label, icon, color mapping ───────── */
 
 export interface EventCategory {
   key: string;
@@ -132,7 +132,7 @@ export function useNotificationService() {
   /* ─── Fetch stored webhook events ─── */
   const fetchEvents = useCallback(async () => {
     try {
-      const res = await fetch("/api/webhooks/zernio");
+      const res = await fetch("/api/webhooks/events");
       if (!res.ok) return;
       const data = await res.json();
       const items: NotificationItem[] = (data.events || []).map(
@@ -154,7 +154,7 @@ export function useNotificationService() {
     }
   }, []);
 
-  /* ─── Fetch webhooks from Zernio ─── */
+  /* ─── Fetch webhook configurations ─── */
   const fetchWebhooks = useCallback(async () => {
     try {
       const res = await fetch("/api/webhooks/manage");
@@ -180,7 +180,7 @@ export function useNotificationService() {
   const markAsRead = useCallback(async (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     try {
-      await fetch("/api/webhooks/zernio", {
+      await fetch("/api/webhooks/events", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
@@ -191,7 +191,7 @@ export function useNotificationService() {
   const markAllAsRead = useCallback(async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     try {
-      await fetch("/api/webhooks/zernio", {
+      await fetch("/api/webhooks/events", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ markAll: true }),
@@ -202,7 +202,7 @@ export function useNotificationService() {
   const removeNotification = useCallback(async (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
-      await fetch("/api/webhooks/zernio", {
+      await fetch("/api/webhooks/events", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
@@ -213,7 +213,7 @@ export function useNotificationService() {
   const clearAll = useCallback(async () => {
     setNotifications([]);
     try {
-      await fetch("/api/webhooks/zernio", {
+      await fetch("/api/webhooks/events", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clearAll: true }),

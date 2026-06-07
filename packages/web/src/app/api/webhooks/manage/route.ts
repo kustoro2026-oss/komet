@@ -1,5 +1,5 @@
 // API Route: Webhook Management
-// Proxies webhook management calls to Zernio API
+// Proxies webhook management calls to the platform API
 // Routes: GET /api/webhooks/manage → list | POST → create | DELETE → delete | POST /test → test
 import { NextRequest, NextResponse } from "next/server";
 import { ZernioClient } from "@komet/zernio-client";
@@ -16,7 +16,7 @@ export async function GET() {
   const client = getClient();
   if (!client) {
     return NextResponse.json(
-      { error: "Zernio API key not configured" },
+      { error: "Platform API key not configured" },
       { status: 500 }
     );
   }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const client = getClient();
   if (!client) {
     return NextResponse.json(
-      { error: "Zernio API key not configured" },
+      { error: "Platform API key not configured" },
       { status: 500 }
     );
   }
@@ -92,7 +92,7 @@ export async function DELETE(request: NextRequest) {
   const client = getClient();
   if (!client) {
     return NextResponse.json(
-      { error: "Zernio API key not configured" },
+      { error: "Platform API key not configured" },
       { status: 500 }
     );
   }

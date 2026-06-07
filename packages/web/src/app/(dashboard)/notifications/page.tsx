@@ -83,8 +83,8 @@ function EventIcon({ eventType }: { eventType: string }) {
   }
 }
 
-/* ───────── All Zernio event types for webhook create form ───────── */
-const ALL_ZERNIO_EVENTS = Object.keys(EVENT_CATEGORIES).filter((e) => e !== "webhook.test");
+/* ───────── All webhook event types for create form ───────── */
+const ALL_WEBHOOK_EVENTS = Object.keys(EVENT_CATEGORIES).filter((e) => e !== "webhook.test");
 
 /* ═══════════════════════════════════════
    NOTIFICATIONS TAB
@@ -170,7 +170,7 @@ function NotificationsTab() {
           <Bell className="mx-auto h-12 w-12 text-[var(--color-on-dark-muted)]" />
           <h3 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">No notifications yet</h3>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)] max-w-sm mx-auto">
-            Zernio webhook events will appear here. Configure a webhook in the <strong>Webhook Config</strong> tab and point it to your endpoint.
+            Webhook events will appear here. Configure a webhook in the <strong>Webhook Config</strong> tab and point it to your endpoint.
           </p>
         </div>
       ) : (
@@ -336,7 +336,7 @@ function WebhookConfigTab() {
   };
 
   const webhookEndpoint = typeof window !== "undefined"
-    ? `${window.location.origin}/api/webhooks/zernio`
+    ? `${window.location.origin}/api/webhooks/events`
     : "";
 
   return (
@@ -350,7 +350,7 @@ function WebhookConfigTab() {
           <div className="flex-1 min-w-0">
             <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">Your Webhook Endpoint</p>
             <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-              Point your Zernio webhooks to this URL to receive real-time events:
+              Point your webhooks to this URL to receive real-time events:
             </p>
             <div className="mt-2 flex items-center gap-2">
               <code className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-micro text-[var(--color-on-dark)] break-all select-all">
@@ -403,7 +403,7 @@ function WebhookConfigTab() {
           </div>
           <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">No webhooks configured</p>
           <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] max-w-xs mx-auto">
-            Add your first webhook to start receiving real-time events from Zernio.
+            Add your first webhook to start receiving real-time events from your platform.
           </p>
           <button
             onClick={() => setShowForm(true)}
@@ -510,13 +510,13 @@ function WebhookConfigTab() {
               <div>
                 <label className={labelClass}>Secret (optional)</label>
                 <input value={formSecret} onChange={(e) => setFormSecret(e.target.value)} placeholder="HMAC-SHA256 signing secret" className={inputClass} />
-                <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">Used to verify webhook signatures via X-Zernio-Signature header.</p>
+                <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">Used to verify webhook signatures via X-Signature header.</p>
               </div>
 
               <div>
                 <label className={labelClass}>Events ({formEvents.length} selected)</label>
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-2 space-y-0.5">
-                  {ALL_ZERNIO_EVENTS.map((e) => {
+                  {ALL_WEBHOOK_EVENTS.map((e) => {
                     const selected = formEvents.includes(e);
                     const cat = EVENT_CATEGORIES[e];
                     return (
@@ -597,7 +597,7 @@ export default function NotificationsPage() {
             Notifications
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Real-time Zernio webhook events &amp; configuration
+            Real-time webhook events &amp; configuration
           </p>
         </div>
       </div>
