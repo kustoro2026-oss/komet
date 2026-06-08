@@ -238,7 +238,7 @@ export default function LandingPage() {
           </motion.div>
           <div className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.04] md:grid-cols-4">
             {quickStats.map((stat, i) => (
-              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-[var(--color-surface-dark)] p-8 text-center">
+              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-[var(--color-surface-dark)] p-5 sm:p-8 text-center">
                 <p className="font-display text-4xl font-bold text-[var(--color-on-dark)]">{stat.value}</p>
                 <p className="mt-1.5 text-sm text-[var(--color-on-dark-muted)]">{stat.label}</p>
               </motion.div>
@@ -263,8 +263,8 @@ export default function LandingPage() {
             ].map((step, i) => {
               const Icon = step.icon;
               return (
-                <motion.div key={step.step} variants={fadeUp} custom={i} className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 transition-all duration-300 hover:border-white/10">
-                  <span className="font-display absolute right-5 top-4 select-none text-5xl font-bold leading-none text-white/[0.04]">{step.step}</span>
+                <motion.div key={step.step} variants={fadeUp} custom={i} className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 sm:p-8 transition-all duration-300 hover:border-white/10">
+                  <span className="font-display absolute right-5 top-4 select-none text-4xl sm:text-5xl font-bold leading-none text-white/[0.04]">{step.step}</span>
                   <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-lg shadow-[var(--color-primary)]/20">
                     <Icon className="h-5 w-5 text-white" />
                   </div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
             ].map((segment, i) => {
               const Icon = segment.icon;
               return (
-                <motion.div key={segment.title} variants={fadeUp} custom={i} className={`relative rounded-2xl border p-8 ${
+                <motion.div key={segment.title} variants={fadeUp} custom={i} className={`relative rounded-2xl border p-6 sm:p-8 ${
                   segment.featured
                     ? "border-[var(--color-primary)]/40 bg-gradient-to-b from-[var(--color-primary)]/[0.08] to-transparent"
                     : "border-white/[0.06] bg-white/[0.02]"
@@ -399,21 +399,35 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== ALL PLATFORMS (inspired by Buffer's platform grid) ===== */}
-      <section className="border-t border-white/[0.06] px-4 sm:px-6 py-14 sm:py-20">
-        <div className="mx-auto max-w-6xl">
+      {/* ===== ALL PLATFORMS — Auto-scrolling Marquee ===== */}
+      <section className="border-t border-white/[0.06] py-14 sm:py-20 overflow-hidden">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <SectionLabel>Integrations</SectionLabel>
             <h2 className="mt-4 font-display text-2xl sm:text-3xl font-bold text-[var(--color-on-dark)]">Connect your favorite platforms</h2>
           </motion.div>
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-10 flex flex-wrap justify-center gap-2 sm:gap-3">
-            {allPlatforms.map((p, i) => (
-              <motion.div key={p.id} variants={fadeUp} custom={i} className="flex items-center gap-2 sm:gap-3 rounded-xl border border-white/[0.10] bg-white/[0.05] px-2.5 sm:px-4 py-3 sm:py-3.5 transition-colors hover:border-white/[0.18] hover:bg-white/[0.08] will-change-transform transform-gpu backface-hidden">
-                <PlatformIcon platform={p.id} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                <span className="truncate text-xs sm:text-sm text-[var(--color-on-dark-soft)]">{p.label}</span>
-              </motion.div>
+        </div>
+        {/* Row 1 — scroll left */}
+        <div className="mt-10 overflow-hidden" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
+          <div className="flex w-max gap-3 animate-marquee-left animate-marquee-paused px-4">
+            {[...allPlatforms, ...allPlatforms].map((p, i) => (
+              <div key={`${p.id}-a-${i}`} className="flex items-center gap-2 sm:gap-3 rounded-xl border border-white/[0.10] bg-white/[0.05] px-3 sm:px-4 py-3 sm:py-3.5 shrink-0">
+                <PlatformIcon platform={p.id} className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm text-[var(--color-on-dark-soft)] whitespace-nowrap">{p.label}</span>
+              </div>
             ))}
-          </motion.div>
+          </div>
+        </div>
+        {/* Row 2 — scroll right */}
+        <div className="mt-3 overflow-hidden" style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}>
+          <div className="flex w-max gap-3 animate-marquee-right animate-marquee-paused px-4">
+            {[...allPlatforms.slice().reverse(), ...allPlatforms.slice().reverse()].map((p, i) => (
+              <div key={`${p.id}-b-${i}`} className="flex items-center gap-2 sm:gap-3 rounded-xl border border-white/[0.10] bg-white/[0.05] px-3 sm:px-4 py-3 sm:py-3.5 shrink-0">
+                <PlatformIcon platform={p.id} className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm text-[var(--color-on-dark-soft)] whitespace-nowrap">{p.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
