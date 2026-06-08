@@ -162,7 +162,7 @@ export default function SettingsPage() {
   }, [user]);
 
   const initials = name
-    ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    ? name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : email.charAt(0).toUpperCase();
 
   /* ═══════════════════════════════════════════
