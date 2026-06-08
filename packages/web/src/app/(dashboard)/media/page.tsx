@@ -78,17 +78,34 @@ export default function MediaPage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("/api/media/upload", {
-          method: "POST",
-          body: formData,
+        // Use XMLHttpRequest for real-time upload progress
+        const data: { media: { id: string; name: string; type: string; mimeType: string; size: string; sizeBytes: number; publicUrl: string; key: string; createdAt?: string } } = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/api/media/upload");
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const fileProgress = Math.round((e.loaded / e.total) * 100);
+              setUploadProgress(Math.round((i * 100 + fileProgress) / fileArray.length));
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch { reject(new Error("Invalid response")); }
+            } else {
+              try {
+                const err = JSON.parse(xhr.responseText);
+                reject(new Error(err.error || `Error ${xhr.status}`));
+              } catch { reject(new Error(`Error ${xhr.status}`)); }
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.send(formData);
         });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: "Upload failed" }));
-          throw new Error(err.error || `Error ${res.status}`);
-        }
-
-        const data = await res.json();
         addItem({
           id: data.media.id,
           name: data.media.name,

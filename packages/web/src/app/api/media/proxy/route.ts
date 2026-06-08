@@ -14,6 +14,14 @@ export async function GET(request: NextRequest) {
 
     // Only allow proxying from known media domains
     const allowed = ["media.zernio.com"];
+    // Also allow Supabase Storage if configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      try {
+        const supabaseHost = new URL(supabaseUrl).hostname;
+        allowed.push(supabaseHost);
+      } catch {}
+    }
     const parsed = new URL(url);
     if (!allowed.some((d) => parsed.hostname.endsWith(d))) {
       return NextResponse.json({ error: "URL not allowed" }, { status: 403 });
