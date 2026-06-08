@@ -10,6 +10,7 @@ import { useSidebarStore } from "@/stores/sidebar-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { LanguageSwitcher } from "./language-switcher";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   LayoutDashboard,
   Calendar,
@@ -86,6 +87,15 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
     fetchWorkspaces();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const user = useAuthStore((s) => s.user);
+  const displayName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "User";
+  const email = user?.email || "";
+  const initial = displayName.charAt(0).toUpperCase();
 
   const sidebarContent = (
     <aside
@@ -385,15 +395,15 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
           )}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-deep)] text-xs font-semibold text-[var(--color-on-primary)] shadow-sm">
-            U
+            {initial}
           </div>
           {!collapsed && (
             <div className="flex flex-1 flex-col overflow-hidden">
               <span className="truncate text-sm font-medium text-[var(--color-on-dark)] light:text-[var(--color-ink)]">
-                User Name
+                {displayName}
               </span>
               <span className="truncate text-xs text-[var(--color-on-dark-muted)] light:text-[var(--color-ink-faint)]">
-                user@komet.app
+                {email}
               </span>
             </div>
           )}
