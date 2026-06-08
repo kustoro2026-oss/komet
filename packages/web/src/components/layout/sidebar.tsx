@@ -38,6 +38,7 @@ import {
 interface SidebarProps {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  className?: string;
 }
 
 const navItems = [
@@ -55,7 +56,7 @@ const navItems = [
   { href: "/team", labelKey: "team", icon: UserPlus },
 ];
 
-export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+export function Sidebar({ mobileOpen = false, onMobileClose, className }: SidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { collapsed, toggleCollapsed } = useSidebarStore();
@@ -105,7 +106,8 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
         "bg-[var(--color-surface-dark)] border-[var(--color-ink-muted)] text-[var(--color-on-dark-soft)]",
         // Light mode override
         "light:bg-[var(--color-canvas)] light:border-[var(--color-hairline)] light:text-[var(--color-ink-soft)]",
-        collapsed ? "w-[72px]" : "w-[264px]"
+        collapsed ? "w-[72px]" : "w-[264px]",
+        className
       )}
     >
       {/* Logo Area */}
