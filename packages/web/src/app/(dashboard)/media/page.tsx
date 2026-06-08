@@ -109,7 +109,7 @@ export default function MediaPage() {
         addItem({
           id: data.media.id,
           name: data.media.name,
-          type: data.media.type,
+          type: data.media.type as "document" | "image" | "video" | "audio",
           mimeType: data.media.mimeType,
           size: data.media.size,
           sizeBytes: data.media.sizeBytes,
