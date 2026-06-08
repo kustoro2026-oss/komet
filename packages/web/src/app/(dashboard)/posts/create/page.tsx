@@ -371,33 +371,64 @@ export default function CreatePostPage() {
   return (
     <div className="mx-auto max-w-4xl">
       {/* Step Progress */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        {steps.map((s, i) => (
-          <div key={s.key} className="flex items-center gap-2">
+      {/* Desktop: horizontal bar | Mobile: vertical list */}
+      <div className="mb-8">
+        <div className="hidden sm:flex items-center justify-center gap-2">
+          {steps.map((s, i) => (
+            <div key={s.key} className="flex items-center gap-2">
+              <button
+                onClick={() => setStep(s.key)}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  step === s.key
+                    ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
+                    : currentStepIndex > i
+                    ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
+                    : "bg-[var(--color-surface-dark-raised)] text-[var(--color-on-dark-soft)]"
+                }`}
+              >
+                <s.icon className="h-4 w-4" />
+                <span>{s.label}</span>
+              </button>
+              {i < steps.length - 1 && (
+                <div
+                  className={`h-px w-8 ${
+                    currentStepIndex > i
+                      ? "bg-[var(--color-primary)]"
+                      : "bg-[var(--color-ink-muted)]"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        {/* Mobile: vertical step list */}
+        <div className="flex sm:hidden flex-col gap-1.5">
+          {steps.map((s, i) => (
             <button
+              key={s.key}
               onClick={() => setStep(s.key)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-left transition-colors ${
                 step === s.key
-                  ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
+                  ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary)]/25"
                   : currentStepIndex > i
-                  ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
-                  : "bg-[var(--color-surface-dark-raised)] text-[var(--color-on-dark-soft)]"
+                  ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20"
+                  : "bg-[var(--color-surface-dark-raised)] text-[var(--color-on-dark-soft)] border border-white/[0.06]"
               }`}
             >
-              <s.icon className="h-4 w-4" />
-              <span>{s.label}</span>
+              <s.icon className={`h-5 w-5 shrink-0 ${step === s.key ? "text-white" : ""}`} />
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] uppercase tracking-wider opacity-60">Step {i + 1}</span>
+                <span className="text-base">{s.label}</span>
+              </div>
+              {currentStepIndex > i && (
+                <CheckCircle2 className="h-4 w-4 ml-auto text-[var(--color-success)]" />
+              )}
+              {step === s.key && (
+                <ArrowRight className="h-4 w-4 ml-auto" />
+              )}
             </button>
-            {i < steps.length - 1 && (
-              <div
-                className={`h-px w-8 ${
-                  currentStepIndex >= i
-                    ? "bg-[var(--color-primary)]"
-                    : "bg-[var(--color-ink-muted)]"
-                }`}
-              />
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Status Notification */}
@@ -434,7 +465,7 @@ export default function CreatePostPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6">
+      <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4 sm:p-6">
         {/* STEP 1: Content */}
         {step === "content" && (
           <div className="space-y-6">
