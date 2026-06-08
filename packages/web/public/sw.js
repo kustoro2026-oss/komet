@@ -6,11 +6,17 @@ const STATIC_ASSETS = [
   "/komet-icon.svg",
 ];
 
-// Install: cache static assets
+// Install: cache static assets (silent fail if any resource is unavailable)
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return Promise.allSettled(
+        STATIC_ASSETS.map((url) =>
+          fetch(url, { cache: "reload" }).then((r) => {
+            if (r.ok) cache.put(url, r.clone());
+          })
+        )
+      );
     })
   );
   self.skipWaiting();
@@ -64,10 +70,13 @@ self.addEventListener("fetch", (event) => {
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
+        if (!response || response.status >= 400) {
+          return caches.match(request) || new Response(null, { status: 502 });
+        }
         const cloned = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
         return response;
-      });
+      }).catch(() => caches.match(request));
     })
   );
 });
