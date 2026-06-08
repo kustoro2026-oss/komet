@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
+import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
 import {
   Save,
   User,
@@ -20,65 +22,13 @@ import {
   Sun,
   Moon,
   Monitor,
+  Loader2,
 } from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { createClient } from "@/lib/supabase/client";
 
-/* ───────── Tabs that need a Save button ───────── */
-const EDITABLE_TABS = new Set<string>([
-  "general",
-  "appearance",
-  "notifications",
-  "language",
-  "security",
-]);
-
-/* ───────── Theme cards for appearance tab ───────── */
-const THEMES = [
-  {
-    id: "dark",
-    label: "Dark",
-    icon: Moon,
-    preview: (
-      <div className="h-14 rounded-md border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-2 flex gap-1.5">
-        <div className="w-6 rounded bg-[var(--color-ink-muted)]" />
-        <div className="flex-1 space-y-1">
-          <div className="h-1.5 w-3/4 rounded bg-[var(--color-ink-soft)]" />
-          <div className="h-1.5 w-1/2 rounded bg-[var(--color-ink-faint)]" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "light",
-    label: "Light",
-    icon: Sun,
-    preview: (
-      <div className="h-14 rounded-md border border-[var(--color-hairline)] bg-[var(--color-canvas-pure)] p-2 flex gap-1.5">
-        <div className="w-6 rounded bg-[var(--color-hairline)]" />
-        <div className="flex-1 space-y-1">
-          <div className="h-1.5 w-3/4 rounded bg-[var(--color-ink-soft)]" />
-          <div className="h-1.5 w-1/2 rounded bg-[var(--color-muted)]" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    id: "system",
-    label: "System",
-    icon: Monitor,
-    preview: (
-      <div className="h-14 rounded-md border border-[var(--color-ink-muted)] bg-[var(--color-canvas-pure)] dark:bg-[var(--color-surface-dark)] p-2 flex gap-1.5 overflow-hidden">
-        <div className="w-6 shrink-0 rounded-tl-md rounded-bl-md bg-[var(--color-hairline)] dark:bg-[var(--color-ink-muted)]" />
-        <div className="flex-1 space-y-1">
-          <div className="h-1.5 w-3/4 rounded bg-[var(--color-ink-soft)] dark:bg-[var(--color-ink-soft)]" />
-          <div className="h-1.5 w-1/2 rounded bg-[var(--color-muted)] dark:bg-[var(--color-ink-faint)]" />
-        </div>
-      </div>
-    ),
-  },
-];
-
-/* ───────── Settings grouped for clean sidebar ───────── */
+/* ───────── Settings grouped for sidebar ───────── */
 const SETTINGS_GROUPS = [
   {
     label: "Account",
@@ -112,295 +62,241 @@ const SETTINGS_GROUPS = [
 ] as const;
 
 type TabId = (typeof SETTINGS_GROUPS)[number]["items"][number]["id"];
-
-// Flatten for mobile chips
 const ALL_TABS = SETTINGS_GROUPS.flatMap((g) => [...g.items]);
+const EDITABLE_TABS = new Set<TabId>(["general", "appearance", "notifications", "language", "security"]);
 
-/* ───────── Shared form input class ───────── */
+/* ───────── Styles ───────── */
 const inputClass =
-  "w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3.5 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-shadow";
+  "w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3.5 py-2.5 text-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-shadow";
+const labelClass = "block text-sm font-medium text-[var(--color-on-dark)] mb-1.5";
 
-const labelClass = "block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5";
-
-/* ───────── Section heading ───────── */
 function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-5">
-      <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-        {title}
-      </h3>
-      {description && (
-        <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{description}</p>
-      )}
+      <h3 className="text-lg font-semibold text-[var(--color-on-dark)]">{title}</h3>
+      {description && <p className="mt-1 text-sm text-[var(--color-on-dark-soft)]">{description}</p>}
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════
-   MAIN PAGE COMPONENT
-   ═══════════════════════════════════════════ */
+/* ───────── Theme cards ───────── */
+const THEMES = [
+  { id: "dark", label: "Dark", icon: Moon },
+  { id: "light", label: "Light", icon: Sun },
+  { id: "system", label: "System", icon: Monitor },
+] as const;
 
+/* ═══════════════════════════════════════════
+   NOTIFICATION TOGGLES (localStorage)
+   ═══════════════════════════════════════════ */
+const NOTIF_ITEMS = [
+  { key: "post_published", label: "Post published", desc: "When a scheduled post is successfully published" },
+  { key: "post_failed", label: "Post failed", desc: "When a post fails to publish" },
+  { key: "new_comments", label: "New comments", desc: "When you receive new comments on your posts" },
+  { key: "new_messages", label: "New messages", desc: "When you receive new direct messages" },
+  { key: "team_invitations", label: "Team invitations", desc: "When you're invited to a workspace" },
+  { key: "ai_complete", label: "AI generation complete", desc: "When AI finishes generating content" },
+  { key: "weekly_digest", label: "Weekly digest", desc: "A summary of your weekly activity" },
+  { key: "product_updates", label: "Product updates", desc: "New features and improvements" },
+];
+
+function loadNotifPrefs(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem("komet-notif-prefs");
+    const parsed = raw ? JSON.parse(raw) : {};
+    const out: Record<string, boolean> = {};
+    NOTIF_ITEMS.forEach((n) => {
+      out[n.key] = parsed[n.key] ?? true;
+    });
+    return out;
+  } catch {
+    const out: Record<string, boolean> = {};
+    NOTIF_ITEMS.forEach((n) => (out[n.key] = true));
+    return out;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   MAIN
+   ═══════════════════════════════════════════ */
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const t = useTranslations("settings");
-  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace } =
-    useWorkspaceStore();
+  const locale = useLocale();
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const user = useAuthStore((s) => s.user);
+  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace } = useWorkspaceStore();
+  const supabase = createClient();
+
+  /* ─── General form state (from real user) ─── */
+  const [name, setName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [bio, setBio] = useState("");
+  const [savingGeneral, setSavingGeneral] = useState(false);
+  const [generalSaved, setGeneralSaved] = useState(false);
+
+  /* ─── Security state ─── */
+  const [currentPass, setCurrentPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [passError, setPassError] = useState("");
+  const [passSuccess, setPassSuccess] = useState("");
+  const [savingPass, setSavingPass] = useState(false);
+
+  /* ─── Notifications state ─── */
+  const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    setNotifPrefs(loadNotifPrefs());
+  }, []);
+
+  /* ─── Delete workspace confirmation ─── */
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  /* ───── Form state ───── */
-  const [name, setName] = useState("John Doe");
-  const [email, setEmail] = useState("john@example.com");
-  const [bio, setBio] = useState("Social media manager & content creator");
-  const [theme, setTheme] = useState("dark");
-  const [language, setLanguage] = useState("en");
+  /* ─── Init form from auth store on mount ─── */
+  useEffect(() => {
+    if (user) {
+      setName(user.user_metadata?.full_name || user.user_metadata?.name || "");
+      setEmail(user.email || "");
+    }
+  }, [user]);
 
-  /* ───── Save handler ───── */
-  const handleSave = () => {
-    // TODO: connect to real persistence
-    console.log("Saving settings…", { activeTab });
+  const initials = name
+    ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : email.charAt(0).toUpperCase();
+
+  /* ═══════════════════════════════════════════
+     SAVE HANDLERS
+     ═══════════════════════════════════════════ */
+  const handleSaveGeneral = async () => {
+    setSavingGeneral(true);
+    setGeneralSaved(false);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: email,
+        data: { full_name: name },
+      });
+      if (error) throw error;
+      setGeneralSaved(true);
+      setTimeout(() => setGeneralSaved(false), 3000);
+    } catch (err: unknown) {
+      console.error("Failed to save profile:", err);
+    } finally {
+      setSavingGeneral(false);
+    }
   };
 
-  /* ───── Flat avatar initial ───── */
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const handleSaveAppearance = () => {
+    // next-themes handles persistence automatically
+  };
 
-  /* ═══════════════════════════════════════
-     TAB CONTENT RENDERER
-     ═══════════════════════════════════════ */
+  const handleSaveNotifications = () => {
+    localStorage.setItem("komet-notif-prefs", JSON.stringify(notifPrefs));
+  };
+
+  const handleSaveLanguage = () => {
+    // locale switcher via next-intl
+  };
+
+  const handleChangePassword = async () => {
+    setPassError("");
+    setPassSuccess("");
+    if (!currentPass || !newPass || !confirmPass) {
+      setPassError("All fields are required.");
+      return;
+    }
+    if (newPass.length < 8) {
+      setPassError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPass !== confirmPass) {
+      setPassError("New passwords do not match.");
+      return;
+    }
+    setSavingPass(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPass });
+      if (error) throw error;
+      setPassSuccess("Password updated successfully.");
+      setCurrentPass("");
+      setNewPass("");
+      setConfirmPass("");
+    } catch (err: unknown) {
+      setPassError(err instanceof Error ? err.message : "Failed to update password.");
+    } finally {
+      setSavingPass(false);
+    }
+  };
+
+  const handleSave = () => {
+    switch (activeTab) {
+      case "general":
+        handleSaveGeneral();
+        break;
+      case "security":
+        handleChangePassword();
+        break;
+      case "appearance":
+        handleSaveAppearance();
+        break;
+      case "notifications":
+        handleSaveNotifications();
+        break;
+      case "language":
+        handleSaveLanguage();
+        break;
+    }
+  };
+
+  /* ═══════════════════════════════════════════
+     TAB CONTENT
+     ═══════════════════════════════════════════ */
   const renderContent = () => {
     switch (activeTab) {
-      /* ───── GENERAL ───── */
+      /* ─── GENERAL ─── */
       case "general":
         return (
           <>
-            <SectionHeading
-              title={t("profileSettings")}
-              description="Update your personal information, avatar and bio."
-            />
-
-            {/* Avatar row */}
+            <SectionHeading title={t("profileSettings")} description="Update your personal information." />
             <div className="flex items-center gap-5 mb-6 p-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-heading-lg font-bold text-white shadow-[var(--shadow-dark-sm)]">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-lg font-bold text-white shadow-sm">
                 {initials}
               </div>
               <div>
-                <p className="text-body-sm font-medium text-[var(--color-on-dark)]">{name}</p>
-                <p className="text-caption text-[var(--color-on-dark-muted)]">{email}</p>
-                <button className="mt-2 rounded-lg border border-[var(--color-ink-muted)] px-3.5 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                  Change Avatar
-                </button>
+                <p className="text-sm font-medium text-[var(--color-on-dark)]">{name || email}</p>
+                <p className="text-xs text-[var(--color-on-dark-muted)]">{email}</p>
               </div>
             </div>
-
-            {/* Name / Email */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
               <div>
                 <label className={labelClass}>Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={inputClass}
-                />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputClass}
-                />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
               </div>
             </div>
-
-            {/* Bio */}
             <div>
               <label className={labelClass}>Bio</label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows={3}
-                className={`${inputClass} resize-none`}
-              />
-              <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">
-                Brief description for your profile. Max 160 characters.
+              <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className={`${inputClass} resize-none`} />
+              <p className="mt-1 text-xs text-[var(--color-on-dark-muted)]">Brief description. Max 160 characters.</p>
+            </div>
+            {generalSaved && (
+              <p className="mt-3 text-sm text-emerald-500 flex items-center gap-1.5">
+                <Check className="h-4 w-4" /> Profile updated
               </p>
-            </div>
+            )}
           </>
         );
 
-      /* ───── WORKSPACE ───── */
-      case "workspace":
-        return (
-          <>
-            <SectionHeading
-              title="Workspace Settings"
-              description="Manage your team workspace and members."
-            />
-
-            {/* Active workspace */}
-            {activeWorkspace && (
-              <div className="mb-5 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-body-sm font-bold text-white">
-                      {activeWorkspace.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">
-                        {activeWorkspace.name}
-                      </p>
-                      <p className="text-caption text-[var(--color-on-dark-muted)]">
-                        {activeWorkspace.slug} &middot; {activeWorkspace.role}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-success)]/15 px-2.5 py-1 text-micro font-semibold text-[var(--color-success)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-                    Active
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* All workspaces */}
-            <h4 className="text-body-sm font-semibold text-[var(--color-on-dark)] mb-3">
-              All Workspaces ({workspaces.length})
-            </h4>
-            <div className="space-y-2 mb-6">
-              {workspaces.map((ws) => (
-                <div
-                  key={ws.id}
-                  className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-3 hover:border-[var(--color-ink-soft)] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-caption font-bold text-[var(--color-primary-light)]">
-                      {ws.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                        {ws.name}
-                      </p>
-                      <p className="text-caption text-[var(--color-on-dark-muted)]">{ws.role}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {ws.id !== activeWorkspace?.id && (
-                      <>
-                        <button
-                          onClick={() => setActiveWorkspace(ws)}
-                          className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
-                        >
-                          Switch
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirmId(ws.id)}
-                          className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
-                    {ws.id === activeWorkspace?.id && (
-                      <span className="text-caption font-medium text-[var(--color-primary-light)]">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Delete confirmation */}
-            {deleteConfirmId && (
-              <div className="rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-error)]/15">
-                    <AlertTriangle className="h-4 w-4 text-[var(--color-error)]" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-body-sm font-semibold text-[var(--color-on-dark)] mb-1">
-                      Delete &ldquo;{workspaces.find((w) => w.id === deleteConfirmId)?.name}
-                      &rdquo;?
-                    </p>
-                    <p className="text-caption text-[var(--color-on-dark-soft)] mb-4">
-                      This will permanently remove this workspace and all associated data. This
-                      action cannot be undone.
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setDeleteConfirmId(null)}
-                        className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-1.5 text-caption font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => {
-                          deleteWorkspace(deleteConfirmId);
-                          setDeleteConfirmId(null);
-                        }}
-                        className="rounded-lg bg-[var(--color-error)] px-4 py-1.5 text-caption font-semibold text-white hover:bg-[var(--color-error)]/85 transition-colors"
-                      >
-                        Delete Permanently
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Team members */}
-            <h4 className="text-body-sm font-semibold text-[var(--color-on-dark)] mt-6 mb-3">
-              Team Members
-            </h4>
-            <div className="space-y-2">
-              {[
-                { name: "You", email: "admin@example.com", role: "Admin" },
-              ].map((member) => (
-                <div
-                  key={member.email}
-                  className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-primary)]/20 text-caption font-bold text-[var(--color-primary-light)]">
-                      {member.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                        {member.name}
-                      </p>
-                      <p className="text-caption text-[var(--color-on-dark-muted)]">
-                        {member.email}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-[var(--color-primary)]/10 px-2.5 py-0.5 text-micro font-medium text-[var(--color-primary-light)]">
-                    {member.role}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
-        );
-
-      /* ───── APPEARANCE ───── */
+      /* ─── APPEARANCE ─── */
       case "appearance":
         return (
           <>
-            <SectionHeading
-              title="Appearance"
-              description="Choose how Komet looks to you."
-            />
-
-            <p className="text-body-sm font-medium text-[var(--color-on-dark)] mb-3">
-              Theme
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mb-6">
+            <SectionHeading title="Appearance" description="Choose how Komet looks to you." />
+            <p className="text-sm font-medium text-[var(--color-on-dark)] mb-3">Theme</p>
+            <div className="grid grid-cols-3 gap-3 mb-6">
               {THEMES.map((item) => {
                 const isActive = theme === item.id;
                 return (
@@ -413,12 +309,9 @@ export default function SettingsPage() {
                         : "border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] hover:border-[var(--color-ink-soft)]"
                     }`}
                   >
-                    {item.preview}
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <item.icon className="h-4 w-4 text-[var(--color-on-dark-soft)]" />
-                      <span className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                        {item.label}
-                      </span>
+                      <span className="text-sm font-medium text-[var(--color-on-dark)]">{item.label}</span>
                       {isActive && (
                         <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)]">
                           <Check className="h-3 w-3 text-white" />
@@ -429,318 +322,233 @@ export default function SettingsPage() {
                 );
               })}
             </div>
-
-            <p className="text-body-sm font-medium text-[var(--color-on-dark)] mb-3">
-              Density
-            </p>
-            <div className="flex gap-2">
-              {["Comfortable", "Compact"].map((d) => (
-                <button
-                  key={d}
-                  className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-caption font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
           </>
         );
 
-      /* ───── NOTIFICATIONS ───── */
+      /* ─── NOTIFICATIONS ─── */
       case "notifications":
         return (
           <>
-            <SectionHeading
-              title="Notification Preferences"
-              description="Choose what notifications you want to receive."
-            />
-
-            <div className="space-y-1">
-              {[
-                { label: "Post published", desc: "When a scheduled post is successfully published" },
-                { label: "Post failed", desc: "When a post fails to publish" },
-                { label: "New comments", desc: "When you receive new comments on your posts" },
-                { label: "New messages", desc: "When you receive new direct messages" },
-                { label: "Team invitations", desc: "When you're invited to a workspace" },
-                { label: "AI generation complete", desc: "When AI finishes generating content" },
-                { label: "Weekly digest", desc: "A summary of your weekly activity" },
-                { label: "Product updates", desc: "New features and improvements" },
-              ].map((item, i) => (
+            <SectionHeading title="Notification Preferences" description="Choose what notifications you want to receive." />
+            <div className="space-y-0.5">
+              {NOTIF_ITEMS.map((item) => (
                 <label
-                  key={item.label}
-                  className={`flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-[var(--color-surface-dark)] transition-colors ${
-                    i !== 0 ? "" : ""
-                  }`}
+                  key={item.key}
+                  className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-[var(--color-surface-dark)] transition-colors"
                 >
                   <div>
-                    <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                      {item.label}
-                    </p>
-                    <p className="text-caption text-[var(--color-on-dark-muted)]">{item.desc}</p>
+                    <p className="text-sm font-medium text-[var(--color-on-dark)]">{item.label}</p>
+                    <p className="text-xs text-[var(--color-on-dark-muted)]">{item.desc}</p>
                   </div>
-                  <div className="relative">
-                    <input type="checkbox" defaultChecked className="peer sr-only" />
-                    <div className="h-6 w-11 rounded-full border-2 border-transparent bg-[var(--color-ink-muted)] peer-checked:bg-[var(--color-primary)] transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5" />
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setNotifPrefs((prev) => ({ ...prev, [item.key]: !prev[item.key] }));
+                    }}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      notifPrefs[item.key] ? "bg-[var(--color-primary)]" : "bg-[var(--color-ink-muted)]"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                        notifPrefs[item.key] ? "translate-x-5" : ""
+                      }`}
+                    />
+                  </button>
                 </label>
               ))}
             </div>
           </>
         );
 
-      /* ───── LANGUAGE ───── */
+      /* ─── LANGUAGE ─── */
       case "language":
         return (
           <>
-            <SectionHeading
-              title="Language &amp; Region"
-              description="Set your preferred language and regional preferences."
-            />
-
+            <SectionHeading title="Language &amp; Region" description="Set your preferred language." />
             <div className="max-w-sm">
               <label className={labelClass}>Interface Language</label>
               <div className="relative">
                 <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
                 <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
+                  value={locale}
+                  onChange={(e) => {
+                    const newLocale = e.target.value;
+                    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`;
+                    router.refresh();
+                  }}
                   className={`${inputClass} pl-10 pr-10 appearance-none cursor-pointer`}
                 >
                   <option value="en">English</option>
                   <option value="id">Bahasa Indonesia</option>
-                  <option value="es">Espa&ntilde;ol</option>
-                  <option value="fr">Fran&ccedil;ais</option>
-                  <option value="de">Deutsch</option>
                 </select>
                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)] pointer-events-none" />
               </div>
-              <p className="mt-2 text-micro text-[var(--color-on-dark-muted)]">
-                This changes the language of the dashboard interface.
-              </p>
             </div>
           </>
         );
 
-      /* ───── SECURITY ───── */
+      /* ─── SECURITY ─── */
       case "security":
         return (
           <>
-            <SectionHeading
-              title="Security"
-              description="Manage your password and account security."
-            />
-
-            {/* Change password */}
+            <SectionHeading title="Security" description="Manage your password and account security." />
             <div className="mb-6 p-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
-              <p className="text-body-sm font-semibold text-[var(--color-on-dark)] mb-3">
-                Change Password
-              </p>
-
+              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">Change Password</p>
               <div className="mb-4">
                 <label className={labelClass}>Current Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter current password"
-                  className={`${inputClass} max-w-sm`}
-                />
+                <input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} placeholder="Enter current password" className={`${inputClass} max-w-sm`} />
               </div>
-
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-lg mb-4">
                 <div>
                   <label className={labelClass}>New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter new password"
-                    className={inputClass}
-                  />
+                  <input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder="Enter new password" className={inputClass} />
                 </div>
                 <div>
                   <label className={labelClass}>Confirm Password</label>
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    className={inputClass}
-                  />
+                  <input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="Confirm new password" className={inputClass} />
                 </div>
               </div>
-
-              <p className="text-caption text-[var(--color-on-dark-muted)]">
-                Password must be at least 8 characters and include a number.
-              </p>
-            </div>
-
-            {/* 2FA */}
-            <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">
-                    Two-Factor Authentication
-                  </p>
-                  <p className="text-caption text-[var(--color-on-dark-muted)] mt-0.5">
-                    Add an extra layer of security to your account.
-                  </p>
-                </div>
-                <button className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors">
-                  Enable
-                </button>
-              </div>
+              {passError && <p className="text-sm text-red-400 mb-2">{passError}</p>}
+              {passSuccess && <p className="text-sm text-emerald-500 mb-2 flex items-center gap-1.5"><Check className="h-4 w-4" />{passSuccess}</p>}
+              <p className="text-xs text-[var(--color-on-dark-muted)]">Password must be at least 8 characters.</p>
             </div>
           </>
         );
 
-      /* ───── API KEYS ───── */
-      case "api-keys":
+      /* ─── WORKSPACE ─── */
+      case "workspace":
         return (
           <>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-              <div>
-                <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-                  API Keys
-                </h3>
-                <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                  Manage keys for programmatic access to the Komet API.
-                </p>
-              </div>
-              <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors">
-                <Key className="h-3.5 w-3.5" />
-                Create Key
-              </button>
-            </div>
-
-            <div className="rounded-xl border border-[var(--color-ink-muted)] overflow-hidden">
-              {/* Desktop header */}
-              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-3 bg-[var(--color-surface-dark)] border-b border-[var(--color-ink-muted)] text-caption font-semibold text-[var(--color-on-dark-muted)]">
-                <span className="col-span-4">Name</span>
-                <span className="col-span-4">Key</span>
-                <span className="col-span-2">Last used</span>
-                <span className="col-span-2 text-right">Action</span>
-              </div>
-              {[
-                { name: "Production Key", key: "komet_prod_••••a1b2", lastUsed: "2 hours ago" },
-                { name: "Development Key", key: "komet_dev_••••c3d4", lastUsed: "1 day ago" },
-              ].map((apiKey) => (
-                <div
-                  key={apiKey.key}
-                  className="flex flex-col gap-1 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center px-4 py-3 border-b border-[var(--color-ink-muted)] last:border-b-0 hover:bg-[var(--color-surface-dark)] transition-colors"
-                >
-                  <div className="flex items-center justify-between sm:contents">
-                    <span className="text-body-sm font-medium text-[var(--color-on-dark)] sm:col-span-4">
-                      {apiKey.name}
-                    </span>
-                    <button className="sm:hidden text-caption font-medium text-[var(--color-error)] hover:underline">
-                      Revoke
-                    </button>
+            <SectionHeading title="Workspace Settings" description="Manage your team workspace and members." />
+            {activeWorkspace && (
+              <div className="mb-5 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-sm font-bold text-white">
+                      {activeWorkspace.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--color-on-dark)]">{activeWorkspace.name}</p>
+                      <p className="text-xs text-[var(--color-on-dark-muted)]">{activeWorkspace.slug}</p>
+                    </div>
                   </div>
-                  <span className="text-caption text-[var(--color-on-dark-soft)] font-mono sm:col-span-4">
-                    {apiKey.key}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
                   </span>
-                  <span className="text-caption text-[var(--color-on-dark-muted)] sm:col-span-2">
-                    {apiKey.lastUsed}
-                  </span>
-                  <span className="hidden sm:block sm:col-span-2 sm:text-right">
-                    <button className="text-caption font-medium text-[var(--color-error)] hover:underline">
-                      Revoke
-                    </button>
-                  </span>
+                </div>
+              </div>
+            )}
+            <h4 className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">All Workspaces ({workspaces.length})</h4>
+            <div className="space-y-2 mb-6">
+              {workspaces.map((ws) => (
+                <div key={ws.id} className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-xs font-bold text-[var(--color-primary-light)]">
+                      {ws.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[var(--color-on-dark)]">{ws.name}</p>
+                      <p className="text-xs text-[var(--color-on-dark-muted)]">{ws.role || "Owner"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {ws.id !== activeWorkspace?.id ? (
+                      <>
+                        <button onClick={() => setActiveWorkspace(ws)} className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
+                          Switch
+                        </button>
+                        <button onClick={() => setDeleteConfirmId(ws.id)} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-red-400 hover:bg-red-400/10 transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs font-medium text-[var(--color-primary-light)]">Active</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
+            {deleteConfirmId && (
+              <div className="rounded-xl border border-red-400/30 bg-red-400/5 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-400/15">
+                    <AlertTriangle className="h-4 w-4 text-red-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">
+                      Delete &ldquo;{workspaces.find((w) => w.id === deleteConfirmId)?.name}&rdquo;?
+                    </p>
+                    <p className="text-xs text-[var(--color-on-dark-soft)] mb-4">This action cannot be undone.</p>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setDeleteConfirmId(null)} className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
+                        Cancel
+                      </button>
+                      <button onClick={() => { deleteWorkspace(deleteConfirmId); setDeleteConfirmId(null); }} className="rounded-lg bg-red-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition-colors">
+                        Delete Permanently
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         );
 
-      /* ───── BILLING ───── */
+      /* ─── BILLING ─── */
       case "billing":
         return (
           <>
-            <SectionHeading
-              title="Billing &amp; Subscription"
-              description="Manage your subscription and payment methods."
-            />
-
-            {/* Plan card */}
+            <SectionHeading title="Billing &amp; Subscription" description="Manage your subscription and payment methods." />
             <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-5 mb-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="text-caption-uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1">
-                    Current Plan
-                  </p>
-                  <p className="font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-                    Pro Plan
-                  </p>
-                  <p className="mt-1 text-caption text-[var(--color-on-dark-soft)]">
-                    $39/month &middot; Next billing: July 5, 2024
-                  </p>
+                  <p className="text-xs uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1">Current Plan</p>
+                  <p className="text-lg font-bold text-[var(--color-on-dark)]">Free Plan</p>
+                  <p className="mt-1 text-xs text-[var(--color-on-dark-soft)]">$0/month · 3 social accounts</p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-[var(--color-success)]/15 px-3 py-1 text-caption font-semibold text-[var(--color-success)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-                  Active
+                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
                 </span>
               </div>
             </div>
-
-            {/* Plan features */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-              {[
-                { label: "Connected accounts", value: "15 / 15" },
-                { label: "Scheduled posts / month", value: "500" },
-                { label: "AI generations / month", value: "200" },
-                { label: "Team members", value: "5" },
-                { label: "Media storage", value: "10 GB" },
-                { label: "Analytics history", value: "90 days" },
-              ].map((f) => (
-                <div
-                  key={f.label}
-                  className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-3"
-                >
-                  <span className="text-caption text-[var(--color-on-dark-soft)]">{f.label}</span>
-                  <span className="text-caption font-semibold text-[var(--color-on-dark)]">
-                    {f.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-
             <div className="flex flex-wrap gap-3">
-              <button className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                Change Plan
-              </button>
-              <button className="rounded-lg border border-[var(--color-error)]/30 px-4 py-2 text-button-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors">
-                Cancel Subscription
-              </button>
+              <a href="/#pricing" className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors no-underline inline-flex items-center">
+                Upgrade Plan
+              </a>
             </div>
           </>
         );
 
-      /* ───── WEBHOOKS ───── */
+      /* ─── API KEYS ─── */
+      case "api-keys":
+        return (
+          <>
+            <SectionHeading title="API Keys" description="Manage keys for programmatic access to the Komet API." />
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]/50 py-16 px-6 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mb-4">
+                <Key className="h-7 w-7 text-[var(--color-primary-light)]" />
+              </div>
+              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">API keys coming soon</p>
+              <p className="text-xs text-[var(--color-on-dark-muted)] max-w-xs">
+                Generate API keys to integrate Komet with your custom workflows.
+              </p>
+            </div>
+          </>
+        );
+
+      /* ─── WEBHOOKS ─── */
       case "webhooks":
         return (
           <>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-              <div>
-                <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-                  Webhooks
-                </h3>
-                <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                  Receive real-time events about your content via HTTP callbacks.
-                </p>
-              </div>
-              <button className="inline-flex items-center gap-2 self-start rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors">
-                <Webhook className="h-3.5 w-3.5" />
-                Add Webhook
-              </button>
-            </div>
-
-            {/* Empty state */}
+            <SectionHeading title="Webhooks" description="Receive real-time events via HTTP callbacks." />
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]/50 py-16 px-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mb-4">
                 <Webhook className="h-7 w-7 text-[var(--color-primary-light)]" />
               </div>
-              <p className="text-body-sm font-semibold text-[var(--color-on-dark)] mb-1">
-                No webhooks yet
-              </p>
-              <p className="text-caption text-[var(--color-on-dark-muted)] max-w-xs">
-                Create a webhook endpoint to receive post status updates, engagement
-                alerts, and more in real-time.
+              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">Webhooks coming soon</p>
+              <p className="text-xs text-[var(--color-on-dark-muted)] max-w-xs">
+                Create webhook endpoints to receive real-time post status and engagement events.
               </p>
             </div>
           </>
@@ -751,21 +559,22 @@ export default function SettingsPage() {
     }
   };
 
-  /* ═══════════════════════════════════════
+  /* ═══════════════════════════════════════════
      RENDER
-     ═══════════════════════════════════════ */
+     ═══════════════════════════════════════════ */
   const showSave = EDITABLE_TABS.has(activeTab);
+  const isSaving = activeTab === "general" ? savingGeneral : activeTab === "security" ? savingPass : false;
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
-      {/* ── MOBILE (< md): Horizontal tab chips ── */}
+      {/* Mobile tabs */}
       <div className="md:hidden -mx-4 px-4 pb-1 overflow-x-auto scrollbar-none">
         <div className="flex gap-1.5 min-w-max">
           {ALL_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-caption font-medium whitespace-nowrap transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? "bg-[var(--color-primary)] text-white"
                   : "bg-[var(--color-surface-dark-raised)] text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]"
@@ -778,24 +587,20 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── DESKTOP (≥ md): Sidebar navigation ── */}
+      {/* Desktop sidebar */}
       <div className="hidden md:block w-44 lg:w-52 shrink-0 self-start sticky top-20 md:top-8 lg:top-10">
         <nav className="space-y-0.5">
-          <p className="px-3 pb-2 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
-            Settings
-          </p>
+          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">Settings</p>
           {SETTINGS_GROUPS.map((group, idx) => (
             <div key={group.label} className={idx > 0 ? "border-t border-[var(--color-ink-muted)] mt-1" : ""}>
-              <p className="px-3 pt-3 pb-1.5 text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">
-                {group.label}
-              </p>
+              <p className="px-3 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">{group.label}</p>
               {group.items.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-body-sm transition-all ${
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-all ${
                       isActive
                         ? "bg-[var(--color-primary)]/15 text-[var(--color-primary-light)] font-semibold"
                         : "text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
@@ -811,25 +616,22 @@ export default function SettingsPage() {
         </nav>
       </div>
 
-      {/* ── Content area ── */}
+      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 sm:p-6">
-          {/* Active tab header (mobile < md only) */}
-          <p className="text-micro font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1 md:hidden">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1 md:hidden">
             {t(ALL_TABS.find((t) => t.id === activeTab)!.labelKey)}
           </p>
-
           {renderContent()}
-
-          {/* ── Save button ── */}
           {showSave && (
             <div className="mt-8 flex items-center justify-end border-t border-[var(--color-ink-muted)] pt-6">
               <button
                 onClick={handleSave}
-                className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-button-sm font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all"
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <Save className="h-4 w-4" />
-                {t("saveChanges")}
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {activeTab === "security" ? "Change Password" : t("saveChanges")}
               </button>
             </div>
           )}
