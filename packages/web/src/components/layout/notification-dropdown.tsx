@@ -93,7 +93,7 @@ export function NotificationDropdown() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute left-2 right-2 top-full mt-2 sm:left-auto sm:right-0 sm:w-96 z-50 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl overflow-hidden">
+        <div className="fixed inset-x-0 top-14 bottom-auto z-50 mx-auto w-full max-w-md rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl overflow-hidden sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:mx-0 sm:w-96">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-4 py-3">
             <h3 className="font-display text-heading-xs font-semibold text-[var(--color-on-dark)]">
