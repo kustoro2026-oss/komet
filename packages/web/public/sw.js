@@ -45,6 +45,9 @@ self.addEventListener("fetch", (event) => {
   // Skip non-GET requests
   if (request.method !== "GET") return;
 
+  // Skip non-HTTP(S) schemes (chrome-extension://, moz-extension://, etc.)
+  if (!url.protocol.startsWith("http")) return;
+
   // API requests: network only
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(fetch(request).catch(() => new Response(null, { status: 503 })));
