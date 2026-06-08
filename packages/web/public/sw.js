@@ -63,7 +63,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match("/")))
+        .catch(() => caches.match(request).then((c) => c || caches.match("/").then((cc) => cc)))
     );
     return;
   }
@@ -74,7 +74,7 @@ self.addEventListener("fetch", (event) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
         if (!response || response.status >= 400) {
-          return caches.match(request) || new Response(null, { status: 502 });
+          return caches.match(request).then((c) => c || new Response(null, { status: 502 }));
         }
         const cloned = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));

@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopNav } from "@/components/layout/top-nav";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { PwaInstallBanner } from "@/components/layout/pwa-install-banner";
+import { ClientOnly } from "@/components/client-only";
 
 export default function DashboardLayout({
   children,
@@ -55,7 +56,7 @@ export default function DashboardLayout({
             "bg-[var(--color-surface-dark)]"
           )}
         >
-          {children}
+          <ClientOnly>{children}</ClientOnly>
         </main>
 
         {/* Bottom Navigation - Mobile only */}
