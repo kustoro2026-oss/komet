@@ -45,13 +45,17 @@ export async function GET(request: NextRequest) {
 
   try {
     const { prisma } = await import("@komet/db");
-    // Verify user is a member of this workspace
-    const membership = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: { workspaceId, userId },
-      },
-    });
-    if (!membership) {
+    // Verify user is owner or member of this workspace
+    const [membership, isOwner] = await Promise.all([
+      prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId } },
+      }),
+      prisma.workspace.findFirst({
+        where: { id: workspaceId, ownerId: userId, isDeleted: false },
+        select: { id: true },
+      }),
+    ] as const);
+    if (!membership && !isOwner) {
       return NextResponse.json({ error: "Not a member of this workspace" }, { status: 403 });
     }
 
@@ -124,13 +128,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Only admin can invite
-    const membership = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: { workspaceId, userId },
-      },
-    });
-    if (!membership || membership.role !== "admin") {
+    // Only admin or owner can invite
+    const [membership, isOwner] = await Promise.all([
+      prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId } },
+      }),
+      prisma.workspace.findFirst({
+        where: { id: workspaceId, ownerId: userId, isDeleted: false },
+        select: { id: true },
+      }),
+    ] as const);
+    if ((!membership || membership.role !== "admin") && !isOwner) {
       return NextResponse.json(
         { error: "Only admins can invite members" },
         { status: 403 }
