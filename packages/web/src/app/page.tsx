@@ -518,34 +518,34 @@ export default function LandingPage() {
               <ul className="space-y-2.5">
                 <li><a href="#features" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerFeatures")}</a></li>
                 <li><a href="#pricing" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerPricing")}</a></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerIntegrations")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerChangelog")}</span></li>
+                <li><Link href="/integrations" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerIntegrations")}</Link></li>
+                <li><Link href="/changelog" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerChangelog")}</Link></li>
               </ul>
             </div>
             {/* Resources */}
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerResources")}</h3>
               <ul className="space-y-2.5">
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerDocumentation")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerApiReference")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerBlog")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerHelpCenter")}</span></li>
+                <li><Link href="/docs" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerDocumentation")}</Link></li>
+                <li><Link href="/docs/api" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerApiReference")}</Link></li>
+                <li><Link href="/blog" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerBlog")}</Link></li>
+                <li><Link href="/help" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerHelpCenter")}</Link></li>
               </ul>
             </div>
             {/* Company + Legal (stacked for 5-col layout) */}
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerCompany")}</h3>
               <ul className="space-y-2.5">
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerAbout")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerCareers")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerContact")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerStatus")}</span></li>
+                <li><Link href="/about" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerAbout")}</Link></li>
+                <li><Link href="/careers" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerCareers")}</Link></li>
+                <li><Link href="/contact" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerContact")}</Link></li>
+                <li><Link href="/status" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerStatus")}</Link></li>
               </ul>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mt-6 mb-4">{t("footerLegal")}</h3>
               <ul className="space-y-2.5">
                 <li><Link href="/privacy" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerPrivacy")}</Link></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerTerms")}</span></li>
-                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerCookies")}</span></li>
+                <li><Link href="/terms" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerTerms")}</Link></li>
+                <li><Link href="/cookies" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerCookies")}</Link></li>
               </ul>
             </div>
           </div>
@@ -556,8 +556,8 @@ export default function LandingPage() {
             <p className="text-xs text-[var(--color-on-dark-muted)]">&copy; {new Date().getFullYear()} Komet. {t("allRightsReserved")}</p>
             <div className="flex items-center gap-5">
               <Link href="/privacy" className="text-xs text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark-soft)] transition-colors">{t("footerPrivacy")}</Link>
-              <span className="text-xs text-[var(--color-on-dark-muted)] cursor-default">{t("footerTerms")}</span>
-              <span className="text-xs text-[var(--color-on-dark-muted)] cursor-default">{t("footerCookies")}</span>
+              <Link href="/terms" className="text-xs text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark-soft)] transition-colors">{t("footerTerms")}</Link>
+              <Link href="/cookies" className="text-xs text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark-soft)] transition-colors">{t("footerCookies")}</Link>
             </div>
           </div>
         </div>
