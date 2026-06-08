@@ -1,6 +1,6 @@
 "use client";
 import { PageShell } from "@/components/page-shell";
-import { Code2, Key, Server, BookOpen } from "lucide-react";
+import { Code2, Key, Server } from "lucide-react";
 
 const endpoints = [
   { method: "GET", path: "/v1/accounts", desc: "List all connected social accounts" },

@@ -1,6 +1,6 @@
 "use client";
 import { PageShell } from "@/components/page-shell";
-import { HelpCircle, Search, MessageCircle, BookOpen, ArrowUpRight } from "lucide-react";
+import { HelpCircle, Search, MessageCircle, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 const topics = [

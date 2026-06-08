@@ -24,7 +24,7 @@ export default function StatusPage() {
         </div>
 
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] divide-y divide-white/[0.06]">
-          {services.map((s, i) => (
+          {services.map((s) => (
             <div key={s.name} className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-2 w-2 rounded-full bg-emerald-500" />

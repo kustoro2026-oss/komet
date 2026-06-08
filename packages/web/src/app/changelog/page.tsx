@@ -1,6 +1,6 @@
 "use client";
 import { PageShell } from "@/components/page-shell";
-import { Clock, Sparkles, Zap, Bug, Star } from "lucide-react";
+import { Sparkles, Zap, Bug, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 const changelog = [

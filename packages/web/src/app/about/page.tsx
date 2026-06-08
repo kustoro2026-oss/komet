@@ -20,7 +20,7 @@ export default function AboutPage() {
             Komet started with a simple frustration: managing social media across multiple platforms was too slow, too expensive, and too complicated. We asked: what if one tool could do everything — schedule, publish, analyze, and reply — without the bloat?
           </p>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed mt-3">
-            Today, Komet connects to 15+ platforms and is trusted by creators, teams, and agencies worldwide. We're still a small team with a big vision: make social media management effortless.
+            Today, Komet connects to 15+ platforms and is trusted by creators, teams, and agencies worldwide. We&rsquo;re still a small team with a big vision: make social media management effortless.
           </p>
         </div>
 

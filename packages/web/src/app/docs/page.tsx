@@ -1,6 +1,6 @@
 "use client";
 import { PageShell } from "@/components/page-shell";
-import { BookOpen, FileText, Code2, Cpu, Terminal, Puzzle } from "lucide-react";
+import { FileText, Code2, Cpu, Terminal, Puzzle } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
