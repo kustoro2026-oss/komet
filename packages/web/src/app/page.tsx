@@ -164,10 +164,10 @@ export default function LandingPage() {
 
       {/* ===== HERO ===== */}
       <section className="relative min-h-screen overflow-hidden pt-16">
-        {/* Background glow */}
+        {/* Background glow — reduced blur on mobile to prevent GPU artifacts */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute left-1/3 top-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-[var(--color-primary)]/10 blur-[150px]" />
-          <div className="absolute right-1/4 top-1/3 h-[500px] w-[500px] rounded-full bg-purple-600/10 blur-[120px]" />
+          <div className="absolute left-1/3 top-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-[var(--color-primary)]/10 blur-[60px] sm:blur-[150px]" />
+          <div className="absolute right-1/4 top-1/3 h-[500px] w-[500px] rounded-full bg-purple-600/10 blur-[50px] sm:blur-[120px]" />
         </div>
         <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
 
@@ -209,23 +209,23 @@ export default function LandingPage() {
           {/* Platform toggle (inspired by Buffer) */}
           <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="mt-10 flex flex-wrap items-center justify-center gap-2.5">
             {allPlatforms.slice(0, 8).map((p) => (
-              <span key={p.id} className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">
+              <span key={p.id} className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">
                 <PlatformIcon platform={p.id} className="h-3.5 w-3.5" />
                 {p.label}
               </span>
             ))}
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">+7 more</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">+7 more</span>
           </motion.div>
 
           {/* Dashboard mockup */}
           <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="relative mt-14 w-full max-w-6xl">
-            <div className="relative rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-1 shadow-2xl shadow-black/50">
+            <div className="relative rounded-xl border border-white/[0.12] bg-gradient-to-b from-white/[0.06] to-transparent p-1 shadow-2xl shadow-black/50">
               <div className="overflow-hidden rounded-lg">
                 <Image src="/images/dashboard-preview.jpg" alt="Komet Dashboard" width={1200} height={675} className="w-full object-cover" priority />
               </div>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[var(--color-surface-dark)] to-transparent" />
             </div>
-            <div className="absolute -bottom-16 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[80px]" />
+            <div className="absolute -bottom-16 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[40px] sm:blur-[80px]" />
           </motion.div>
         </div>
       </section>
