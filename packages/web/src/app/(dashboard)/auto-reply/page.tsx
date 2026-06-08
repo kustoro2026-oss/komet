@@ -337,9 +337,36 @@ export default function AutoReplyPage() {
             key={rule.id}
             className="group rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5 transition-all hover:border-[var(--color-ink-soft)] hover:shadow-lg"
           >
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Actions — top row on mobile / right column on desktop */}
+              <div className="flex items-center gap-1 shrink-0 order-2 sm:order-none sm:flex-col">
+                <div className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-2.5 py-1.5">
+                  <Switch
+                    checked={rule.isActive}
+                    onCheckedChange={() => toggleRule(rule.id)}
+                  />
+                  <span className="text-micro font-medium text-[var(--color-on-dark-soft)] w-6">
+                    {rule.isActive ? "On" : "Off"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleEdit(rule)}
+                  className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)] transition-colors"
+                  title="Edit rule"
+                >
+                  <Edit3 className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => deleteRule(rule.id)}
+                  className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)] transition-colors"
+                  title="Delete rule"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
               {/* Left content */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 order-1 sm:order-none">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h3 className="text-body-sm font-semibold text-[var(--color-on-dark)]">
                     {rule.name}
@@ -421,33 +448,6 @@ export default function AutoReplyPage() {
                     {rule.createdAt}
                   </span>
                 </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1 shrink-0">
-                <div className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-2.5 py-1.5">
-                  <Switch
-                    checked={rule.isActive}
-                    onCheckedChange={() => toggleRule(rule.id)}
-                  />
-                  <span className="text-micro font-medium text-[var(--color-on-dark-soft)] w-6">
-                    {rule.isActive ? "On" : "Off"}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleEdit(rule)}
-                  className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)] transition-colors"
-                  title="Edit rule"
-                >
-                  <Edit3 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => deleteRule(rule.id)}
-                  className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)] transition-colors"
-                  title="Delete rule"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
               </div>
             </div>
           </div>
