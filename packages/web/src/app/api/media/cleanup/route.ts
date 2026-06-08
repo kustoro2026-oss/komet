@@ -28,13 +28,19 @@ export async function POST(request: NextRequest) {
         id: { in: mediaIds },
         userId: user.id,
       },
-      select: { id: true, url: true, key: true },
+      select: { id: true, url: true },
     });
+
+    // Helper: extract storage path from Supabase URL
+    const extractPath = (url: string): string => {
+      // URL format: https://xxx.supabase.co/storage/v1/object/public/media/temp/userId/file.jpg
+      const match = url.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
+      return match ? match[1] : "";
+    };
 
     const cleanupResults = [];
     for (const record of mediaRecords) {
-      // Extract file path from URL or use stored key
-      const filePath = record.key || record.url.split("/").pop() || "";
+      const filePath = extractPath(record.url);
       if (!filePath) continue;
 
       try {
