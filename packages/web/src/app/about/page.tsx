@@ -12,7 +12,7 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <PageShell title="About Komet" description="We're building the last social media management tool you'll ever need.">
+    <PageShell title="About Komet" description="We&rsquo;re building the last social media management tool you&rsquo;ll ever need.">
       <div className="prose prose-invert max-w-none space-y-8">
         <div>
           <h2 className="text-xl font-semibold text-[var(--color-on-dark)] mb-3">Our Story</h2>

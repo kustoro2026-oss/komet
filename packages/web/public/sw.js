@@ -4,8 +4,6 @@ const STATIC_ASSETS = [
   "/login",
   "/register",
   "/komet-icon.svg",
-  "/komet-icon-192.png",
-  "/komet-icon-512.png",
 ];
 
 // Install: cache static assets
