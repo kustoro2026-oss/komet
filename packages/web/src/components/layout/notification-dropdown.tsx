@@ -93,7 +93,7 @@ export function NotificationDropdown() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 z-50 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl overflow-hidden">
+        <div className="absolute left-2 right-2 top-full mt-2 sm:left-auto sm:right-0 sm:w-96 z-50 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-4 py-3">
             <h3 className="font-display text-heading-xs font-semibold text-[var(--color-on-dark)]">
@@ -156,7 +156,7 @@ export function NotificationDropdown() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="hidden sm:flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                       {!notif.isRead && (
                         <button
                           onClick={() => markRead(notif.id)}
