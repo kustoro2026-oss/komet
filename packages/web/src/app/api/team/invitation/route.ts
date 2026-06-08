@@ -1,36 +1,16 @@
 // API Route: Team Invitations List
 // GET /api/team/invitation?workspaceId=xxx → list pending invitations
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseClient } from "@komet/auth";
+import { getUserFromRequest } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
-async function getAuthenticatedUserId(request: NextRequest): Promise<string | null> {
-  try {
-    const supabase = createSupabaseClient();
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) return null;
-    const token = authHeader.slice(7);
-
-    const { data } = await supabase.auth.getUser(token);
-    if (!data.user) return null;
-
-    const { prisma } = await import("@komet/db");
-    const user = await prisma.user.findUnique({
-      where: { supabaseId: data.user.id },
-      select: { id: true },
-    });
-    return user?.id || null;
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(request: NextRequest) {
-  const userId = await getAuthenticatedUserId(request);
-  if (!userId) {
+  const { user, error } = await getUserFromRequest(request);
+  if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.id;
 
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId");
@@ -41,12 +21,17 @@ export async function GET(request: NextRequest) {
 
   try {
     const { prisma } = await import("@komet/db");
-    const membership = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: { workspaceId, userId },
-      },
-    });
-    if (!membership) {
+    // Verify user is owner or member of this workspace
+    const [membership, isOwner] = await Promise.all([
+      prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId } },
+      }),
+      prisma.workspace.findFirst({
+        where: { id: workspaceId, ownerId: userId, isDeleted: false },
+        select: { id: true },
+      }),
+    ] as const);
+    if (!membership && !isOwner) {
       return NextResponse.json({ error: "Not a member of this workspace" }, { status: 403 });
     }
 
