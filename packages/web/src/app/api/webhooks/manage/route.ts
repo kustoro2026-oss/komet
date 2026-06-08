@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { prisma } = await import("@komet/db");
 
     const kometUser = await prisma.user.findUnique({
-      where: { supabaseId: user.id },
+      where: { id: user.id },
       select: { id: true },
     });
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     const { prisma } = await import("@komet/db");
 
     const kometUser = await prisma.user.findUnique({
-      where: { supabaseId: user.id },
+      where: { id: user.id },
       select: { id: true },
     });
 
@@ -173,7 +173,7 @@ export async function PUT(request: NextRequest) {
     const { prisma } = await import("@komet/db");
 
     const kometUser = await prisma.user.findUnique({
-      where: { supabaseId: user.id },
+      where: { id: user.id },
       select: { id: true },
     });
 
@@ -245,7 +245,7 @@ export async function DELETE(request: NextRequest) {
     const { prisma } = await import("@komet/db");
 
     const kometUser = await prisma.user.findUnique({
-      where: { supabaseId: user.id },
+      where: { id: user.id },
       select: { id: true },
     });
 

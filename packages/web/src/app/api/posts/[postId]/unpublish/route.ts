@@ -18,7 +18,7 @@ export async function POST(
     const { prisma } = await import("@komet/db");
 
     const kometUser = await prisma.user.findUnique({
-      where: { supabaseId: user.id },
+      where: { id: user.id },
       select: { id: true },
     });
 
