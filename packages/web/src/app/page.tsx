@@ -498,21 +498,67 @@ export default function LandingPage() {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-10 sm:py-12">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600">
-              <Sparkles className="h-3.5 w-3.5 text-white" />
+      <footer className="border-t border-white/[0.06] bg-[var(--color-surface-dark)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14 sm:py-16">
+          {/* Top grid */}
+          <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4 lg:grid-cols-5">
+            {/* Brand column */}
+            <div className="col-span-2 lg:col-span-2">
+              <Link href="/" className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/20">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
+              </Link>
+              <p className="mt-4 max-w-xs text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{t("footerTagline")}</p>
             </div>
-            <span className="font-bold text-[var(--color-on-dark)]">Komet</span>
+            {/* Product */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerProduct")}</h3>
+              <ul className="space-y-2.5">
+                <li><a href="#features" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerFeatures")}</a></li>
+                <li><a href="#pricing" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerPricing")}</a></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerIntegrations")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerChangelog")}</span></li>
+              </ul>
+            </div>
+            {/* Resources */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerResources")}</h3>
+              <ul className="space-y-2.5">
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerDocumentation")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerApiReference")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerBlog")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerHelpCenter")}</span></li>
+              </ul>
+            </div>
+            {/* Company + Legal (stacked for 5-col layout) */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerCompany")}</h3>
+              <ul className="space-y-2.5">
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerAbout")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerCareers")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerContact")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerStatus")}</span></li>
+              </ul>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mt-6 mb-4">{t("footerLegal")}</h3>
+              <ul className="space-y-2.5">
+                <li><Link href="/privacy" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerPrivacy")}</Link></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerTerms")}</span></li>
+                <li><span className="text-sm text-[var(--color-on-dark-muted)] cursor-default">{t("footerCookies")}</span></li>
+              </ul>
+            </div>
           </div>
-          <div className="flex gap-6 text-sm">
-            <span className="text-[var(--color-on-dark-muted)]">&copy; {new Date().getFullYear()} Komet. {t("allRightsReserved")}</span>
-            <Link href="/privacy" className="text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Privacy</Link>
-          </div>
-          <div className="flex gap-6">
-            <Link href="/login" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("login")}</Link>
-            <Link href="/register" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("startFree")}</Link>
+        </div>
+        {/* Bottom bar */}
+        <div className="border-t border-white/[0.06]">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:px-6 py-5 sm:flex-row">
+            <p className="text-xs text-[var(--color-on-dark-muted)]">&copy; {new Date().getFullYear()} Komet. {t("allRightsReserved")}</p>
+            <div className="flex items-center gap-5">
+              <Link href="/privacy" className="text-xs text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark-soft)] transition-colors">{t("footerPrivacy")}</Link>
+              <span className="text-xs text-[var(--color-on-dark-muted)] cursor-default">{t("footerTerms")}</span>
+              <span className="text-xs text-[var(--color-on-dark-muted)] cursor-default">{t("footerCookies")}</span>
+            </div>
           </div>
         </div>
       </footer>
