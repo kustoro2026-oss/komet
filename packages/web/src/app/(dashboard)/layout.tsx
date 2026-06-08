@@ -33,11 +33,15 @@ export default function DashboardLayout({
           "min-h-screen transition-all duration-normal",
           // Mobile: space for top nav (h-14) + bottom nav (~64px)
           "pt-16 pb-24",
-          // Tablet (md) & Desktop: sidebar offset + comfortable padding
+          // Tablet (md) & Desktop: sidebar offset + breathing room
           "md:pt-8 md:pb-8 lg:pt-10 lg:pb-10",
-          collapsed ? "md:ml-[72px] lg:ml-[72px]" : "md:ml-[264px] lg:ml-[264px]",
-          // Horizontal padding
-          "mx-auto w-full max-w-[1280px] px-4 sm:px-6",
+          collapsed
+            ? "md:pl-[80px]"
+            : "md:pl-[272px]",
+          // Horizontal padding — generous on desktop
+          "px-4 sm:px-6 md:px-8 lg:px-12",
+          // Full width on desktop (auto-fits available space)
+          "md:w-auto",
           "bg-[var(--color-surface-dark)]"
         )}
       >
