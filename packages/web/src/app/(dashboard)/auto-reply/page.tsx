@@ -408,7 +408,7 @@ export default function AutoReplyPage() {
                 {/* Keywords */}
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   {rule.trigger.type === "all" ? (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--color-accent)]/10 px-2 py-0.5 text-micro font-medium text-[var(--color-accent)]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent)]/10 px-2.5 py-0.5 text-micro font-medium text-[var(--color-accent)]">
                       <Zap className="h-3 w-3" />
                       Match all comments
                     </span>
@@ -416,7 +416,7 @@ export default function AutoReplyPage() {
                     rule.trigger.keywords?.map((kw) => (
                       <span
                         key={kw}
-                        className="rounded-md bg-[var(--color-primary)]/10 px-2 py-0.5 text-micro font-medium text-[var(--color-primary-light)]"
+                        className="inline-flex items-center rounded-full bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 px-3 py-0.5 text-micro font-medium text-[var(--color-primary-light)]"
                       >
                         {kw}
                       </span>
@@ -424,16 +424,18 @@ export default function AutoReplyPage() {
                   )}
                 </div>
 
-                {/* Reply Preview */}
-                <div className="mt-3 rounded-lg bg-[var(--color-surface-dark)] border border-[var(--color-ink-muted)]/50 p-3 relative">
-                  <div className="absolute left-3 top-0 bottom-0 w-0.5 rounded-full bg-[var(--color-accent)]/30" />
-                  <p className="pl-3 text-micro text-[var(--color-on-dark-soft)] leading-relaxed">
-                    {rule.reply}
-                  </p>
+                {/* Reply Preview — right aligned bubble */}
+                <div className="mt-3 flex justify-end">
+                  <div className="rounded-lg bg-[var(--color-surface-dark)] border border-[var(--color-ink-muted)]/50 p-3 max-w-[85%] relative">
+                    <div className="absolute right-3 top-0 bottom-0 w-0.5 rounded-full bg-[var(--color-accent)]/30" />
+                    <p className="pr-3 text-micro text-[var(--color-on-dark-soft)] leading-relaxed">
+                      {rule.reply}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Platform badges */}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                {/* Platform badges + date */}
+                <div className="mt-3 flex flex-wrap items-center gap-2.5">
                   {rule.platforms.map((p) => (
                     <span
                       key={p}
