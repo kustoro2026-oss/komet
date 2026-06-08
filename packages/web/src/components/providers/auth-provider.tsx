@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/stores/auth-store";
 import type { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -19,14 +20,19 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const setAuthUser = useAuthStore((s) => s.setUser);
+  const clearAuthUser = useAuthStore((s) => s.clearUser);
 
   const refresh = async () => {
     try {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
-      setUser(data?.user ?? null);
+      const u = data?.user ?? null;
+      setUser(u);
+      if (u) setAuthUser(u); else clearAuthUser();
     } catch {
       setUser(null);
+      clearAuthUser();
     } finally {
       setLoading(false);
     }
@@ -37,7 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const supabase = createClient();
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) setAuthUser(u); else clearAuthUser();
       setLoading(false);
     });
 
