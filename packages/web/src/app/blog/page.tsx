@@ -14,7 +14,7 @@ export default function BlogPage() {
         </div>
         <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-2">Coming Soon</h2>
         <p className="text-[var(--color-on-dark-soft)] max-w-md mx-auto leading-relaxed">
-          We're preparing our first articles on social media strategy, platform tips, and product updates. Stay tuned!
+          We&rsquo;re preparing our first articles on social media strategy, platform tips, and product updates. Stay tuned!
         </p>
         <Link
           href="/"

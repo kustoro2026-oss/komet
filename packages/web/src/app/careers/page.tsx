@@ -14,7 +14,7 @@ export default function CareersPage() {
         </div>
         <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-2">No Open Positions Yet</h2>
         <p className="text-[var(--color-on-dark-soft)] max-w-md mx-auto leading-relaxed">
-          We're a small, fast-moving team. When we're hiring, you'll be the first to know. Check back soon!
+          We&rsquo;re a small, fast-moving team. When we&rsquo;re hiring, you&rsquo;ll be the first to know. Check back soon!
         </p>
         <Link
           href="/"
