@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopNav } from "@/components/layout/top-nav";
@@ -13,15 +13,28 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  // Wait for client hydration before rendering sidebar
+  // Prevents hydration mismatch from zustand persist (localStorage)
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-[auto_1fr] bg-[var(--color-surface-dark)]">
-      {/* Sidebar — grid cell on desktop (un-fixed), overlay on mobile */}
-      <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-        className="!relative !sticky !top-0 h-screen z-20"
-      />
+    <div className="min-h-screen md:grid md:grid-cols-[auto_1fr] bg-[var(--color-surface-dark)]">
+      {/* Sidebar — grid cell on desktop, overlay on mobile.
+          Only rendered after hydration to avoid localStorage mismatch */}
+      {hasMounted ? (
+        <Sidebar
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+          className="!relative !sticky !top-0 h-screen z-20"
+        />
+      ) : (
+        /* SSR placeholder — invisible, same width as collapsed sidebar */
+        <div className="hidden md:block w-[72px] h-screen shrink-0" />
+      )}
 
       {/* Main Column — fills remaining space naturally */}
       <div className="flex flex-col min-h-screen min-w-0">
