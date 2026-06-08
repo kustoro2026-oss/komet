@@ -41,8 +41,9 @@ export default function DashboardLayout({
         {/* Top Navigation - Mobile only */}
         <TopNav onMenuClick={() => setMobileMenuOpen(true)} />
 
-        {/* Main Content */}
+        {/* Main Content — suppressHydrationWarning: child components use zustand persist stores */}
         <main
+          suppressHydrationWarning
           className={cn(
             "flex-1 min-h-0",
             // Mobile: space for top nav (h-14) + bottom nav (~64px)
