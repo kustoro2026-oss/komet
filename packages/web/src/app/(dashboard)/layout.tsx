@@ -31,13 +31,13 @@ export default function DashboardLayout({
       <main
         className={cn(
           "min-h-screen transition-all duration-normal",
-          // Mobile: offset for top nav + bottom nav
-          "pt-14 pb-20",
-          // Tablet (md) & Desktop (lg): offset depends on collapsed state
-          "md:pb-6",
+          // Mobile: space for top nav (h-14) + bottom nav (~64px)
+          "pt-16 pb-24",
+          // Tablet (md) & Desktop: sidebar offset + comfortable padding
+          "md:pt-8 md:pb-8 lg:pt-10 lg:pb-10",
           collapsed ? "md:ml-[72px] lg:ml-[72px]" : "md:ml-[264px] lg:ml-[264px]",
-          // Content styling
-          "mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6 sm:py-6 md:pt-8 lg:pt-10",
+          // Horizontal padding
+          "mx-auto w-full max-w-[1280px] px-4 sm:px-6",
           "bg-[var(--color-surface-dark)]"
         )}
       >
