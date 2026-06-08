@@ -47,9 +47,34 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
+
+    // Auto-create media bucket if it doesn't exist
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some((b) => b.name === "media");
+    if (!bucketExists) {
+      const { error: createBucketError } = await supabase.storage.createBucket("media", {
+        public: true,
+        fileSizeLimit: 52428800, // 50MB
+        allowedMimeTypes: [
+          "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml",
+          "video/mp4", "video/quicktime", "video/webm",
+          "audio/mpeg", "audio/wav", "audio/ogg",
+          "application/pdf",
+        ],
+      });
+      if (createBucketError) {
+        console.error("Failed to create media bucket:", createBucketError);
+        return NextResponse.json(
+          { error: "Storage not configured. Please create a 'media' bucket in Supabase." },
+          { status: 500 }
+        );
+      }
+      console.log("✅ Created 'media' storage bucket");
+    }
+
     const fileExt = file.name.split(".").pop() || "bin";
     const fileName = `${randomUUID()}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`;
+    const filePath = `temp/${user.id}/${fileName}`;
 
     // Upload file to Supabase Storage bucket "media"
     const buffer = Buffer.from(await file.arrayBuffer());
