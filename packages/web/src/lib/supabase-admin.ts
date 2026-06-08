@@ -38,7 +38,8 @@ export async function getUserFromRequest(request: NextRequest) {
     return { user: null, error: "Unauthorized" };
   }
 
-  // Auto-sync user to Prisma database
+  // Auto-sync user to Prisma database and get Prisma user ID
+  let prismaUserId = data.user.id; // fallback
   try {
     const { prisma } = await import("@komet/db");
     const email = data.user.email || "";
@@ -47,7 +48,7 @@ export async function getUserFromRequest(request: NextRequest) {
       data.user.user_metadata?.name ||
       email.split("@")[0];
 
-    await prisma.user.upsert({
+    const dbUser = await prisma.user.upsert({
       where: { supabaseId: data.user.id },
       update: {
         email,
@@ -61,13 +62,14 @@ export async function getUserFromRequest(request: NextRequest) {
         lastSeenAt: new Date(),
       },
     });
+    prismaUserId = dbUser.id;
   } catch (dbErr) {
     console.error("Failed to sync user to database:", dbErr);
   }
 
   return {
     user: {
-      id: data.user.id,
+      id: prismaUserId,
       email: data.user.email || "",
       name: data.user.user_metadata?.name,
     },
