@@ -19,6 +19,7 @@ import {
   BarChart3,
   Inbox,
   Bell,
+  Sparkles,
   Bot,
   Image,
   Settings,
