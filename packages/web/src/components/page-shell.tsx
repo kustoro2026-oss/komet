@@ -15,6 +15,7 @@ interface PageShellProps {
 
 export function PageShell({ title, description, children }: PageShellProps) {
   const t = useTranslations("components");
+  const tc = useTranslations("common");
   return (
     <div className="min-h-screen bg-[var(--color-surface-dark)]">
       {/* Navbar */}
@@ -22,7 +23,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/25" />
-            <span className="text-lg font-bold text-[var(--color-on-dark)]">{t("brandName")}</span>
+            <span className="text-lg font-bold text-[var(--color-on-dark)]">{tc("brandName")}</span>
           </Link>
           <Link
             href="/"

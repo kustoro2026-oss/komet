@@ -605,7 +605,19 @@
     "onboarding_setup_ai": "Jelajahi Fitur AI",
     "onboarding_setup_ai_desc": "Coba generasi konten dengan AI",
     "onboarding_settings": "Konfigurasi Pengaturan",
-    "onboarding_settings_desc": "Atur preferensi Anda"
+    "onboarding_settings_desc": "Atur preferensi Anda",
+    "onboarding_allDone": "Semua Selesai! 🎉",
+    "onboarding_gettingStarted": "Memulai",
+    "onboarding_completedAll": "Anda telah menyelesaikan semua langkah orientasi",
+    "onboarding_stepsCompleted": "{completed} dari {total} langkah selesai",
+    "onboarding_goToDashboard": "Ke Dashboard",
+    "onboarding_undo": "Batal",
+    "onboarding_markDone": "Tandai Selesai",
+    "onboarding_go": "Buka",
+    "onboarding_upload_media": "Unggah Media",
+    "onboarding_upload_media_desc": "Tambahkan gambar dan video ke perpustakaan Anda",
+    "onboarding_notifications": "Konfigurasi Notifikasi",
+    "onboarding_notifications_desc": "Atur preferensi notifikasi Anda"
   },
   "media": {
     "heading": "Perpustakaan Media",
@@ -1206,30 +1218,7 @@
     "v11Item2": "Penjadwalan, analitik, generator konten AI, dan kotak masuk terpadu",
     "v11Item3": "Dasbor responsif seluler"
   },
-  "common": {
-    "onboarding_allDone": "Semua Selesai! 🎉",
-    "onboarding_gettingStarted": "Memulai",
-    "onboarding_completedAll": "Anda telah menyelesaikan semua langkah orientasi",
-    "onboarding_stepsCompleted": "{completed} dari {total} langkah selesai",
-    "onboarding_goToDashboard": "Ke Dashboard",
-    "onboarding_undo": "Batal",
-    "onboarding_markDone": "Tandai Selesai",
-    "onboarding_go": "Buka",
-    "onboarding_connect": "Hubungkan Akun Sosial",
-    "onboarding_connect_desc": "Tautkan platform media sosial Anda",
-    "onboarding_first_post": "Buat Postingan Pertama",
-    "onboarding_first_post_desc": "Tulis dan jadwalkan konten pertama Anda",
-    "onboarding_invite_team": "Undang Anggota Tim",
-    "onboarding_invite_team_desc": "Berkolaborasi dengan tim Anda",
-    "onboarding_setup_ai": "Jelajahi Fitur AI",
-    "onboarding_setup_ai_desc": "Coba generasi konten AI",
-    "onboarding_upload_media": "Unggah Media",
-    "onboarding_upload_media_desc": "Tambahkan gambar dan video ke pustaka Anda",
-    "onboarding_notifications": "Konfigurasi Notifikasi",
-    "onboarding_notifications_desc": "Atur preferensi notifikasi Anda"
-  },
   "components": {
-    "brandName": "Komet",
     "backToHome": "Kembali ke Beranda",
     "copyright": "© {year} Komet. Hak cipta dilindungi."
   },

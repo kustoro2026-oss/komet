@@ -605,7 +605,19 @@
     "onboarding_setup_ai": "Explore AI Features",
     "onboarding_setup_ai_desc": "Try AI content generation",
     "onboarding_settings": "Configure Settings",
-    "onboarding_settings_desc": "Set up your preferences"
+    "onboarding_settings_desc": "Set up your preferences",
+    "onboarding_allDone": "All Done! 🎉",
+    "onboarding_gettingStarted": "Getting Started",
+    "onboarding_completedAll": "You've completed all onboarding steps",
+    "onboarding_stepsCompleted": "{completed} of {total} steps completed",
+    "onboarding_goToDashboard": "Go to Dashboard",
+    "onboarding_undo": "Undo",
+    "onboarding_markDone": "Mark Done",
+    "onboarding_go": "Go",
+    "onboarding_upload_media": "Upload Media",
+    "onboarding_upload_media_desc": "Add images and videos to your library",
+    "onboarding_notifications": "Configure Notifications",
+    "onboarding_notifications_desc": "Set up your notification preferences"
   },
   "media": {
     "heading": "Media Library",
@@ -1206,30 +1218,7 @@
     "v11Item2": "Scheduling, analytics, AI content generator, and unified inbox",
     "v11Item3": "Mobile-responsive dashboard"
   },
-  "common": {
-    "onboarding_allDone": "All Done! 🎉",
-    "onboarding_gettingStarted": "Getting Started",
-    "onboarding_completedAll": "You've completed all onboarding steps",
-    "onboarding_stepsCompleted": "{completed} of {total} steps completed",
-    "onboarding_goToDashboard": "Go to Dashboard",
-    "onboarding_undo": "Undo",
-    "onboarding_markDone": "Mark Done",
-    "onboarding_go": "Go",
-    "onboarding_connect": "Connect Social Accounts",
-    "onboarding_connect_desc": "Link your social media platforms",
-    "onboarding_first_post": "Create Your First Post",
-    "onboarding_first_post_desc": "Write and schedule your first content",
-    "onboarding_invite_team": "Invite Team Members",
-    "onboarding_invite_team_desc": "Collaborate with your team",
-    "onboarding_setup_ai": "Explore AI Features",
-    "onboarding_setup_ai_desc": "Try AI content generation",
-    "onboarding_upload_media": "Upload Media",
-    "onboarding_upload_media_desc": "Add images and videos to your library",
-    "onboarding_notifications": "Configure Notifications",
-    "onboarding_notifications_desc": "Set up your notification preferences"
-  },
   "components": {
-    "brandName": "Komet",
     "backToHome": "Back to Home",
     "copyright": "© {year} Komet. All rights reserved."
   },
