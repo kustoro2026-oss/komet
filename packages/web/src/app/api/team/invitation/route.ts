@@ -178,3 +178,53 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to send invitation" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  const { user, error } = await getUserFromRequest(request);
+  if (error || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const userId = user.id;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const invitationId = searchParams.get("id");
+
+    if (!invitationId) {
+      return NextResponse.json({ error: "id parameter required" }, { status: 400 });
+    }
+
+    const { prisma } = await import("@komet/db");
+
+    // Verify user owns the workspace this invitation belongs to
+    const invitation = await prisma.teamInvitation.findUnique({
+      where: { id: invitationId },
+      select: { id: true, workspaceId: true },
+    });
+
+    if (!invitation) {
+      return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
+    }
+
+    const isOwner = await prisma.workspace.findFirst({
+      where: { id: invitation.workspaceId, ownerId: userId, isDeleted: false },
+      select: { id: true },
+    });
+
+    if (!isOwner) {
+      const membership = await prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId: invitation.workspaceId, userId } },
+      });
+      if (!membership || membership.role !== "admin") {
+        return NextResponse.json({ error: "Only workspace admins can cancel invitations" }, { status: 403 });
+      }
+    }
+
+    await prisma.teamInvitation.delete({ where: { id: invitationId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[Team Invitation DELETE] Error:", error);
+    return NextResponse.json({ error: "Failed to cancel invitation" }, { status: 500 });
+  }
+}

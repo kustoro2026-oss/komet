@@ -218,6 +218,25 @@ export default function TeamPage() {
     }
   }, []);
 
+  /* ─── Cancel invitation ─── */
+  const handleCancelInvite = useCallback(async (invitationId: string) => {
+    try {
+      const token = await getAuthToken();
+      if (!token || !workspaceId) return;
+
+      const res = await fetch(`/api/team/invitation?id=${invitationId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+      }
+    } catch {
+      // silent
+    }
+  }, [workspaceId]);
+
   /* ─── Render ─── */
   const activeCount = members.length;
   const pendingCount = invitations.length;
@@ -413,6 +432,45 @@ export default function TeamPage() {
                 <span>{pendingCount} pending invitation{pendingCount !== 1 ? "s" : ""}</span>
               </div>
             </div>
+
+            {/* Pending Invitations */}
+            {invitations.length > 0 && (
+              <div className="border-t border-[var(--color-ink-muted)]">
+                <div className="px-5 py-3">
+                  <h3 className="text-caption-uppercase font-semibold text-[var(--color-on-dark-muted)] mb-2">
+                    Pending Invitations
+                  </h3>
+                  <div className="space-y-2">
+                    {invitations.map((inv) => (
+                      <div
+                        key={inv.id}
+                        className="flex items-center justify-between rounded-lg bg-[var(--color-surface-dark)] px-3 py-2.5"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Mail className="h-3.5 w-3.5 shrink-0 text-[var(--color-on-dark-muted)]" />
+                          <div className="min-w-0">
+                            <p className="text-caption text-[var(--color-on-dark)] truncate">{inv.email}</p>
+                            <p className="text-micro text-[var(--color-on-dark-muted)]">
+                              {inv.role.charAt(0).toUpperCase() + inv.role.slice(1)} · Expires{" "}
+                              {new Date(inv.expiresAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        {isUserAdmin && (
+                          <button
+                            onClick={() => handleCancelInvite(inv.id)}
+                            className="shrink-0 rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors"
+                            title="Cancel invitation"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Roles & Permissions */}
