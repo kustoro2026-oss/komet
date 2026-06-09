@@ -311,7 +311,7 @@ register({
   authorizeUrl: "https://www.tiktok.com/v2/auth/authorize/",
   tokenUrl: "https://open.tiktokapis.com/v2/oauth/token/",
   profileUrl: "https://open.tiktokapis.com/v2/user/info/",
-  scopes: ["user.info.basic", "user.info.profile"],
+  scopes: ["user.info.basic", "user.info.profile", "video.upload"],
   tokenAuth: "body",
   clientIdEnv: "TIKTOK_CLIENT_ID",
   clientSecretEnv: "TIKTOK_CLIENT_SECRET",
