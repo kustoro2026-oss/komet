@@ -454,6 +454,29 @@ export default function PostDetailPage() {
               </div>
             </div>
 
+            {/* Media */}
+            {post.mediaItems && post.mediaItems.length > 0 && (
+              <>
+                <div className="h-px bg-[var(--color-ink-muted)]" />
+                <div>
+                  <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] mb-3">
+                    {t("sectionMedia", { count: post.mediaItems.length })}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {post.mediaItems.map((m, i) => (
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-[var(--color-surface-dark)]">
+                        {m.type === "video" ? (
+                          <video src={m.url} controls className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={m.url} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="h-px bg-[var(--color-ink-muted)]" />
 
             {/* Platforms */}
@@ -636,6 +659,24 @@ export default function PostDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* Media (view-only in edit) */}
+            {post.mediaItems && post.mediaItems.length > 0 && (
+              <div>
+                <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">{t("sectionMedia", { count: post.mediaItems.length })}</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {post.mediaItems.map((m, i) => (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-[var(--color-surface-dark)] border border-[var(--color-ink-muted)]">
+                      {m.type === "video" ? (
+                        <video src={m.url} controls className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={m.url} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Save status */}
             {saveSuccess && (

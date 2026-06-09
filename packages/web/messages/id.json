@@ -825,6 +825,7 @@
     "tabEdit": "Edit",
     "tabHistory": "Riwayat",
     "sectionContent": "Konten",
+    "sectionMedia": "{count} media",
     "sectionPlatforms": "Platform ({count})",
     "noPlatforms": "Tidak ada platform dipilih",
     "sectionStatus": "Status",

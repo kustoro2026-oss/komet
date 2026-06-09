@@ -19,6 +19,7 @@ export interface PostItem {
   createdAt: string;
   engagement?: number;
   tags?: string[];
+  mediaItems?: { type: string; url: string }[];
 }
 
 interface PaginationInfo {

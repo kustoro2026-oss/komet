@@ -27,6 +27,7 @@ function normalizePost(post: Record<string, unknown>) {
       : new Date().toISOString(),
     engagement: (post.engagement as number) || 0,
     tags,
+    mediaItems: (post.mediaItems as Array<{ type: string; url: string }>) || [],
   };
 }
 

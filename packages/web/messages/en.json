@@ -825,6 +825,7 @@
     "tabEdit": "Edit",
     "tabHistory": "History",
     "sectionContent": "Content",
+    "sectionMedia": "{count} media",
     "sectionPlatforms": "Platforms ({count})",
     "noPlatforms": "No platforms selected",
     "sectionStatus": "Status",
