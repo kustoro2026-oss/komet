@@ -538,11 +538,11 @@ export default function SettingsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => { setEditingWsId(ws.id); setEditWsName(ws.name); }} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/10 transition-colors" title={t("renameButton")}>
+                      <Edit3 className="h-3.5 w-3.5" />
+                    </button>
                     {ws.id !== activeWorkspace?.id ? (
                       <>
-                        <button onClick={() => { setEditingWsId(ws.id); setEditWsName(ws.name); }} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/10 transition-colors" title={t("renameButton")}>
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </button>
                         <button onClick={() => setActiveWorkspace(ws)} className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
                           {t("switchButton")}
                         </button>
