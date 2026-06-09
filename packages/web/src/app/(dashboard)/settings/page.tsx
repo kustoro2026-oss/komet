@@ -23,6 +23,10 @@ import {
   Moon,
   Monitor,
   Loader2,
+  UserPlus,
+  Edit3,
+  Plus,
+  X,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
@@ -126,7 +130,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const user = useAuthStore((s) => s.user);
-  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace } = useWorkspaceStore();
+  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace, createWorkspace, updateWorkspace } = useWorkspaceStore();
   const supabase = createClient();
 
   /* ─── General form state (from real user) ─── */
@@ -152,6 +156,17 @@ export default function SettingsPage() {
 
   /* ─── Delete workspace confirmation ─── */
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  /* ─── Create workspace ─── */
+  const [showCreateWs, setShowCreateWs] = useState(false);
+  const [newWsName, setNewWsName] = useState("");
+  const [creatingWs, setCreatingWs] = useState(false);
+  const [createWsError, setCreateWsError] = useState("");
+
+  /* ─── Rename workspace ─── */
+  const [editingWsId, setEditingWsId] = useState<string | null>(null);
+  const [editWsName, setEditWsName] = useState("");
+  const [savingWsName, setSavingWsName] = useState(false);
 
   /* ─── Init form from auth store on mount ─── */
   useEffect(() => {
@@ -241,6 +256,34 @@ export default function SettingsPage() {
     } finally {
       setSavingPass(false);
     }
+  };
+
+  const handleCreateWorkspace = async () => {
+    if (!newWsName.trim()) {
+      setCreateWsError(t("createWorkspaceErrorEmpty"));
+      return;
+    }
+    setCreatingWs(true);
+    setCreateWsError("");
+    const ws = await createWorkspace(newWsName.trim());
+    if (ws) {
+      setNewWsName("");
+      setShowCreateWs(false);
+    } else {
+      setCreateWsError(t("createWorkspaceErrorFailed"));
+    }
+    setCreatingWs(false);
+  };
+
+  const handleRenameWorkspace = async () => {
+    if (!editingWsId || !editWsName.trim()) return;
+    setSavingWsName(true);
+    const ok = await updateWorkspace(editingWsId, { name: editWsName.trim() });
+    if (ok) {
+      setEditingWsId(null);
+      setEditWsName("");
+    }
+    setSavingWsName(false);
   };
 
   const handleSave = () => {
@@ -454,22 +497,52 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
-            <h4 className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">{t("allWorkspacesLabel", { count: workspaces.length })}</h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-[var(--color-on-dark)]">{t("allWorkspacesLabel", { count: workspaces.length })}</h4>
+              <button
+                onClick={() => setShowCreateWs(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                {t("createWorkspaceButton")}
+              </button>
+            </div>
             <div className="space-y-2 mb-6">
               {workspaces.map((ws) => (
                 <div key={ws.id} className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-xs font-bold text-[var(--color-primary-light)]">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary)]/20 text-xs font-bold text-[var(--color-primary-light)]">
                       {ws.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-[var(--color-on-dark)]">{ws.name}</p>
-                      <p className="text-xs text-[var(--color-on-dark-muted)]">{ws.role || t("ownerRole")}</p>
-                    </div>
+                    {editingWsId === ws.id ? (
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <input
+                          value={editWsName}
+                          onChange={(e) => setEditWsName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleRenameWorkspace(); if (e.key === "Escape") setEditingWsId(null); }}
+                          className="flex-1 min-w-0 rounded border border-[var(--color-primary)] bg-[var(--color-surface-dark)] px-2 py-1 text-sm text-[var(--color-on-dark)] focus:outline-none"
+                          autoFocus
+                        />
+                        <button onClick={handleRenameWorkspace} disabled={savingWsName} className="rounded p-1 text-emerald-500 hover:bg-emerald-500/10">
+                          {savingWsName ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        </button>
+                        <button onClick={() => setEditingWsId(null)} className="rounded p-1 text-[var(--color-on-dark-muted)] hover:text-red-400">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-[var(--color-on-dark)] truncate">{ws.name}</p>
+                        <p className="text-xs text-[var(--color-on-dark-muted)]">{ws.role || t("ownerRole")}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     {ws.id !== activeWorkspace?.id ? (
                       <>
+                        <button onClick={() => { setEditingWsId(ws.id); setEditWsName(ws.name); }} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/10 transition-colors" title={t("renameButton")}>
+                          <Edit3 className="h-3.5 w-3.5" />
+                        </button>
                         <button onClick={() => setActiveWorkspace(ws)} className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
                           {t("switchButton")}
                         </button>
@@ -503,6 +576,40 @@ export default function SettingsPage() {
                         {t("deletePermanentlyButton")}
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Create Workspace Modal */}
+            {showCreateWs && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowCreateWs(false)}>
+                <div className="w-full max-w-md rounded-2xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-6 py-4">
+                    <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("createWorkspaceTitle")}</h3>
+                    <button onClick={() => { setShowCreateWs(false); setNewWsName(""); setCreateWsError(""); }} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] transition-colors">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="px-6 py-5">
+                    <label className={labelClass}>{t("createWorkspaceNameLabel")}</label>
+                    <input
+                      value={newWsName}
+                      onChange={(e) => setNewWsName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleCreateWorkspace(); }}
+                      placeholder={t("createWorkspaceNamePlaceholder")}
+                      className={inputClass}
+                      autoFocus
+                    />
+                    {createWsError && <p className="mt-2 text-xs text-red-400">{createWsError}</p>}
+                  </div>
+                  <div className="flex items-center justify-end gap-3 border-t border-[var(--color-ink-muted)] px-6 py-4">
+                    <button onClick={() => { setShowCreateWs(false); setNewWsName(""); setCreateWsError(""); }} className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-sm font-medium text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark)] transition-colors">
+                      {t("cancelButton")}
+                    </button>
+                    <button onClick={handleCreateWorkspace} disabled={creatingWs || !newWsName.trim()} className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors">
+                      {creatingWs ? <Loader2 className="h-4 w-4 animate-spin inline mr-1" /> : <Plus className="h-4 w-4 inline mr-1" />}
+                      {t("createWorkspaceModalButton")}
+                    </button>
                   </div>
                 </div>
               </div>
