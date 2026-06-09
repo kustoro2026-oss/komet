@@ -43,7 +43,12 @@
     "createAccount": "Buat Akun",
     "fullName": "Nama Lengkap",
     "accountCreated": "Akun berhasil dibuat! Periksa email Anda untuk konfirmasi akun, lalu masuk di bawah.",
-    "unexpectedError": "Terjadi kesalahan yang tidak terduga"
+    "unexpectedError": "Terjadi kesalahan yang tidak terduga",
+    "backToHome": "Kembali ke Beranda",
+    "emailPlaceholder": "anda@email.com",
+    "passwordPlaceholder": "••••••••",
+    "namePlaceholder": "John Doe",
+    "createPasswordPlaceholder": "Buat kata sandi yang kuat"
   },
   "landing": {
     "heroTitle": "Ledakkan Kontenmu ke",

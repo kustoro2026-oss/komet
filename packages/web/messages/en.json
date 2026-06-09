@@ -43,7 +43,12 @@
     "createAccount": "Create Account",
     "fullName": "Full Name",
     "accountCreated": "Account created! Check your email to confirm your account, then sign in below.",
-    "unexpectedError": "An unexpected error occurred"
+    "unexpectedError": "An unexpected error occurred",
+    "backToHome": "Back to Home",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••",
+    "namePlaceholder": "John Doe",
+    "createPasswordPlaceholder": "Create a strong password"
   },
   "landing": {
     "heroTitle": "Blast Your Content to",
