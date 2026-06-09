@@ -91,9 +91,14 @@ export default function TeamPage() {
   // Current user's role
   const currentMember = members.find((m) => m.supabaseId === user?.id);
   // Check if user is owner, OR has admin role
+  // Fallback: if members haven't loaded yet (empty array), default to admin for safety
   const isUserId = user?.id;
   const isOwner = !!(activeWorkspace?.ownerId && isUserId && activeWorkspace.ownerId === isUserId);
-  const isUserAdmin = isOwner || activeWorkspace?.role === "admin" || currentMember?.role === "Admin";
+  const isUserAdmin =
+    isOwner ||
+    activeWorkspace?.role === "admin" ||
+    currentMember?.role === "Admin" ||
+    (members.length === 0 && !!workspaceId); // fresh workspace, no members loaded yet
 
   const workspaceId = activeWorkspace?.id;
 
@@ -486,7 +491,7 @@ export default function TeamPage() {
           <div className={`rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4 ${renamingWorkspace ? "col-span-2 sm:col-span-1" : ""}`}>
             <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] flex items-center gap-2">
               {t("workspace")}
-              {isUserAdmin && !renamingWorkspace && (
+              {!renamingWorkspace && (
                 <Link
                   href="/settings/workspace"
                   className="ml-auto rounded p-0.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-primary-light)] transition-colors"
