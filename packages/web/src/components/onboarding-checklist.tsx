@@ -56,12 +56,12 @@ export function OnboardingChecklist({ steps: initialSteps, onComplete }: Onboard
           </div>
           <div>
             <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-              {isAllComplete ? "All Done! 🎉" : "Getting Started"}
+              {isAllComplete ? tc("onboarding_allDone") : tc("onboarding_gettingStarted")}
             </h3>
             <p className="text-micro text-[var(--color-on-dark-soft)]">
               {isAllComplete
-                ? "You've completed all onboarding steps"
-                : `${completedCount} of ${totalCount} steps completed`}
+                ? tc("onboarding_completedAll")
+                : tc("onboarding_stepsCompleted", { completed: completedCount, total: totalCount })}
             </p>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function OnboardingChecklist({ steps: initialSteps, onComplete }: Onboard
             href="/dashboard"
             className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
           >
-            Go to Dashboard
+            {tc("onboarding_goToDashboard")}
             <ChevronRight className="h-4 w-4" />
           </NextLink>
         )}
@@ -126,13 +126,13 @@ export function OnboardingChecklist({ steps: initialSteps, onComplete }: Onboard
                     : "bg-[var(--color-primary)]/10 text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/20"
                 }`}
               >
-                {step.isComplete ? "Undo" : "Mark Done"}
+                {step.isComplete ? tc("onboarding_undo") : tc("onboarding_markDone")}
               </button>
               <NextLink
                 href={step.href}
                 className="flex items-center gap-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-micro font-medium text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark)] transition-all"
               >
-                Go
+                {tc("onboarding_go")}
                 <ChevronRight className="h-3 w-3" />
               </NextLink>
             </div>

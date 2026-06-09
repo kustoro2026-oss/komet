@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { KometLogo } from "@/components/ui/komet-logo";
 
@@ -13,6 +14,7 @@ interface PageShellProps {
 }
 
 export function PageShell({ title, description, children }: PageShellProps) {
+  const t = useTranslations("components");
   return (
     <div className="min-h-screen bg-[var(--color-surface-dark)]">
       {/* Navbar */}
@@ -20,14 +22,14 @@ export function PageShell({ title, description, children }: PageShellProps) {
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/25" />
-            <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
+            <span className="text-lg font-bold text-[var(--color-on-dark)]">{t("brandName")}</span>
           </Link>
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Home
+            {t("backToHome")}
           </Link>
         </nav>
       </header>
@@ -65,7 +67,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
       <footer className="border-t border-white/[0.06] px-4 sm:px-6 py-6">
         <div className="mx-auto max-w-6xl text-center">
           <p className="text-xs text-[var(--color-on-dark-muted)]">
-            &copy; {new Date().getFullYear()} Komet. All rights reserved.
+            {t("copyright", { year: new Date().getFullYear() })}
           </p>
         </div>
       </footer>

@@ -542,6 +542,21 @@
       "dms": "DMs"
     }
   },
+  "components": {
+    "menuOpen": "Open menu",
+    "userMenu": "User menu",
+    "accountSettings": "Account Settings",
+    "workspaceLabel": "Workspace",
+    "signOut": "Sign Out",
+    "fallbackEmail": "user@komet.app",
+    "notifications": "Notifications",
+    "notificationsHeading": "Notifications",
+    "markAllRead": "Mark all read",
+    "noNotifications": "No notifications",
+    "markRead": "Mark read",
+    "remove": "Remove",
+    "viewAllNotifications": "View all notifications"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
@@ -555,6 +570,19 @@
     "filter": "Filter",
     "noData": "No data available",
     "comingSoon": "Coming Soon",
+    "brandName": "Komet",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "newWorkspaceDescription": "Enter a name for your new workspace",
+    "newWorkspacePlaceholder": "My New Workspace",
+    "deleteWorkspace": "Delete Workspace",
+    "deleteWorkspaceWarning": "This action cannot be undone",
+    "deleteWorkspaceConfirmPrefix": "Are you sure you want to delete",
+    "deleteWorkspaceDataLoss": "All data will be lost.",
+    "fallbackUserName": "User",
+    "signOut": "Sign Out",
+    "signingOut": "Signing out...",
+    "switchWorkspace": "Switch workspace",
    "installApp": "Install App",
     "app": "App",
     "mobileFeatures": "Mobile Features",
@@ -1172,6 +1200,40 @@
     "v11Item1": "15+ social platform integrations",
     "v11Item2": "Scheduling, analytics, AI content generator, and unified inbox",
     "v11Item3": "Mobile-responsive dashboard"
+  },
+  "common": {
+    "onboarding_allDone": "All Done! 🎉",
+    "onboarding_gettingStarted": "Getting Started",
+    "onboarding_completedAll": "You've completed all onboarding steps",
+    "onboarding_stepsCompleted": "{completed} of {total} steps completed",
+    "onboarding_goToDashboard": "Go to Dashboard",
+    "onboarding_undo": "Undo",
+    "onboarding_markDone": "Mark Done",
+    "onboarding_go": "Go",
+    "onboarding_connect": "Connect Social Accounts",
+    "onboarding_connect_desc": "Link your social media platforms",
+    "onboarding_first_post": "Create Your First Post",
+    "onboarding_first_post_desc": "Write and schedule your first content",
+    "onboarding_invite_team": "Invite Team Members",
+    "onboarding_invite_team_desc": "Collaborate with your team",
+    "onboarding_setup_ai": "Explore AI Features",
+    "onboarding_setup_ai_desc": "Try AI content generation",
+    "onboarding_upload_media": "Upload Media",
+    "onboarding_upload_media_desc": "Add images and videos to your library",
+    "onboarding_notifications": "Configure Notifications",
+    "onboarding_notifications_desc": "Set up your notification preferences"
+  },
+  "components": {
+    "brandName": "Komet",
+    "backToHome": "Back to Home",
+    "copyright": "© {year} Komet. All rights reserved."
+  },
+  "pwaBanner": {
+    "dismiss": "Dismiss",
+    "heading": "Install Komet App",
+    "description": "Install as an app for the best experience. Faster access, offline support, and push notifications.",
+    "install": "Install",
+    "notNow": "Not now"
   },
   "apiDocs": {
     "title": "API Reference",

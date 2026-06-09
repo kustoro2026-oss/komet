@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { KometLogo } from "@/components/ui/komet-logo";
+import { useTranslations } from "next-intl";
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -27,6 +28,8 @@ export function TopNav({ onMenuClick }: TopNavProps) {
   const clearUser = useAuthStore((s) => s.clearUser);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const t = useTranslations("components");
+  const tc = useTranslations("common");
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -40,8 +43,8 @@ export function TopNav({ onMenuClick }: TopNavProps) {
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] ||
-    "User";
-  const email = user?.email || "user@komet.app";
+    tc("fallbackUserName");
+  const email = user?.email || t("fallbackEmail");
   const initials = getUserInitials(
     user?.email,
     user?.user_metadata?.full_name || user?.user_metadata?.name
@@ -59,7 +62,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
       <button
         onClick={onMenuClick}
         className="flex h-10 w-10 items-center justify-center rounded-md text-[var(--color-ink-soft)] hover:bg-[var(--color-hairline-soft)] dark:text-[var(--color-on-dark-soft)] dark:hover:bg-[var(--color-surface-dark-raised)]"
-        aria-label="Open menu"
+        aria-label={t("menuOpen")}
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -68,7 +71,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
       <div className="flex items-center gap-2">
         <KometLogo size="sm" className="h-6 w-6" />
         <span className="font-display text-base font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
-          Komet
+          {tc("brandName")}
         </span>
       </div>
 
@@ -82,7 +85,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
           <button
             onClick={() => setOpen(!open)}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-semibold text-[var(--color-on-primary)] hover:opacity-90 transition-opacity"
-            aria-label="User menu"
+            aria-label={t("userMenu")}
           >
             {initials}
           </button>
@@ -106,7 +109,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-ink-soft)] dark:text-[var(--color-on-dark-soft)] hover:bg-[var(--color-hairline-soft)] dark:hover:bg-[var(--color-surface-dark-raised)] transition-colors"
                 >
                   <Settings className="h-4 w-4" />
-                  Account Settings
+                  {t("accountSettings")}
                 </Link>
                 <Link
                   href="/settings/workspace"
@@ -114,7 +117,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-ink-soft)] dark:text-[var(--color-on-dark-soft)] hover:bg-[var(--color-hairline-soft)] dark:hover:bg-[var(--color-surface-dark-raised)] transition-colors"
                 >
                   <User className="h-4 w-4" />
-                  Workspace
+                  {t("workspaceLabel")}
                 </Link>
               </div>
               {/* Logout */}
@@ -128,7 +131,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
-                  Sign Out
+                  {t("signOut")}
                 </button>
               </div>
             </div>

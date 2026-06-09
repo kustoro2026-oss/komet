@@ -5,6 +5,7 @@ import type { ComponentType } from "react";
 import { Bell, Check, Trash2, MessageSquare, Calendar, AlertTriangle, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { KometLogoIcon } from "@/components/ui/komet-logo";
+import { useTranslations } from "next-intl";
 
 interface Notification {
   id: string;
@@ -78,6 +79,7 @@ export function NotificationDropdown() {
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("components");
 
   // Load preferences on mount and on open
   useEffect(() => {
@@ -120,7 +122,7 @@ export function NotificationDropdown() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative flex h-10 w-10 items-center justify-center rounded-md text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
-        aria-label="Notifications"
+        aria-label={t("notifications")}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -136,14 +138,14 @@ export function NotificationDropdown() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-4 py-3">
             <h3 className="font-display text-heading-xs font-semibold text-[var(--color-on-dark)]">
-              Notifications
+              {t("notificationsHeading")}
             </h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
                 className="text-micro font-medium text-[var(--color-primary-light)] hover:underline"
               >
-                Mark all read
+                {t("markAllRead")}
               </button>
             )}
           </div>
@@ -153,7 +155,7 @@ export function NotificationDropdown() {
             {filtered.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <Bell className="mx-auto h-6 w-6 text-[var(--color-on-dark-muted)]" />
-                <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">No notifications</p>
+                <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">{t("noNotifications")}</p>
               </div>
             ) : (
               filtered.slice(0, 10).map((notif) => {
@@ -200,7 +202,7 @@ export function NotificationDropdown() {
                         <button
                           onClick={() => markRead(notif.id)}
                           className="rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-success)]"
-                          title="Mark read"
+                          title={t("markRead")}
                         >
                           <Check className="h-3.5 w-3.5" />
                         </button>
@@ -208,7 +210,7 @@ export function NotificationDropdown() {
                       <button
                         onClick={() => removeNotification(notif.id)}
                         className="rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-error)]"
-                        title="Remove"
+                        title={t("remove")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -225,7 +227,7 @@ export function NotificationDropdown() {
             onClick={() => setIsOpen(false)}
             className="flex items-center justify-center border-t border-[var(--color-ink-muted)] px-4 py-2.5 text-caption font-medium text-[var(--color-primary-light)] hover:bg-[var(--color-surface-dark)] transition-colors"
           >
-            View all notifications
+            {t("viewAllNotifications")}
           </Link>
         </div>
       )}

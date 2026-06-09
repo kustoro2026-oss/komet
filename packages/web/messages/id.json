@@ -542,6 +542,21 @@
       "dms": "DM"
     }
   },
+  "components": {
+    "menuOpen": "Buka menu",
+    "userMenu": "Menu pengguna",
+    "accountSettings": "Pengaturan Akun",
+    "workspaceLabel": "Workspace",
+    "signOut": "Keluar",
+    "fallbackEmail": "pengguna@komet.app",
+    "notifications": "Notifikasi",
+    "notificationsHeading": "Notifikasi",
+    "markAllRead": "Tandai semua dibaca",
+    "noNotifications": "Tidak ada notifikasi",
+    "markRead": "Tandai dibaca",
+    "remove": "Hapus",
+    "viewAllNotifications": "Lihat semua notifikasi"
+  },
   "common": {
     "loading": "Memuat...",
     "error": "Terjadi kesalahan",
@@ -555,6 +570,19 @@
     "filter": "Filter",
     "noData": "Tidak ada data",
     "comingSoon": "Segera Hadir",
+    "brandName": "Komet",
+    "expandSidebar": "Perluas sidebar",
+    "collapseSidebar": "Ciutkan sidebar",
+    "newWorkspaceDescription": "Masukkan nama untuk workspace baru Anda",
+    "newWorkspacePlaceholder": "Workspace Baru Saya",
+    "deleteWorkspace": "Hapus Workspace",
+    "deleteWorkspaceWarning": "Tindakan ini tidak bisa dibatalkan",
+    "deleteWorkspaceConfirmPrefix": "Apakah Anda yakin ingin menghapus",
+    "deleteWorkspaceDataLoss": "Semua data akan hilang.",
+    "fallbackUserName": "Pengguna",
+    "signOut": "Keluar",
+    "signingOut": "Keluar...",
+    "switchWorkspace": "Pindah workspace",
     "installApp": "Instal Aplikasi",
     "app": "Aplikasi",
     "mobileFeatures": "Fitur Mobile",
@@ -1172,6 +1200,40 @@
     "v11Item1": "15+ integrasi platform sosial",
     "v11Item2": "Penjadwalan, analitik, generator konten AI, dan kotak masuk terpadu",
     "v11Item3": "Dasbor responsif seluler"
+  },
+  "common": {
+    "onboarding_allDone": "Semua Selesai! 🎉",
+    "onboarding_gettingStarted": "Memulai",
+    "onboarding_completedAll": "Anda telah menyelesaikan semua langkah orientasi",
+    "onboarding_stepsCompleted": "{completed} dari {total} langkah selesai",
+    "onboarding_goToDashboard": "Ke Dashboard",
+    "onboarding_undo": "Batal",
+    "onboarding_markDone": "Tandai Selesai",
+    "onboarding_go": "Buka",
+    "onboarding_connect": "Hubungkan Akun Sosial",
+    "onboarding_connect_desc": "Tautkan platform media sosial Anda",
+    "onboarding_first_post": "Buat Postingan Pertama",
+    "onboarding_first_post_desc": "Tulis dan jadwalkan konten pertama Anda",
+    "onboarding_invite_team": "Undang Anggota Tim",
+    "onboarding_invite_team_desc": "Berkolaborasi dengan tim Anda",
+    "onboarding_setup_ai": "Jelajahi Fitur AI",
+    "onboarding_setup_ai_desc": "Coba generasi konten AI",
+    "onboarding_upload_media": "Unggah Media",
+    "onboarding_upload_media_desc": "Tambahkan gambar dan video ke pustaka Anda",
+    "onboarding_notifications": "Konfigurasi Notifikasi",
+    "onboarding_notifications_desc": "Atur preferensi notifikasi Anda"
+  },
+  "components": {
+    "brandName": "Komet",
+    "backToHome": "Kembali ke Beranda",
+    "copyright": "© {year} Komet. Hak cipta dilindungi."
+  },
+  "pwaBanner": {
+    "dismiss": "Tutup",
+    "heading": "Instal Aplikasi Komet",
+    "description": "Instal sebagai aplikasi untuk pengalaman terbaik. Akses lebih cepat, dukungan offline, dan notifikasi push.",
+    "install": "Instal",
+    "notNow": "Nanti saja"
   },
   "apiDocs": {
     "title": "Referensi API",

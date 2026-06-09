@@ -96,7 +96,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] ||
-    "User";
+    tc("fallbackUserName");
   const email = user?.email || "";
   const initial = displayName.charAt(0).toUpperCase();
 
@@ -128,7 +128,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
             <Link href="/dashboard" className="flex items-center gap-2">
               <KometLogo size="sm" className="h-6 w-6" />
               <span className="font-display text-lg font-semibold text-[var(--color-on-dark)] light:text-[var(--color-ink)]">
-                Komet
+                {tc("brandName")}
               </span>
             </Link>
           </>
@@ -140,7 +140,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
             "hidden rounded-md p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] light:hover:bg-[var(--color-hairline-soft)] light:hover:text-[var(--color-ink)] md:block",
             collapsed && "mx-auto"
           )}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? tc("expandSidebar") : tc("collapseSidebar")}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -156,6 +156,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
           <button
             onClick={() => setWorkspaceOpen(!workspaceOpen)}
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-body-sm font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] light:text-[var(--color-ink)] light:hover:bg-[var(--color-hairline-soft)] transition-colors"
+            title={tc("switchWorkspace")}
           >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--color-primary)] text-micro font-bold text-white">
               {activeWorkspace.name.charAt(0).toUpperCase()}
@@ -222,7 +223,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
               {tc("newWorkspace")}
             </h3>
             <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
-              Enter a name for your new workspace
+              {tc("newWorkspaceDescription")}
             </p>
             <input
               type="text"
@@ -237,7 +238,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
                 }
                 if (e.key === "Escape") setShowNewWorkspace(false);
               }}
-              placeholder="My New Workspace"
+              placeholder={tc("newWorkspacePlaceholder")}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] mb-4"
               autoFocus
             />
@@ -277,19 +278,19 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
               </div>
               <div>
                 <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-                  {tc("delete") || "Delete Workspace"}
+                  {tc("deleteWorkspace")}
                 </h3>
                 <p className="text-caption text-[var(--color-on-dark-soft)]">
-                  This action cannot be undone
+                  {tc("deleteWorkspaceWarning")}
                 </p>
               </div>
             </div>
             <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
-              Are you sure you want to delete{' '}
+              {tc("deleteWorkspaceConfirmPrefix")}{' '}
               <span className="font-medium text-[var(--color-on-dark)]">
                 {workspaces.find((w) => w.id === confirmDeleteId)?.name}
               </span>
-              ? All data will be lost.
+              ? {tc("deleteWorkspaceDataLoss")}
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
@@ -306,7 +307,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
                 }}
                 className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90"
               >
-                {tc("delete") || "Delete"}
+                {tc("delete")}
               </button>
             </div>
           </div>
@@ -426,11 +427,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
             "light:text-[var(--color-ink-faint)] light:hover:bg-[var(--color-error)]/10 light:hover:text-[var(--color-error)]",
             collapsed && "justify-center px-0"
           )}
-          title="Sign Out"
+          title={tc("signOut")}
         >
           <LogOut className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-0.5" />
           {!collapsed && (
-            <span>{loggingOut ? "Signing out..." : "Sign Out"}</span>
+            <span>{loggingOut ? tc("signingOut") : tc("signOut")}</span>
           )}
         </button>
       </div>

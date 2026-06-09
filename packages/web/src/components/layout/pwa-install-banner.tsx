@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { X, Smartphone, Download } from "lucide-react";
 import { KometLogo } from "@/components/ui/komet-logo";
 
@@ -10,6 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PwaInstallBanner() {
+  const t = useTranslations("pwaBanner");
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -62,7 +64,7 @@ export function PwaInstallBanner() {
         <button
           onClick={() => setDismissed(true)}
           className="absolute right-2 top-2 rounded-lg p-1 text-white/40 hover:bg-white/5 hover:text-white/70 transition-colors"
-          aria-label="Dismiss"
+          aria-label={t("dismiss")}
         >
           <X className="h-4 w-4" />
         </button>
@@ -72,10 +74,10 @@ export function PwaInstallBanner() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Smartphone className="h-4 w-4 text-[var(--color-primary)]" />
-              <p className="text-sm font-semibold text-white">Install Komet App</p>
+              <p className="text-sm font-semibold text-white">{t("heading")}</p>
             </div>
             <p className="mt-1 text-xs text-white/60 leading-relaxed">
-              Install as an app for the best experience. Faster access, offline support, and push notifications.
+              {t("description")}
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -83,13 +85,13 @@ export function PwaInstallBanner() {
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all"
               >
                 <Download className="h-3.5 w-3.5" />
-                Install
+                {t("install")}
               </button>
               <button
                 onClick={() => setDismissed(true)}
                 className="rounded-lg border border-white/10 px-3.5 py-1.5 text-xs text-white/50 hover:bg-white/5 hover:text-white/70 transition-all"
               >
-                Not now
+                {t("notNow")}
               </button>
             </div>
           </div>
