@@ -1249,6 +1249,23 @@
     "v11Item2": "Penjadwalan, analitik, generator konten AI, dan kotak masuk terpadu",
     "v11Item3": "Dasbor responsif seluler"
   },
+  "privacy": {
+    "title": "Kebijakan Privasi",
+    "description": "Terakhir diperbarui: Juni 2026",
+    "intro": "Komet (\"kami\") berkomitmen untuk melindungi privasi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, mengungkapkan, dan melindungi informasi Anda saat Anda menggunakan platform penjadwalan media sosial kami di kontenmumelesat.com (\"Layanan\"). Dengan menggunakan Layanan, Anda menyetujui pengumpulan dan penggunaan informasi sesuai dengan kebijakan ini.",
+    "section1Heading": "1. Informasi yang Kami Kumpulkan",
+    "section1Text": "Kami mengumpulkan informasi yang Anda berikan langsung: detail pendaftaran akun (nama, email), koneksi akun media sosial melalui OAuth, konten yang Anda buat (postingan, draf, media), dan preferensi ruang kerja. Kami juga secara otomatis mengumpulkan informasi teknis tertentu: alamat IP, jenis browser, informasi perangkat, pola penggunaan, dan cookie sebagaimana dijelaskan dalam Kebijakan Cookie kami.",
+    "section2Heading": "2. Bagaimana Kami Menggunakan Informasi Anda",
+    "section2Text": "Kami menggunakan informasi Anda untuk: menyediakan dan memelihara Layanan, mengautentikasi identitas Anda, memposting konten ke akun media sosial Anda yang terhubung atas nama Anda, mengirim komunikasi terkait layanan (pembaruan akun, peringatan keamanan), meningkatkan dan mempersonalisasi pengalaman Anda, serta mematuhi kewajiban hukum.",
+    "section3Heading": "3. Berbagi Data & Pihak Ketiga",
+    "section3Text": "Kami membagikan data hanya seperlunya: dengan platform media sosial (saat Anda mempublikasikan konten), dengan penyedia layanan (hosting di Vercel, database di Supabase, email via Resend, fitur AI), dan bila diwajibkan oleh hukum. Kami TIDAK menjual data pribadi Anda kepada pihak ketiga. Semua layanan pihak ketiga terikat oleh kebijakan privasi dan keamanan mereka sendiri.",
+    "section4Heading": "4. Penyimpanan & Keamanan Data",
+    "section4Text": "Kami menyimpan data Anda selama akun Anda aktif. Anda dapat menghapus akun dan data terkait kapan saja melalui Pengaturan. Kami menerapkan langkah-langkah keamanan standar industri termasuk enkripsi saat diam dan saat transit, namun tidak ada metode penyimpanan elektronik yang 100% aman.",
+    "section5Heading": "5. Hak Anda",
+    "section5Text": "Tergantung pada yurisdiksi Anda, Anda mungkin memiliki hak untuk: mengakses data pribadi Anda, memperbaiki data yang tidak akurat, menghapus data Anda, membatasi atau menolak pemrosesan, dan portabilitas data. Untuk menggunakan hak-hak ini, hubungi kami melalui email di bawah.",
+    "section6Heading": "6. Kontak",
+    "section6Text": "Pertanyaan tentang Kebijakan Privasi ini? Hubungi kami di"
+  },
   "pwaBanner": {
     "dismiss": "Tutup",
     "heading": "Instal Aplikasi Komet",

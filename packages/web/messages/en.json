@@ -1249,6 +1249,23 @@
     "v11Item2": "Scheduling, analytics, AI content generator, and unified inbox",
     "v11Item3": "Mobile-responsive dashboard"
   },
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": "Last updated: June 2026",
+    "intro": "Komet (\"we\", \"our\", or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our social media scheduling platform at kontenmumelesat.com (the \"Service\"). By using the Service, you agree to the collection and use of information in accordance with this policy.",
+    "section1Heading": "1. Information We Collect",
+    "section1Text": "We collect information you provide directly: account registration details (name, email), social media account connections via OAuth, content you create (posts, drafts, media), and workspace preferences. We also automatically collect certain technical information: IP address, browser type, device information, usage patterns, and cookies as described in our Cookie Policy.",
+    "section2Heading": "2. How We Use Your Information",
+    "section2Text": "We use your information to: provide and maintain the Service, authenticate your identity, post content to your connected social media accounts on your behalf, send service-related communications (account updates, security alerts), improve and personalize your experience, and comply with legal obligations.",
+    "section3Heading": "3. Data Sharing & Third Parties",
+    "section3Text": "We share data only as necessary: with social media platforms (when you publish content), with service providers (hosting on Vercel, database on Supabase, email via Resend, AI features), and when required by law. We do NOT sell your personal data to third parties. All third-party services are bound by their own privacy and security policies.",
+    "section4Heading": "4. Data Retention & Security",
+    "section4Text": "We retain your data as long as your account is active. You may delete your account and associated data at any time via Settings. We implement industry-standard security measures including encryption at rest and in transit, but no method of electronic storage is 100% secure.",
+    "section5Heading": "5. Your Rights",
+    "section5Text": "Depending on your jurisdiction, you may have rights to: access your personal data, correct inaccurate data, delete your data, restrict or object to processing, and data portability. To exercise these rights, contact us at the email below.",
+    "section6Heading": "6. Contact",
+    "section6Text": "Questions about this Privacy Policy? Contact us at"
+  },
   "pwaBanner": {
     "dismiss": "Dismiss",
     "heading": "Install Komet App",
