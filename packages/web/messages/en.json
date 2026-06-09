@@ -780,7 +780,14 @@
     "emptyTitle": "No drafts found",
     "emptyCTA": "Create your first post",
     "view": "View",
-    "continue": "Continue"
+    "continue": "Continue",
+    "loading": "Loading drafts…",
+    "errorLoading": "Failed to load drafts",
+    "retry": "Retry",
+    "deleteTitle": "Delete Draft",
+    "deleteWarning": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "bulkUpload": {
     "heading": "Bulk Upload",
@@ -840,6 +847,7 @@
     "add": "Add",
     "saveSuccess": "Changes saved successfully",
     "saveError": "Failed to save changes",
+    "publishError": "Failed to publish. Content was saved as draft.",
     "saveChanges": "Save Changes",
     "saveAndPublish": "Save & Publish",
     "historyDescription": "Version history for this post",

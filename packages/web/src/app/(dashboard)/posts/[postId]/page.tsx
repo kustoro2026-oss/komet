@@ -44,6 +44,7 @@ export default function PostDetailPage() {
   const [editHashtags, setEditHashtags] = useState<string[]>([]);
   const [editHashtagInput, setEditHashtagInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -108,25 +109,35 @@ export default function PostDetailPage() {
   // Save handler
   const handleSave = async (publishNow?: boolean) => {
     if (!post) return;
-    setIsSaving(true);
+    
+    if (publishNow) {
+      setIsPublishing(true);
+    } else {
+      setIsSaving(true);
+    }
     setSaveError(null);
     setSaveSuccess(false);
 
     try {
-      // Step 1: Always save content changes
+      // Step 1: Save content changes (don't change status yet)
       await updatePostMutation.mutateAsync({
         postId,
         data: {
           title: editTitle || undefined,
           content: editContent,
           hashtags: editHashtags.length > 0 ? editHashtags : undefined,
-          ...(publishNow ? { publishNow: true, status: "published" } : {}),
         },
       });
 
       // Step 2: If publishing, trigger the actual publish
       if (publishNow && post.status === "draft") {
-        await publishPostMutation.mutateAsync(postId);
+        try {
+          await publishPostMutation.mutateAsync(postId);
+        } catch (publishErr) {
+          // Publish failed but content was saved
+          setSaveError(publishErr instanceof Error ? publishErr.message : t("publishError"));
+          return;
+        }
       }
 
       setSaveSuccess(true);
@@ -135,6 +146,7 @@ export default function PostDetailPage() {
       setSaveError(err instanceof Error ? err.message : t("saveError"));
     } finally {
       setIsSaving(false);
+      setIsPublishing(false);
     }
   };
 
@@ -644,7 +656,7 @@ export default function PostDetailPage() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--color-ink-muted)]">
                 <button
                   onClick={() => handleSave(false)}
-                  disabled={isSaving}
+                  disabled={isSaving || isPublishing}
                   className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
                 >
                   {isSaving ? (
@@ -657,10 +669,10 @@ export default function PostDetailPage() {
                 {post.status === "draft" && (
                   <button
                     onClick={() => handleSave(true)}
-                    disabled={isSaving}
+                    disabled={isSaving || isPublishing}
                     className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
                   >
-                    {isSaving ? (
+                    {isPublishing ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="h-4 w-4" />

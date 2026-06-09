@@ -780,7 +780,14 @@
     "emptyTitle": "Tidak ada draft ditemukan",
     "emptyCTA": "Buat postingan pertama Anda",
     "view": "Lihat",
-    "continue": "Lanjutkan"
+    "continue": "Lanjutkan",
+    "loading": "Memuat draft…",
+    "errorLoading": "Gagal memuat draft",
+    "retry": "Coba Lagi",
+    "deleteTitle": "Hapus Draft",
+    "deleteWarning": "Tindakan ini tidak dapat dibatalkan.",
+    "cancel": "Batal",
+    "delete": "Hapus"
   },
   "bulkUpload": {
     "heading": "Unggah Massal",
@@ -840,6 +847,7 @@
     "add": "Tambah",
     "saveSuccess": "Perubahan berhasil disimpan",
     "saveError": "Gagal menyimpan perubahan",
+    "publishError": "Gagal publikasi. Konten tetap disimpan sebagai draft.",
     "saveChanges": "Simpan Perubahan",
     "saveAndPublish": "Simpan & Publikasikan",
     "historyDescription": "Riwayat versi untuk postingan ini",
