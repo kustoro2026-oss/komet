@@ -40,9 +40,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-primary)]">
-          <KometLogo size="md" />
-        </div>
+        <KometLogo size="md" className="mx-auto rounded-xl shadow-md shadow-[var(--color-primary)]/30" />
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
           {t("forgotTitle")}
         </h1>

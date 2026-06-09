@@ -133,9 +133,7 @@ export default function LandingPage() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[var(--color-surface-dark)]/70 backdrop-blur-2xl">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/25">
-              <KometLogo size="sm" />
-            </div>
+            <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/25" />
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
@@ -505,9 +503,7 @@ export default function LandingPage() {
             {/* Brand column */}
             <div className="col-span-2 lg:col-span-2">
               <Link href="/" className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/20">
-                  <KometLogo size="sm" />
-                </div>
+                <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/20" />
                 <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
               </Link>
               <p className="mt-4 max-w-xs text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{t("footerTagline")}</p>

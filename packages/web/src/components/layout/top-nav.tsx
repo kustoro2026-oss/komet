@@ -66,7 +66,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
 
       {/* Logo - Centered */}
       <div className="flex items-center gap-2">
-        <KometLogo size="md" />
+        <KometLogo size="sm" className="h-6 w-6" />
         <span className="font-display text-base font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
           Komet
         </span>

@@ -122,11 +122,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
         )}
       >
         {collapsed ? (
-          <KometLogo size="md" />
+          <KometLogo size="sm" className="h-6 w-6" />
         ) : (
           <>
             <Link href="/dashboard" className="flex items-center gap-2">
-              <KometLogo size="md" />
+              <KometLogo size="sm" className="h-6 w-6" />
               <span className="font-display text-lg font-semibold text-[var(--color-on-dark)] light:text-[var(--color-ink)]">
                 Komet
               </span>

@@ -68,9 +68,7 @@ export function PwaInstallBanner() {
         </button>
 
         <div className="relative flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-lg shadow-[var(--color-primary)]/25">
-            <KometLogo size="md" />
-          </div>
+          <KometLogo size="md" className="h-10 w-10 rounded-xl shadow-lg shadow-[var(--color-primary)]/25" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Smartphone className="h-4 w-4 text-[var(--color-primary)]" />

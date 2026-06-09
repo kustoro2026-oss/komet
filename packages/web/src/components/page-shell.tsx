@@ -19,9 +19,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[var(--color-surface-dark)]/80 backdrop-blur-xl">
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/25">
-              <KometLogo size="sm" />
-            </div>
+            <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/25" />
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
           <Link
