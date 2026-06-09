@@ -125,11 +125,9 @@ export class EmailService {
   async send(payload: EmailPayload): Promise<boolean> {
     try {
       if (!this.apiKey) {
-        console.log(`[EmailService] No API key configured — logging only`);
-        console.log(`[EmailService] To: ${payload.to}`);
-        console.log(`[EmailService] Subject: ${payload.subject}`);
-        console.log(`[EmailService] Body (first 200 chars): ${payload.html.substring(0, 200)}`);
-        return true; // Don't fail — just log
+        console.warn(`[EmailService] No RESEND_API_KEY configured — email not sent.`);
+        console.warn(`[EmailService] Would have sent to: ${payload.to}, subject: ${payload.subject}`);
+        return false; // API key missing → email not actually sent
       }
 
       const res = await fetch("https://api.resend.com/emails", {

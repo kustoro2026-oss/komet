@@ -167,12 +167,11 @@ export async function POST(request: NextRequest) {
       const workspaceName = w?.name || "Workspace";
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://komet.so";
       const inviteLink = `${baseUrl}/invite/${token}`;
-      emailService.sendTemplate("team_invite", email.toLowerCase(), {
+      emailSent = await emailService.sendTemplate("team_invite", email.toLowerCase(), {
         workspaceName,
         inviterName,
         inviteLink,
-      }).then((ok: boolean) => { emailSent = ok; })
-        .catch((e: unknown) => { emailError = String(e); console.error("[Invite email] Failed to send:", e); });
+      });
     } catch (emailErr) {
       emailError = String(emailErr);
       console.error("[Invite email] Error:", emailErr);
