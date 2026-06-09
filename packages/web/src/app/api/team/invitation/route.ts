@@ -125,6 +125,8 @@ export async function POST(request: NextRequest) {
 
     // Generate a unique token
     const token = crypto.randomUUID();
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://komet.so";
+    const inviteLink = `${baseUrl}/invite/${token}`;
 
     // Create invitation (expires in 7 days)
     const invitation = await prisma.teamInvitation.create({
@@ -144,10 +146,13 @@ export async function POST(request: NextRequest) {
         status: true,
         expiresAt: true,
         createdAt: true,
+        token: true,
       },
     });
 
-    // Send invitation email
+    // Send invitation email (best-effort, don't fail the request)
+    let emailSent = false;
+    let emailError: string | null = null;
     try {
       const { emailService } = await import("@komet/email");
       const w = await prisma.workspace.findUnique({
@@ -166,13 +171,20 @@ export async function POST(request: NextRequest) {
         workspaceName,
         inviterName,
         inviteLink,
-      }).catch((e: unknown) => console.error("[Invite email] Failed to send:", e));
+      }).then((ok: boolean) => { emailSent = ok; })
+        .catch((e: unknown) => { emailError = String(e); console.error("[Invite email] Failed to send:", e); });
     } catch (emailErr) {
+      emailError = String(emailErr);
       console.error("[Invite email] Error:", emailErr);
       // Don't fail the request — invitation is created, email is best-effort
     }
 
-    return NextResponse.json({ invitation }, { status: 201 });
+    return NextResponse.json({
+      invitation,
+      inviteLink,
+      emailSent,
+      emailError: emailSent ? null : (emailError || "No email API key configured. Add RESEND_API_KEY to enable email delivery.")
+    }, { status: 201 });
   } catch (error) {
     console.error("[Team Invitation POST] Error:", error);
     return NextResponse.json({ error: "Failed to send invitation" }, { status: 500 });

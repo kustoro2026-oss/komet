@@ -33,9 +33,11 @@ interface PendingInvitation {
   id: string;
   email: string;
   role: string;
+  token: string;
   status: string;
   expiresAt: string;
   createdAt: string;
+  inviteLink?: string;
 }
 
 const ROLE_PERMISSIONS: { role: string; permissions: string[] }[] = [
@@ -73,6 +75,8 @@ export default function TeamPage() {
   const [inviteRole, setInviteRole] = useState("editor");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState("");
+  const [lastInviteLink, setLastInviteLink] = useState("");
+  const [lastEmailSent, setLastEmailSent] = useState(false);
 
   // Delete confirmation
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -154,9 +158,13 @@ export default function TeamPage() {
       });
 
       if (res.ok) {
+        const resp = await res.json();
         setInviteEmail("");
         setInviteRole("editor");
         setShowInviteForm(false);
+        // Capture invite link for manual sharing
+        if (resp.inviteLink) setLastInviteLink(resp.inviteLink);
+        setLastEmailSent(resp.emailSent === true);
         await fetchData(); // Refresh invitations
       } else {
         const err = await res.json();
@@ -308,6 +316,43 @@ export default function TeamPage() {
             >
               {inviteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Send Invite
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Link (show after successful invite, especially when email not sent) */}
+      {lastInviteLink && (
+        <div className={`rounded-lg border p-4 mb-4 ${
+          lastEmailSent ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5"
+        }`}>
+          <div className="flex items-center gap-2 mb-2">
+            {lastEmailSent ? (
+              <Mail className="h-4 w-4 text-emerald-400" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
+            )}
+            <p className={`text-body-sm font-medium ${
+              lastEmailSent ? "text-emerald-400" : "text-amber-400"
+            }`}>
+              {lastEmailSent ? "Invitation sent!" : "Invitation created (email not configured)"}
+            </p>
+          </div>
+          {!lastEmailSent && (
+            <p className="text-micro text-[var(--color-on-dark-st)] mb-3">
+              Add <code className="bg-[var(--color-surface-dark)] px-1 py-0.5 rounded text-[var(--color-primary)]">RESEND_API_KEY</code> to environment variables to enable email delivery.
+              Share this link manually:
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <code className="flex-1 truncate rounded border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark-soft)]">
+              {lastInviteLink}
+            </code>
+            <button
+              onClick={() => { navigator.clipboard.writeText(lastInviteLink); }}
+              className="shrink-0 rounded-lg bg-[var(--color-primary)]/10 px-3 py-2 text-caption font-medium text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/20 transition-colors"
+            >
+              Copy
             </button>
           </div>
         </div>
