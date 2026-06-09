@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type ComponentType } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
@@ -353,7 +353,7 @@ const KometLogoImg = ({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
 );
 
-  const steps: { key: ComposerStep; label: string; icon: typeof Type }[] = [
+  const steps: { key: ComposerStep; label: string; icon: ComponentType<{ className?: string }> }[] = [
     { key: "content", label: "Content", icon: Type },
     { key: "platforms", label: "Platforms", icon: KometLogoImg },
     { key: "schedule", label: "Schedule", icon: Calendar },
