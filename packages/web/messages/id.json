@@ -560,7 +560,9 @@
     "noNotifications": "Tidak ada notifikasi",
     "markRead": "Tandai dibaca",
     "remove": "Hapus",
-    "viewAllNotifications": "Lihat semua notifikasi"
+    "viewAllNotifications": "Lihat semua notifikasi",
+    "backToHome": "Kembali ke Beranda",
+    "copyright": "© {year} Komet. Hak cipta dilindungi."
   },
   "common": {
     "loading": "Memuat...",
@@ -1217,10 +1219,6 @@
     "v11Item1": "15+ integrasi platform sosial",
     "v11Item2": "Penjadwalan, analitik, generator konten AI, dan kotak masuk terpadu",
     "v11Item3": "Dasbor responsif seluler"
-  },
-  "components": {
-    "backToHome": "Kembali ke Beranda",
-    "copyright": "© {year} Komet. Hak cipta dilindungi."
   },
   "pwaBanner": {
     "dismiss": "Tutup",

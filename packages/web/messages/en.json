@@ -560,7 +560,9 @@
     "noNotifications": "No notifications",
     "markRead": "Mark read",
     "remove": "Remove",
-    "viewAllNotifications": "View all notifications"
+    "viewAllNotifications": "View all notifications",
+    "backToHome": "Back to Home",
+    "copyright": "© {year} Komet. All rights reserved."
   },
   "common": {
     "loading": "Loading...",
@@ -1217,10 +1219,6 @@
     "v11Item1": "15+ social platform integrations",
     "v11Item2": "Scheduling, analytics, AI content generator, and unified inbox",
     "v11Item3": "Mobile-responsive dashboard"
-  },
-  "components": {
-    "backToHome": "Back to Home",
-    "copyright": "© {year} Komet. All rights reserved."
   },
   "pwaBanner": {
     "dismiss": "Dismiss",
