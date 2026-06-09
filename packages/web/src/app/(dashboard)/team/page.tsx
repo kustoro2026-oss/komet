@@ -138,7 +138,7 @@ export default function TeamPage() {
       const token = await getAuthToken();
       if (!token) { setInviteError("Not authenticated"); return; }
 
-      const res = await fetch("/api/team", {
+      const res = await fetch("/api/team/invitation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

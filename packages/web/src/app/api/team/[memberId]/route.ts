@@ -2,30 +2,9 @@
 // PATCH  /api/team/[memberId] → change role
 // DELETE /api/team/[memberId] → remove member
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseClient } from "@komet/auth";
+import { getUserFromRequest } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
-
-async function getAuthenticatedUserId(request: NextRequest): Promise<string | null> {
-  try {
-    const supabase = createSupabaseClient();
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) return null;
-    const token = authHeader.slice(7);
-
-    const { data } = await supabase.auth.getUser(token);
-    if (!data.user) return null;
-
-    const { prisma } = await import("@komet/db");
-    const user = await prisma.user.findUnique({
-      where: { supabaseId: data.user.id },
-      select: { id: true },
-    });
-    return user?.id || null;
-  } catch {
-    return null;
-  }
-}
 
 export async function GET() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
@@ -35,10 +14,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { memberId: string } }
 ) {
-  const userId = await getAuthenticatedUserId(request);
-  if (!userId) {
+  const { user, error } = await getUserFromRequest(request);
+  if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.id;
 
   const { memberId } = params;
 
@@ -94,11 +74,12 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { memberId: string } }
 ) {
-  const userId = await getAuthenticatedUserId(request);
-  if (!userId) {
+  const { user, error } = await getUserFromRequest(request);
+  if (error || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const userId = user.id;
   const { memberId } = params;
 
   try {
