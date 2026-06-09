@@ -398,6 +398,7 @@
     "createWorkspaceErrorEmpty": "Workspace name is required.",
     "createWorkspaceErrorFailed": "Failed to create workspace.",
     "renameButton": "Rename",
+    "renameError": "Failed to rename workspace",
     "billingHeading": "Billing & Subscription",
     "billingDescription": "Manage your subscription and payment methods.",
     "currentPlanLabel": "Current Plan",

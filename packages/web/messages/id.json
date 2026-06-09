@@ -398,6 +398,7 @@
     "createWorkspaceErrorEmpty": "Nama workspace harus diisi.",
     "createWorkspaceErrorFailed": "Gagal membuat workspace.",
     "renameButton": "Ganti Nama",
+    "renameError": "Gagal mengganti nama workspace",
     "billingHeading": "Penagihan & Langganan",
     "billingDescription": "Kelola langganan dan metode pembayaran Anda.",
     "currentPlanLabel": "Paket Saat Ini",

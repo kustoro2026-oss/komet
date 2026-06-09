@@ -167,6 +167,7 @@ export default function SettingsPage() {
   const [editingWsId, setEditingWsId] = useState<string | null>(null);
   const [editWsName, setEditWsName] = useState("");
   const [savingWsName, setSavingWsName] = useState(false);
+  const [renameError, setRenameError] = useState("");
 
   /* ─── Init form from auth store on mount ─── */
   useEffect(() => {
@@ -278,10 +279,13 @@ export default function SettingsPage() {
   const handleRenameWorkspace = async () => {
     if (!editingWsId || !editWsName.trim()) return;
     setSavingWsName(true);
+    setRenameError("");
     const ok = await updateWorkspace(editingWsId, { name: editWsName.trim() });
     if (ok) {
       setEditingWsId(null);
       setEditWsName("");
+    } else {
+      setRenameError(t("renameError"));
     }
     setSavingWsName(false);
   };
@@ -508,6 +512,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <div className="space-y-2 mb-6">
+              {renameError && <p className="text-xs text-red-400 mb-2 flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />{renameError}</p>}
               {workspaces.map((ws) => (
                 <div key={ws.id} className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
