@@ -49,10 +49,11 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseAdmin();
 
     // Auto-create media bucket if it doesn't exist
+    const bucketName = process.env.MEDIA_BUCKET || "media";
     const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some((b) => b.name === "media");
+    const bucketExists = buckets?.some((b) => b.name === bucketName);
     if (!bucketExists) {
-      const { error: createBucketError } = await supabase.storage.createBucket("media", {
+      const { error: createBucketError } = await supabase.storage.createBucket(bucketName, {
         public: true,
         fileSizeLimit: 52428800, // 50MB
         allowedMimeTypes: [
@@ -63,23 +64,23 @@ export async function POST(request: NextRequest) {
         ],
       });
       if (createBucketError) {
-        console.error("Failed to create media bucket:", createBucketError);
+        console.error(`Failed to create '${bucketName}' bucket:`, createBucketError);
         return NextResponse.json(
-          { error: "Storage not configured. Please create a 'media' bucket in Supabase." },
+          { error: `Storage not configured. Please create a '${bucketName}' bucket in Supabase.` },
           { status: 500 }
         );
       }
-      console.log("✅ Created 'media' storage bucket");
+      console.log(`✅ Created '${bucketName}' storage bucket`);
     }
 
     const fileExt = file.name.split(".").pop() || "bin";
     const fileName = `${randomUUID()}.${fileExt}`;
     const filePath = `temp/${user.id}/${fileName}`;
 
-    // Upload file to Supabase Storage bucket "media"
+    // Upload file to Supabase Storage
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error: uploadError } = await supabase.storage
-      .from("media")
+      .from(bucketName)
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: false,
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // Get public URL
     const { data: publicUrlData } = supabase.storage
-      .from("media")
+      .from(bucketName)
       .getPublicUrl(filePath);
 
     // Determine media type category
