@@ -170,7 +170,11 @@
     "draft": "Draft",
     "publishing": "Publishing",
     "failed": "Failed",
-    "partial": "Partial"
+    "partial": "Partial",
+    "stepContent": "Content",
+    "stepPlatforms": "Platforms",
+    "stepSchedule": "Schedule",
+    "stepReview": "Review"
   },
   "accountsPage": {
     "title": "Connected Accounts",
@@ -288,6 +292,16 @@
     "newWorkspace": "New Workspace",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
-    "language": "Language"
+    "language": "Language",
+    "onboarding_connect": "Connect Social Accounts",
+    "onboarding_connect_desc": "Link your social media platforms",
+    "onboarding_first_post": "Create Your First Post",
+    "onboarding_first_post_desc": "Write and schedule your first content",
+    "onboarding_invite_team": "Invite Team Members",
+    "onboarding_invite_team_desc": "Collaborate with your team",
+    "onboarding_setup_ai": "Explore AI Features",
+    "onboarding_setup_ai_desc": "Try AI content generation",
+    "onboarding_settings": "Configure Settings",
+    "onboarding_settings_desc": "Set up your preferences"
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, ChevronRight, Calendar, Users, Bell, Image, Link as LinkIcon } from "lucide-react";
 import NextLink from "next/link";
 import { KometLogoIcon } from "@/components/ui/komet-logo";
@@ -30,6 +31,7 @@ const DEFAULT_STEPS: OnboardingStep[] = [
 ];
 
 export function OnboardingChecklist({ steps: initialSteps, onComplete }: OnboardingChecklistProps) {
+  const tc = useTranslations("common");
   const [steps, setSteps] = useState(initialSteps.length > 0 ? initialSteps : DEFAULT_STEPS);
 
   const completedCount = steps.filter((s) => s.isComplete).length;
@@ -107,10 +109,10 @@ export function OnboardingChecklist({ steps: initialSteps, onComplete }: Onboard
             {/* Content */}
             <div className="flex-1 min-w-0">
               <h4 className={`text-body-sm font-semibold ${step.isComplete ? "text-[var(--color-success)]" : "text-[var(--color-on-dark)]"}`}>
-                {step.title}
+                {tc(`onboarding_${step.id}` as any) || step.title}
               </h4>
               <p className="text-micro text-[var(--color-on-dark-muted)]">
-                {step.description}
+                {tc(`onboarding_${step.id}_desc` as any) || step.description}
               </p>
             </div>
 

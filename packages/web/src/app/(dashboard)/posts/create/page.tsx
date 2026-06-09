@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, type ComponentType } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo } from "lucide-react";
 import type { Platform } from "@komet/shared";
@@ -351,10 +352,10 @@ export default function CreatePostPage() {
   };
 
   const steps: { key: ComposerStep; label: string; icon: ComponentType<{ className?: string }> }[] = [
-    { key: "content", label: "Content", icon: Type },
-    { key: "platforms", label: "Platforms", icon: KometLogoIcon },
-    { key: "schedule", label: "Schedule", icon: Calendar },
-    { key: "review", label: "Review", icon: Check },
+    { key: "content", label: t("stepContent"), icon: Type },
+    { key: "platforms", label: t("stepPlatforms"), icon: KometLogoIcon },
+    { key: "schedule", label: t("stepSchedule"), icon: Calendar },
+    { key: "review", label: t("stepReview"), icon: Check },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.key === step);

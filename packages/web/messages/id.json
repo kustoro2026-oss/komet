@@ -170,7 +170,11 @@
     "draft": "Draft",
     "publishing": "Mempublikasikan",
     "failed": "Gagal",
-    "partial": "Sebagian"
+    "partial": "Sebagian",
+    "stepContent": "Konten",
+    "stepPlatforms": "Platform",
+    "stepSchedule": "Jadwal",
+    "stepReview": "Tinjau"
   },
   "accountsPage": {
     "title": "Akun Terhubung",
@@ -288,6 +292,16 @@
     "newWorkspace": "Workspace Baru",
     "lightMode": "Mode Terang",
     "darkMode": "Mode Gelap",
-    "language": "Bahasa"
+    "language": "Bahasa",
+    "onboarding_connect": "Hubungkan Akun Sosial",
+    "onboarding_connect_desc": "Tautkan platform media sosial Anda",
+    "onboarding_first_post": "Buat Postingan Pertama",
+    "onboarding_first_post_desc": "Tulis dan jadwalkan konten pertama Anda",
+    "onboarding_invite_team": "Undang Anggota Tim",
+    "onboarding_invite_team_desc": "Berkolaborasi dengan tim Anda",
+    "onboarding_setup_ai": "Jelajahi Fitur AI",
+    "onboarding_setup_ai_desc": "Coba generasi konten dengan AI",
+    "onboarding_settings": "Konfigurasi Pengaturan",
+    "onboarding_settings_desc": "Atur preferensi Anda"
   }
 }
