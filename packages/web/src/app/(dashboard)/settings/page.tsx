@@ -215,6 +215,21 @@ export default function SettingsPage() {
     }
     setSavingPass(true);
     try {
+      // Step 1: Re-authenticate — Supabase requires recent auth to change password
+      const userEmail = email;
+      if (!userEmail) {
+        setPassError("Cannot verify identity. Please log out and log back in.");
+        return;
+      }
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: currentPass,
+      });
+      if (reauthError) {
+        setPassError("Current password is incorrect.");
+        return;
+      }
+      // Step 2: Now update the password
       const { error } = await supabase.auth.updateUser({ password: newPass });
       if (error) throw error;
       setPassSuccess("Password updated successfully.");
