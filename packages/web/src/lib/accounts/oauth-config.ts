@@ -317,7 +317,7 @@ register({
   clientSecretEnv: "TIKTOK_CLIENT_SECRET",
   usePkce: false,
   redirectPath: "/api/oauth/callback",
-  extraAuthorizeParams: { response_type: "code", client_key: "" }, // client_key added dynamically
+  extraAuthorizeParams: { response_type: "code" },
   tokenContentType: "form",
   transformToken: (raw) => ({
     accessToken: raw.access_token as string,
@@ -600,7 +600,6 @@ export function getPlatformAuthUrl(
   if (!clientId) return null;
 
   const params = new URLSearchParams({
-    client_id: clientId,
     redirect_uri: options.redirectUri,
     response_type: "code",
     scope: cfg.scopes.join(" "),
@@ -617,9 +616,11 @@ export function getPlatformAuthUrl(
     params.set("code_challenge_method", "S256");
   }
 
-  // For TikTok, dynamically set client_key
+  // TikTok uses client_key instead of client_id
   if (platform === "tiktok") {
     params.set("client_key", clientId);
+  } else {
+    params.set("client_id", clientId);
   }
 
   return `${cfg.authorizeUrl}?${params.toString()}`;
