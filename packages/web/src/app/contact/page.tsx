@@ -2,16 +2,19 @@
 import { PageShell } from "@/components/page-shell";
 import { Mail, MapPin, Clock, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-
-const contacts = [
-  { icon: Mail, title: "Email Us", desc: "hello@kontenmumelesat.com", detail: "We reply within 24 hours on weekdays." },
-  { icon: MapPin, title: "Location", desc: "Remote-first", detail: "Our team works from around the globe." },
-  { icon: Clock, title: "Support Hours", desc: "Mon–Fri, 9 AM–6 PM UTC", detail: "Enterprise customers get 24/7 priority support." },
-];
+import { useTranslations } from "next-intl";
 
 export default function ContactPage() {
+  const t = useTranslations("contact");
+
+  const contacts = [
+    { icon: Mail, title: t("email"), desc: t("emailDesc"), detail: t("emailDetail") },
+    { icon: MapPin, title: t("location"), desc: t("locationDesc"), detail: t("locationDetail") },
+    { icon: Clock, title: t("supportHours"), desc: t("supportHoursDesc"), detail: t("supportHoursDetail") },
+  ];
+
   return (
-    <PageShell title="Contact Us" description="We'd love to hear from you.">
+    <PageShell title={t("title")} description={t("description")}>
       <div className="space-y-8">
         <div className="grid gap-4 sm:grid-cols-3">
           {contacts.map((c) => {
@@ -32,13 +35,13 @@ export default function ContactPage() {
         </div>
 
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-6 sm:p-8 text-center">
-          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-2">Want to get started?</h2>
-          <p className="text-sm text-[var(--color-on-dark-soft)] mb-4">Try Komet for free — no credit card required.</p>
+          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-2">{t("cta.title")}</h2>
+          <p className="text-sm text-[var(--color-on-dark-soft)] mb-4">{t("cta.subtitle")}</p>
           <Link
             href="/register"
             className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all"
           >
-            Start Free
+            {t("cta.button")}
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>

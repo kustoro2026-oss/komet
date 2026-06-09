@@ -1,48 +1,48 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { PageShell } from "@/components/page-shell";
 
 export default function CookiesPage() {
+  const t = useTranslations("cookies");
   return (
-    <PageShell title="Cookie Policy" description="Last updated: June 2026">
+    <PageShell title={t("title")} description={t("description")}>
       <div className="prose prose-invert max-w-none space-y-8 text-sm sm:text-base">
         <section>
-          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">What Are Cookies</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">{t("whatAreHeading")}</h2>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed">
-            Cookies are small text files stored on your device when you visit a website. They help us remember your preferences,
-            keep you signed in, and understand how you use Komet.
+            {t("whatAreText")}
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">How We Use Cookies</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">{t("howWeUseHeading")}</h2>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed">
-            We use essential cookies for authentication and security. We use analytics cookies to understand usage patterns and
-            improve the Service. We do not use third-party advertising cookies.
+            {t("howWeUseText")}
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">Types of Cookies We Use</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">{t("typesHeading")}</h2>
           <ul className="list-disc pl-5 space-y-1.5 text-[var(--color-on-dark-soft)] leading-relaxed">
-            <li><strong className="text-[var(--color-on-dark)]">Essential Cookies:</strong> Required for the Service to function (authentication, security).</li>
-            <li><strong className="text-[var(--color-on-dark)]">Preference Cookies:</strong> Remember your settings like language and theme.</li>
-            <li><strong className="text-[var(--color-on-dark)]">Analytics Cookies:</strong> Help us measure and improve performance.</li>
+            <li><strong className="text-[var(--color-on-dark)]">{t("essentialLabel")}</strong>{" "}{t("essentialDesc")}</li>
+            <li><strong className="text-[var(--color-on-dark)]">{t("preferenceLabel")}</strong>{" "}{t("preferenceDesc")}</li>
+            <li><strong className="text-[var(--color-on-dark)]">{t("analyticsLabel")}</strong>{" "}{t("analyticsDesc")}</li>
           </ul>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">Managing Cookies</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">{t("managingHeading")}</h2>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed">
-            Most browsers allow you to control cookies through their settings. You can usually delete existing cookies, block
-            third-party cookies, or block all cookies. Note that blocking essential cookies may prevent Komet from functioning
-            properly.
+            {t("managingText")}
           </p>
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">Contact</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">{t("contactHeading")}</h2>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed">
-            Questions about our Cookie Policy? Contact us at <span className="text-[var(--color-primary)]">hello@kontenmumelesat.com</span>.
+            {t("contactText")}{" "}
+            <span className="text-[var(--color-primary)]">hello@kontenmumelesat.com</span>
+            .
           </p>
         </section>
       </div>

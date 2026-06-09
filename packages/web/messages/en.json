@@ -105,7 +105,55 @@
     "footerTerms": "Terms of Service",
     "footerCookies": "Cookie Policy",
    "mobileApp": "Mobile App",
-    "mobileAppDesc": "Install Komet on your phone for a native-like experience"
+    "mobileAppDesc": "Install Komet on your phone for a native-like experience",
+    "navFeatures": "Features",
+    "navPricing": "Pricing",
+    "heroBadge": "Now supporting 15+ platforms",
+    "mobileMenu": "Menu",
+    "heroNoCreditCard": "No credit card",
+    "heroFreeForever": "Free forever plan",
+    "heroCancelAnytime": "Cancel anytime",
+    "plusMore": "+7 more",
+    "trustedBy": "Trusted by creators & teams",
+    "statsPlatforms": "Platforms Supported",
+    "statsPosts": "Posts Scheduled",
+    "statsUptime": "Uptime",
+    "statsRating": "User Rating",
+    "howItWorks": "How it works",
+    "howItWorksTitle": "Three simple steps",
+    "howItWorksSubtitle": "Connect your accounts, create content, and publish everywhere — all from one dashboard.",
+    "step1Title": "Connect accounts",
+    "step1Desc": "Link your social media profiles with one-click OAuth. We support 15+ platforms including Instagram, TikTok, LinkedIn, and X.",
+    "step2Title": "Schedule & create",
+    "step2Desc": "Drag & drop posts onto the calendar. Use our AI to generate captions, hashtags, and find the best times to publish.",
+    "step3Title": "Track & optimize",
+    "step3Desc": "Monitor engagement, follower growth, and ROI across all platforms. Export reports and refine your strategy.",
+    "sectionFeatures": "Features",
+    "featuresHeadingLine1": "Everything you need to",
+    "featuresHeadingLine2Prefix": "manage",
+    "featuresHeadingLine2Highlight": "every platform",
+    "sectionAnalytics": "Analytics",
+    "analyticsTitle": "Measure what matters",
+    "analyticsDesc": "Track engagement, follower growth, and top-performing content across all your platforms. Beautiful charts, exportable reports, and real-time data.",
+    "analyticsCheck1": "Real-time engagement metrics",
+    "analyticsCheck2": "Cross-platform comparison",
+    "analyticsCheck3": "Custom date range filtering",
+    "analyticsCheck4": "Export to CSV / PDF",
+    "sectionAudience": "Who it's for",
+    "audienceTitle": "Built for everyone",
+    "audienceSubtitle": "Whether you're a solo creator, a growing team, or an agency managing dozens of accounts.",
+    "audienceCreators": "Creators",
+    "audienceCreatorsItems": ["Schedule content across all platforms", "AI-powered caption & hashtag generator", "Best time to post recommendations", "Free plan with 3 social accounts"],
+    "audienceTeams": "Small Teams",
+    "audienceTeamsItems": ["Collaborate with team members", "Unlimited posts & scheduled content", "Advanced analytics & export", "Unified inbox for all messages"],
+    "audienceAgencies": "Agencies",
+    "audienceAgenciesItems": ["Manage unlimited client accounts", "Custom reports for each client", "API and MCP server access", "White-label options available"],
+    "sectionIntegrations": "Integrations",
+    "integrationsTitle": "Connect your favorite platforms",
+    "sectionPricing": "Pricing",
+    "ctaTitle": "Ready to streamline your social media?",
+    "ctaSubtitle": "Join thousands of creators and teams who trust Komet to manage their content across every platform.",
+    "ctaFooter": "No credit card required. Free forever plan available."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -941,5 +989,204 @@
     "disconnecting": "Disconnecting...",
     "disconnect": "Disconnect",
     "cancel": "Cancel"
+  },
+  "mobile": {
+    "nav": {
+      "signIn": "Sign In",
+      "getStarted": "Get Started"
+    },
+    "badge": "PWA — No app store needed",
+    "hero": {
+      "title": "Komet on Mobile",
+      "subtitle": "Take your social media management on the go. Schedule posts, track analytics, and manage your inbox — all from your phone. Install as a Progressive Web App for a native-like experience.",
+      "checkmarks": [
+        "Works on iOS, Android, and any modern browser",
+        "Full dashboard with calendar and analytics",
+        "Push notifications for publishing and engagement",
+        "Automatic sync between desktop and mobile"
+      ]
+    },
+    "installNow": "Install Now",
+    "createFreeAccount": "Create Free Account",
+    "stats": {
+      "webBased": "Web-Based",
+      "appStoreHassle": "App Store Hassle",
+      "installSize": "Install Size",
+      "crossPlatform": "Cross-Platform"
+    },
+    "features": {
+      "heading": "Mobile Features",
+      "title": "Everything you love, now on mobile",
+      "subtitle": "Full-featured mobile experience with zero compromises.",
+      "items": [
+        { "title": "Blazing Fast", "desc": "Native app-like performance. Navigate between calendar, posts, and analytics instantly." },
+        { "title": "Push Notifications", "desc": "Get notified when posts publish, comments arrive, or tokens are about to expire." },
+        { "title": "Offline Access", "desc": "Browse your content calendar and draft posts even without internet connection." },
+        { "title": "Quick Share", "desc": "Share content directly from your phone browser or gallery to Komet in one tap." },
+        { "title": "Seamless Sync", "desc": "All your data syncs instantly between desktop and mobile. Pick up where you left off." },
+        { "title": "Home Screen Ready", "desc": "Add to your home screen and use it like any other app. No app store needed." }
+      ]
+    },
+    "install": {
+      "heading": "Installation Guide",
+      "title": "Install in 3 simple steps",
+      "subtitle": "No app store, no downloads. Just a simple add to your home screen.",
+      "steps": [
+        { "title": "Open in Browser", "desc": "Visit app.komet.com on your phone using Chrome, Safari, or Edge." },
+        { "title": "Add to Home Screen", "desc": "Tap the share button (iOS) or the install prompt (Android) and select Add to Home Screen." },
+        { "title": "Start Scheduling", "desc": "Launch Komet from your home screen and manage your content like a native app." }
+      ],
+      "browserIos": "iOS (Safari)",
+      "browserIosDesc": "Tap Share → Add to Home Screen",
+      "browserAndroid": "Android (Chrome)",
+      "browserAndroidDesc": "Tap Install prompt or menu → Install App",
+      "browserDesktop": "Desktop (Chrome/Edge)",
+      "browserDesktopDesc": "Click Install icon in address bar"
+    },
+    "comparison": {
+      "title": "PWA vs Native App",
+      "subtitle": "Why we chose PWA over a native mobile app.",
+      "feature": "Feature",
+      "kometPwa": "Komet PWA",
+      "nativeApp": "Native App",
+      "rows": [
+        { "feature": "Install size", "pwa": "< 2MB", "native": "50-200MB" },
+        { "feature": "Updates", "pwa": "Instant — no app store", "native": "App store review required" },
+        { "feature": "Cross-platform", "pwa": "iOS, Android, Desktop", "native": "Separate builds per OS" },
+        { "feature": "Offline support", "pwa": "Yes", "native": "Yes" },
+        { "feature": "Push notifications", "pwa": "Yes", "native": "Yes" },
+        { "feature": "No downloads required", "pwa": "Yes", "native": "No" }
+      ]
+    },
+    "cta": {
+      "title": "Ready to manage content on the go?",
+      "subtitle": "Open Komet on your phone, install instantly, and start scheduling posts from anywhere.",
+      "button": "Get Started Free",
+      "disclaimer": "No credit card required. Open on your phone to install."
+    },
+    "footer": {
+      "copyright": "© {year} Komet. All rights reserved.",
+      "home": "Home",
+      "signIn": "Sign In",
+      "privacy": "Privacy"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "We'd love to hear from you.",
+    "email": "Email Us",
+    "emailDesc": "hello@kontenmumelesat.com",
+    "emailDetail": "We reply within 24 hours on weekdays.",
+    "location": "Location",
+    "locationDesc": "Remote-first",
+    "locationDetail": "Our team works from around the globe.",
+    "supportHours": "Support Hours",
+    "supportHoursDesc": "Mon–Fri, 9 AM–6 PM UTC",
+    "supportHoursDetail": "Enterprise customers get 24/7 priority support.",
+    "cta": {
+      "title": "Want to get started?",
+      "subtitle": "Try Komet for free — no credit card required.",
+      "button": "Start Free"
+    }
+  },
+  "invite": {
+    "loading": "Loading invitation…",
+    "success": {
+      "welcome": "Welcome to {workspaceName}!",
+      "redirecting": "You are now a {role}. Redirecting to dashboard…"
+    },
+    "error": {
+      "somethingWrong": "Something went wrong",
+      "tryAgain": "Try Again",
+      "notFound": "Invitation Not Found",
+      "notFoundDesc": "This invitation link is invalid or has been removed.",
+      "expired": "Invitation Expired",
+      "expiredDesc": "This invitation for {workspaceName} has expired. Please ask the workspace admin to send a new invitation.",
+      "alreadyJoined": "Already Joined",
+      "alreadyJoinedDesc": "You have already accepted this invitation to {workspaceName}.",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "wrongAccount": "Wrong account",
+    "wrongAccountDesc": "You are signed in as {currentEmail}. This invitation was sent to {inviteEmail}.",
+    "signOutSwitch": "Sign Out & Switch Account",
+    "join": {
+      "title": "Join {workspaceName}",
+      "description": "You have been invited to join as {role}",
+      "needLogin": "You need to log in with {email} to accept this invitation.",
+      "loginToAccept": "Log In to Accept",
+      "switchToAccept": "Switch to {email} to accept this invitation.",
+      "accept": "Accept Invitation"
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "description": "Last updated: June 2026",
+    "privacyNote": "Please also review our",
+    "privacyPolicy": "Privacy Policy",
+    "section1Heading": "1. Acceptance of Terms",
+    "section1Text": "By accessing or using Komet (\"the Service\"), you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.",
+    "section2Heading": "2. Account Responsibilities",
+    "section2Text": "You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. Komet cannot and will not be liable for any loss or damage from your failure to comply with this security obligation.",
+    "section3Heading": "3. Acceptable Use",
+    "section3Text": "You agree not to misuse the Service. This includes, but is not limited to: violating any laws, infringing intellectual property rights, sending spam, distributing malware, or attempting to gain unauthorized access to our systems.",
+    "section4Heading": "4. Service Availability",
+    "section4Text": "We strive to maintain 99.9% uptime but do not guarantee uninterrupted access. We reserve the right to modify, suspend, or discontinue the Service with reasonable notice.",
+    "section5Heading": "5. Limitation of Liability",
+    "section5Text": "To the fullest extent permitted by law, Komet shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your use of the Service.",
+    "section6Heading": "6. Contact",
+    "section6Text": "Questions about these Terms? Contact us at"
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "description": "Last updated: June 2026",
+    "whatAreHeading": "What Are Cookies",
+    "whatAreText": "Cookies are small text files stored on your device when you visit a website. They help us remember your preferences, keep you signed in, and understand how you use Komet.",
+    "howWeUseHeading": "How We Use Cookies",
+    "howWeUseText": "We use essential cookies for authentication and security. We use analytics cookies to understand usage patterns and improve the Service. We do not use third-party advertising cookies.",
+    "typesHeading": "Types of Cookies We Use",
+    "essentialLabel": "Essential Cookies:",
+    "essentialDesc": "Required for the Service to function (authentication, security).",
+    "preferenceLabel": "Preference Cookies:",
+    "preferenceDesc": "Remember your settings like language and theme.",
+    "analyticsLabel": "Analytics Cookies:",
+    "analyticsDesc": "Help us measure and improve performance.",
+    "managingHeading": "Managing Cookies",
+    "managingText": "Most browsers allow you to control cookies through their settings. You can usually delete existing cookies, block third-party cookies, or block all cookies. Note that blocking essential cookies may prevent Komet from functioning properly.",
+    "contactHeading": "Contact",
+    "contactText": "Questions about our Cookie Policy? Contact us at"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "description": "See what's new in Komet.",
+    "v14Title": "v1.4 \u2014 Marquee platform showcase",
+    "v14Item1": "New auto-scrolling marquee on landing page for platform integrations",
+    "v14Item2": "Responsive padding improvements across all cards on mobile",
+    "v14Item3": "Footer redesigned with multi-column SaaS layout",
+    "v13Title": "v1.3 \u2014 Improved rendering",
+    "v13Item1": "Fixed GPU compositing artifacts on platform card section for Android Chrome",
+    "v13Item2": "Added will-change-transform and transform-gpu hints for smoother animations",
+    "v12Title": "v1.2 \u2014 Performance update",
+    "v12Item1": "Resolved cracked-glass rendering artifact caused by ultra-low opacity backgrounds",
+    "v12Item2": "Updated card backgrounds to use solid surface-dark-elevated colors",
+    "v11Title": "v1.1 \u2014 First stable release",
+    "v11Item1": "15+ social platform integrations",
+    "v11Item2": "Scheduling, analytics, AI content generator, and unified inbox",
+    "v11Item3": "Mobile-responsive dashboard"
+  },
+  "apiDocs": {
+    "title": "API Reference",
+    "description": "Build on top of Komet with our REST API.",
+    "authHeading": "Authentication",
+    "authText": "All API requests require an API key passed via the Authorization: Bearer *** header. Generate keys in your dashboard Settings.",
+    "baseUrlLabel": "Base URL",
+    "endpointsHeading": "Endpoints",
+    "epListAccounts": "List all connected social accounts",
+    "epGetAccount": "Get account details and stats",
+    "epCreatePost": "Create and schedule a new post",
+    "epListPosts": "List posts with filters (status, platform, date)",
+    "epGetPost": "Get post details and engagement data",
+    "epDeletePost": "Delete a scheduled or draft post",
+    "epGetAnalytics": "Get aggregated analytics across platforms",
+    "epGetPlatformAnalytics": "Get per-platform analytics data"
   }
 }

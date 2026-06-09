@@ -1,36 +1,39 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { PageShell } from "@/components/page-shell";
 import { Code2, Key, Server } from "lucide-react";
 
-const endpoints = [
-  { method: "GET", path: "/v1/accounts", desc: "List all connected social accounts" },
-  { method: "GET", path: "/v1/accounts/{id}", desc: "Get account details and stats" },
-  { method: "POST", path: "/v1/posts", desc: "Create and schedule a new post" },
-  { method: "GET", path: "/v1/posts", desc: "List posts with filters (status, platform, date)" },
-  { method: "GET", path: "/v1/posts/{id}", desc: "Get post details and engagement data" },
-  { method: "DELETE", path: "/v1/posts/{id}", desc: "Delete a scheduled or draft post" },
-  { method: "GET", path: "/v1/analytics", desc: "Get aggregated analytics across platforms" },
-  { method: "GET", path: "/v1/analytics/{platform}", desc: "Get per-platform analytics data" },
-];
-
 export default function ApiReferencePage() {
+  const t = useTranslations("apiDocs");
+
+  const endpoints = [
+    { method: "GET", path: "/v1/accounts", desc: t("epListAccounts") },
+    { method: "GET", path: "/v1/accounts/{id}", desc: t("epGetAccount") },
+    { method: "POST", path: "/v1/posts", desc: t("epCreatePost") },
+    { method: "GET", path: "/v1/posts", desc: t("epListPosts") },
+    { method: "GET", path: "/v1/posts/{id}", desc: t("epGetPost") },
+    { method: "DELETE", path: "/v1/posts/{id}", desc: t("epDeletePost") },
+    { method: "GET", path: "/v1/analytics", desc: t("epGetAnalytics") },
+    { method: "GET", path: "/v1/analytics/{platform}", desc: t("epGetPlatformAnalytics") },
+  ];
+
   return (
-    <PageShell title="API Reference" description="Build on top of Komet with our REST API.">
+    <PageShell title={t("title")} description={t("description")}>
       <div className="space-y-8">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-3">
               <Key className="h-4 w-4 text-[var(--color-primary)]" />
-              <h3 className="font-semibold text-[var(--color-on-dark)] text-sm">Authentication</h3>
+              <h3 className="font-semibold text-[var(--color-on-dark)] text-sm">{t("authHeading")}</h3>
             </div>
             <p className="text-sm text-[var(--color-on-dark-soft)] leading-relaxed">
-              All API requests require an API key passed via the <code className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[var(--color-primary)] text-xs">Authorization: Bearer &lt;key&gt;</code> header. Generate keys in your dashboard Settings.
+              {t("authText")}
             </p>
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-3">
               <Server className="h-4 w-4 text-[var(--color-primary)]" />
-              <h3 className="font-semibold text-[var(--color-on-dark)] text-sm">Base URL</h3>
+              <h3 className="font-semibold text-[var(--color-on-dark)] text-sm">{t("baseUrlLabel")}</h3>
             </div>
             <p className="text-sm text-[var(--color-on-dark-soft)] leading-relaxed">
               <code className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[var(--color-primary)] text-xs break-all">https://api.kontenmumelesat.com/v1</code>
@@ -41,7 +44,7 @@ export default function ApiReferencePage() {
         <div>
           <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-4 flex items-center gap-2">
             <Code2 className="h-4 w-4 text-[var(--color-primary)]" />
-            Endpoints
+            {t("endpointsHeading")}
           </h2>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] divide-y divide-white/[0.06]">
             {endpoints.map((ep) => (

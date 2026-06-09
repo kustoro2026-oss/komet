@@ -1,39 +1,42 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { PageShell } from "@/components/page-shell";
 import { Zap, Bug, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { KometLogoIcon } from "@/components/ui/komet-logo";
 
-const changelog = [
-  {
-    date: "June 2026",
-    title: "v1.4 — Marquee platform showcase",
-    icon: KometLogoIcon,
-    items: ["New auto-scrolling marquee on landing page for platform integrations", "Responsive padding improvements across all cards on mobile", "Footer redesigned with multi-column SaaS layout"],
-  },
-  {
-    date: "May 2026",
-    title: "v1.3 — Improved rendering",
-    icon: Zap,
-    items: ["Fixed GPU compositing artifacts on platform card section for Android Chrome", "Added will-change-transform and transform-gpu hints for smoother animations"],
-  },
-  {
-    date: "April 2026",
-    title: "v1.2 — Performance update",
-    icon: Bug,
-    items: ["Resolved cracked-glass rendering artifact caused by ultra-low opacity backgrounds", "Updated card backgrounds to use solid surface-dark-elevated colors"],
-  },
-  {
-    date: "March 2026",
-    title: "v1.1 — First stable release",
-    icon: Star,
-    items: ["15+ social platform integrations", "Scheduling, analytics, AI content generator, and unified inbox", "Mobile-responsive dashboard"],
-  },
-];
-
 export default function ChangelogPage() {
+  const t = useTranslations("changelog");
+
+  const changelog = [
+    {
+      date: "June 2026",
+      title: t("v14Title"),
+      icon: KometLogoIcon,
+      items: [t("v14Item1"), t("v14Item2"), t("v14Item3")],
+    },
+    {
+      date: "May 2026",
+      title: t("v13Title"),
+      icon: Zap,
+      items: [t("v13Item1"), t("v13Item2")],
+    },
+    {
+      date: "April 2026",
+      title: t("v12Title"),
+      icon: Bug,
+      items: [t("v12Item1"), t("v12Item2")],
+    },
+    {
+      date: "March 2026",
+      title: t("v11Title"),
+      icon: Star,
+      items: [t("v11Item1"), t("v11Item2"), t("v11Item3")],
+    },
+  ];
+
   return (
-    <PageShell title="Changelog" description="See what's new in Komet.">
+    <PageShell title={t("title")} description={t("description")}>
       <div className="relative space-y-8">
         {/* Timeline line */}
         <div className="absolute left-[19px] top-2 bottom-2 w-px bg-white/[0.08] hidden sm:block" />

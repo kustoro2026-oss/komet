@@ -76,38 +76,38 @@ export default function LandingPage() {
   const features = [
     {
       icon: Calendar,
-      title: "Visual Calendar",
-      desc: "Drag & drop scheduling with monthly, weekly, and list views across all platforms. See everything at a glance.",
+      titleKey: "visualCalendar",
+      descKey: "visualCalendarDesc",
       gradient: "from-indigo-500 to-purple-500",
     },
     {
       icon: Share2,
-      title: "Multi-Platform Publishing",
-      desc: "Publish to 15+ social platforms simultaneously. Customize per-platform content in one workflow.",
+      titleKey: "multiPlatform",
+      descKey: "multiPlatformDesc",
       gradient: "from-blue-500 to-cyan-500",
     },
     {
       icon: BarChart3,
-      title: "Advanced Analytics",
-      desc: "Track engagement, follower growth, and top-performing posts. Beautiful charts and exportable reports.",
+      titleKey: "advancedAnalytics",
+      descKey: "advancedAnalyticsDesc",
       gradient: "from-emerald-500 to-teal-500",
     },
     {
       icon: Bot,
-      title: "AI Content Generator",
-      desc: "Generate captions, hashtags, threads, and replies powered by GPT-4o. Never run out of ideas.",
+      titleKey: "aiGenerator",
+      descKey: "aiGeneratorDesc",
       gradient: "from-orange-500 to-rose-500",
     },
     {
       icon: MessageCircle,
-      title: "Unified Inbox",
-      desc: "Manage comments, messages, and reviews from all platforms in one place. Reply 10x faster.",
+      titleKey: "unifiedInbox",
+      descKey: "unifiedInboxDesc",
       gradient: "from-pink-500 to-red-500",
     },
     {
       icon: Zap,
-      title: "Smart Queue",
-      desc: "AI-powered scheduling that finds the best times to post for maximum engagement on each platform.",
+      titleKey: "smartQueue",
+      descKey: "smartQueueDesc",
       gradient: "from-amber-500 to-yellow-500",
     },
   ];
@@ -121,10 +121,10 @@ export default function LandingPage() {
   };
 
   const quickStats = [
-    { value: "15+", label: "Platforms Supported" },
-    { value: "10K+", label: "Posts Scheduled" },
-    { value: "99.9%", label: "Uptime" },
-    { value: "4.9★", label: "User Rating" },
+    { value: "15+", labelKey: "statsPlatforms" },
+    { value: "10K+", labelKey: "statsPosts" },
+    { value: "99.9%", labelKey: "statsUptime" },
+    { value: "4.9★", labelKey: "statsRating" },
   ];
 
   return (
@@ -137,21 +137,21 @@ export default function LandingPage() {
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
-            <a href="#features" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Features</a>
-            <a href="#pricing" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Pricing</a>
+            <a href="#features" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("navFeatures")}</a>
+            <a href="#pricing" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("navPricing")}</a>
             <HeaderLanguageSwitcher />
             <Link href="/login" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("login")}</Link>
             <Link href="/register" className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-md shadow-[var(--color-primary)]/20">{t("startFree")}</Link>
           </div>
-          <button onClick={() => setMobileMenu(!mobileMenu)} className="flex items-center md:hidden" aria-label="Menu">
+          <button onClick={() => setMobileMenu(!mobileMenu)} className="flex items-center md:hidden" aria-label={t("mobileMenu")}>
             {mobileMenu ? <X className="h-5 w-5 text-[var(--color-on-dark)]" /> : <Menu className="h-5 w-5 text-[var(--color-on-dark)]" />}
           </button>
         </nav>
         {mobileMenu && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="border-t border-white/[0.06] bg-[var(--color-surface-dark)] px-6 py-4 md:hidden">
             <div className="flex flex-col gap-3">
-              <a href="#features" onClick={() => setMobileMenu(false)} className="text-sm text-[var(--color-on-dark-soft)]">Features</a>
-              <a href="#pricing" onClick={() => setMobileMenu(false)} className="text-sm text-[var(--color-on-dark-soft)]">Pricing</a>
+              <a href="#features" onClick={() => setMobileMenu(false)} className="text-sm text-[var(--color-on-dark-soft)]">{t("navFeatures")}</a>
+              <a href="#pricing" onClick={() => setMobileMenu(false)} className="text-sm text-[var(--color-on-dark-soft)]">{t("navPricing")}</a>
               <HeaderLanguageSwitcher />
               <Link href="/login" onClick={() => setMobileMenu(false)} className="text-sm text-[var(--color-on-dark-soft)]">{t("login")}</Link>
               <Link href="/register" onClick={() => setMobileMenu(false)} className="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white">{t("startFree")}</Link>
@@ -178,7 +178,7 @@ export default function LandingPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              <span className="text-xs font-medium text-emerald-400/80">Now supporting 15+ platforms</span>
+              <span className="text-xs font-medium text-emerald-400/80">{t("heroBadge")}</span>
             </div>
 
             <h1 className="font-display text-balance text-4xl font-bold leading-[1.1] text-[var(--color-on-dark)] sm:text-5xl md:text-7xl">
@@ -198,9 +198,9 @@ export default function LandingPage() {
             </motion.div>
 
            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[var(--color-on-dark-muted)]">
-              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> No credit card</span>
-              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> Free forever plan</span>
-              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> Cancel anytime</span>
+              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroNoCreditCard")}</span>
+              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroFreeForever")}</span>
+              <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroCancelAnytime")}</span>
             </motion.p>
           </motion.div>
 
@@ -212,7 +212,7 @@ export default function LandingPage() {
                 {p.label}
               </span>
             ))}
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">+7 more</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">{t("plusMore")}</span>
           </motion.div>
 
           {/* Dashboard mockup */}
@@ -232,13 +232,13 @@ export default function LandingPage() {
       <section className="border-t border-white/[0.06] py-14 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <SectionLabel>Trusted by creators & teams</SectionLabel>
+            <SectionLabel>{t("trustedBy")}</SectionLabel>
           </motion.div>
           <div className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.04] md:grid-cols-4">
             {quickStats.map((stat, i) => (
-              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-[var(--color-surface-dark)] p-5 sm:p-8 text-center">
+              <motion.div key={stat.labelKey} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-[var(--color-surface-dark)] p-5 sm:p-8 text-center">
                 <p className="font-display text-4xl font-bold text-[var(--color-on-dark)]">{stat.value}</p>
-                <p className="mt-1.5 text-sm text-[var(--color-on-dark-muted)]">{stat.label}</p>
+                <p className="mt-1.5 text-sm text-[var(--color-on-dark-muted)]">{t(stat.labelKey)}</p>
               </motion.div>
             ))}
           </div>
@@ -249,15 +249,15 @@ export default function LandingPage() {
       <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <SectionLabel>How it works</SectionLabel>
-            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">Three simple steps</h2>
-            <p className="mx-auto mt-3 max-w-lg text-[var(--color-on-dark-soft)]">Connect your accounts, create content, and publish everywhere — all from one dashboard.</p>
+            <SectionLabel>{t("howItWorks")}</SectionLabel>
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">{t("howItWorksTitle")}</h2>
+            <p className="mx-auto mt-3 max-w-lg text-[var(--color-on-dark-soft)]">{t("howItWorksSubtitle")}</p>
           </motion.div>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-16 grid gap-8 md:grid-cols-3">
             {[
-              { step: "01", icon: Globe, title: "Connect accounts", desc: "Link your social media profiles with one-click OAuth. We support 15+ platforms including Instagram, TikTok, LinkedIn, and X." },
-              { step: "02", icon: Calendar, title: "Schedule & create", desc: "Drag & drop posts onto the calendar. Use our AI to generate captions, hashtags, and find the best times to publish." },
-              { step: "03", icon: BarChart3, title: "Track & optimize", desc: "Monitor engagement, follower growth, and ROI across all platforms. Export reports and refine your strategy." },
+              { step: "01", icon: Globe, titleKey: "step1Title", descKey: "step1Desc" },
+              { step: "02", icon: Calendar, titleKey: "step2Title", descKey: "step2Desc" },
+              { step: "03", icon: BarChart3, titleKey: "step3Title", descKey: "step3Desc" },
             ].map((step, i) => {
               const Icon = step.icon;
               return (
@@ -266,8 +266,8 @@ export default function LandingPage() {
                   <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-lg shadow-[var(--color-primary)]/20">
                     <Icon className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="relative z-10 text-lg font-semibold text-[var(--color-on-dark)]">{step.title}</h3>
-                  <p className="relative z-10 mt-2 text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{step.desc}</p>
+                  <h3 className="relative z-10 text-lg font-semibold text-[var(--color-on-dark)]">{t(step.titleKey)}</h3>
+                  <p className="relative z-10 mt-2 text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{t(step.descKey)}</p>
                 </motion.div>
               );
             })}
@@ -279,10 +279,10 @@ export default function LandingPage() {
       <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24" id="features">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <SectionLabel>Features</SectionLabel>
-            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">Everything you need to</h2>
+            <SectionLabel>{t("sectionFeatures")}</SectionLabel>
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">{t("featuresHeadingLine1")}</h2>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">
-              manage <span className="bg-gradient-to-r from-[var(--color-primary)] to-purple-400 bg-clip-text text-transparent">every platform</span>
+              {t("featuresHeadingLine2Prefix")} <span className="bg-gradient-to-r from-[var(--color-primary)] to-purple-400 bg-clip-text text-transparent">{t("featuresHeadingLine2Highlight")}</span>
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">{t("featuresSubtitle")}</p>
           </motion.div>
@@ -290,15 +290,15 @@ export default function LandingPage() {
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <motion.div key={f.title} variants={fadeUp} custom={i} className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.04]">
+                <motion.div key={f.titleKey} variants={fadeUp} custom={i} className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.04]">
                   <div className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100">
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-primary)]/5 to-transparent" />
                   </div>
                   <div className={`relative z-10 mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br shadow-md ${f.gradient}`}>
                     <Icon className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="relative z-10 text-base font-semibold text-[var(--color-on-dark)]">{f.title}</h3>
-                  <p className="relative z-10 mt-1.5 text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{f.desc}</p>
+                  <h3 className="relative z-10 text-base font-semibold text-[var(--color-on-dark)]">{t(f.titleKey)}</h3>
+                  <p className="relative z-10 mt-1.5 text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{t(f.descKey)}</p>
                 </motion.div>
               );
             })}
@@ -311,15 +311,15 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2">
             <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <SectionLabel>Analytics</SectionLabel>
-              <h2 className="mt-4 font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">Measure what matters</h2>
-              <p className="mt-4 text-[var(--color-on-dark-soft)] leading-relaxed">Track engagement, follower growth, and top-performing content across all your platforms. Beautiful charts, exportable reports, and real-time data.</p>
+              <SectionLabel>{t("sectionAnalytics")}</SectionLabel>
+              <h2 className="mt-4 font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">{t("analyticsTitle")}</h2>
+              <p className="mt-4 text-[var(--color-on-dark-soft)] leading-relaxed">{t("analyticsDesc")}</p>
               <ul className="mt-6 space-y-3">
                 {[
-                  "Real-time engagement metrics",
-                  "Cross-platform comparison",
-                  "Custom date range filtering",
-                  "Export to CSV / PDF",
+                  t("analyticsCheck1"),
+                  t("analyticsCheck2"),
+                  t("analyticsCheck3"),
+                  t("analyticsCheck4"),
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-[var(--color-on-dark-soft)]">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
@@ -344,35 +344,36 @@ export default function LandingPage() {
       <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <SectionLabel>Who it&apos;s for</SectionLabel>
-            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">Built for everyone</h2>
-            <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">Whether you&apos;re a solo creator, a growing team, or an agency managing dozens of accounts.</p>
+            <SectionLabel>{t("sectionAudience")}</SectionLabel>
+            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">{t("audienceTitle")}</h2>
+            <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">{t("audienceSubtitle")}</p>
           </motion.div>
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="mt-14 grid gap-6 md:grid-cols-3">
             {[
               {
                 icon: Star,
-                title: "Creators",
-                items: ["Schedule content across all platforms", "AI-powered caption & hashtag generator", "Best time to post recommendations", "Free plan with 3 social accounts"],
+                titleKey: "audienceCreators",
+                itemsKey: "audienceCreatorsItems",
                 gradient: "from-violet-500 to-purple-500",
               },
               {
                 icon: Users,
-                title: "Small Teams",
-                items: ["Collaborate with team members", "Unlimited posts & scheduled content", "Advanced analytics & export", "Unified inbox for all messages"],
+                titleKey: "audienceTeams",
+                itemsKey: "audienceTeamsItems",
                 gradient: "from-blue-500 to-cyan-500",
                 featured: true,
               },
               {
                 icon: Globe,
-                title: "Agencies",
-                items: ["Manage unlimited client accounts", "Custom reports for each client", "API and MCP server access", "White-label options available"],
+                titleKey: "audienceAgencies",
+                itemsKey: "audienceAgenciesItems",
                 gradient: "from-emerald-500 to-teal-500",
               },
             ].map((segment, i) => {
               const Icon = segment.icon;
+              const segmentItems = t.raw(segment.itemsKey) as string[];
               return (
-                <motion.div key={segment.title} variants={fadeUp} custom={i} className={`relative rounded-2xl border p-6 sm:p-8 ${
+                <motion.div key={segment.titleKey} variants={fadeUp} custom={i} className={`relative rounded-2xl border p-6 sm:p-8 ${
                   segment.featured
                     ? "border-[var(--color-primary)]/40 bg-gradient-to-b from-[var(--color-primary)]/[0.08] to-transparent"
                     : "border-white/[0.06] bg-white/[0.02]"
@@ -381,9 +382,9 @@ export default function LandingPage() {
                   <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${segment.gradient} shadow-lg`}>
                     <Icon className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-[var(--color-on-dark)]">{segment.title}</h3>
+                  <h3 className="text-lg font-semibold text-[var(--color-on-dark)]">{t(segment.titleKey)}</h3>
                   <ul className="mt-4 space-y-2.5">
-                    {segment.items.map((item) => (
+                    {segmentItems.map((item) => (
                       <li key={item} className="flex items-start gap-2.5 text-sm text-[var(--color-on-dark-soft)]">
                         <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
                         {item}
@@ -401,8 +402,8 @@ export default function LandingPage() {
       <section className="border-t border-white/[0.06] py-14 sm:py-20 overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <SectionLabel>Integrations</SectionLabel>
-            <h2 className="mt-4 font-display text-2xl sm:text-3xl font-bold text-[var(--color-on-dark)]">Connect your favorite platforms</h2>
+            <SectionLabel>{t("sectionIntegrations")}</SectionLabel>
+            <h2 className="mt-4 font-display text-2xl sm:text-3xl font-bold text-[var(--color-on-dark)]">{t("integrationsTitle")}</h2>
           </motion.div>
         </div>
         {/* Row 1 — scroll left */}
@@ -433,7 +434,7 @@ export default function LandingPage() {
       <section className="border-t border-white/[0.06] px-4 sm:px-6 py-16 sm:py-24" id="pricing">
         <div className="mx-auto max-w-6xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <SectionLabel>Pricing</SectionLabel>
+            <SectionLabel>{t("sectionPricing")}</SectionLabel>
             <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-[var(--color-on-dark)]">{t("pricingTitle")}</h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">{t("pricingSubtitle")}</p>
           </motion.div>
@@ -481,15 +482,15 @@ export default function LandingPage() {
             className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[var(--color-primary)]/[0.08] via-purple-600/[0.04] to-transparent p-6 sm:p-12 text-center">
             <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[100px]" />
             <div className="relative">
-              <h2 className="font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">Ready to streamline your social media?</h2>
-              <p className="mx-auto mt-4 max-w-lg text-[var(--color-on-dark-soft)]">Join thousands of creators and teams who trust Komet to manage their content across every platform.</p>
+              <h2 className="font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">{t("ctaTitle")}</h2>
+              <p className="mx-auto mt-4 max-w-lg text-[var(--color-on-dark-soft)]">{t("ctaSubtitle")}</p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link href="/register" className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-8 py-3 text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-xl shadow-[var(--color-primary)]/25">
                   {t("startFree")}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <p className="mt-4 text-xs text-[var(--color-on-dark-muted)]">No credit card required. Free forever plan available.</p>
+              <p className="mt-4 text-xs text-[var(--color-on-dark-muted)]">{t("ctaFooter")}</p>
             </div>
           </motion.div>
         </div>

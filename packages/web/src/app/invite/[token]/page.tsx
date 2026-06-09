@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 
 interface InvitationInfo {
   workspaceId: string;
@@ -39,6 +40,8 @@ export default function InviteAcceptPage({
   const [success, setSuccess] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [status, setStatus] = useState<"loading" | "valid" | "expired" | "accepted" | "not_found" | "error">("loading");
+
+  const t = useTranslations("invite");
 
   // Validate invitation
   useEffect(() => {
@@ -142,7 +145,7 @@ export default function InviteAcceptPage({
         {loading && (
           <div className="text-center py-8">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--color-primary-light)]" />
-            <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">Loading invitation…</p>
+            <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">{t("loading")}</p>
           </div>
         )}
 
@@ -151,10 +154,10 @@ export default function InviteAcceptPage({
           <div className="text-center py-8">
             <CheckCircle className="mx-auto h-12 w-12 text-[var(--color-success)]" />
             <h2 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-              Welcome to {invitation?.workspaceName}!
+              {t("success.welcome", { workspaceName: invitation?.workspaceName ?? "" })}
             </h2>
             <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
-              You are now a {invitation?.role}. Redirecting to dashboard…
+              {t("success.redirecting", { role: invitation?.role ?? "" })}
             </p>
           </div>
         )}
@@ -164,14 +167,14 @@ export default function InviteAcceptPage({
           <div className="text-center py-8">
             <XCircle className="mx-auto h-12 w-12 text-[var(--color-error)]" />
             <h2 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-              Something went wrong
+              {t("error.somethingWrong")}
             </h2>
             <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-caption font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
             >
-              Try Again
+              {t("error.tryAgain")}
             </button>
           </div>
         )}
@@ -181,10 +184,10 @@ export default function InviteAcceptPage({
           <div className="text-center py-8">
             <XCircle className="mx-auto h-12 w-12 text-[var(--color-on-dark-muted)]" />
             <h2 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-              Invitation Not Found
+              {t("error.notFound")}
             </h2>
             <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
-              This invitation link is invalid or has been removed.
+              {t("error.notFoundDesc")}
             </p>
           </div>
         )}
@@ -194,10 +197,10 @@ export default function InviteAcceptPage({
           <div className="text-center py-8">
             <AlertTriangle className="mx-auto h-12 w-12 text-[var(--color-warning)]" />
             <h2 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-              Invitation Expired
+              {t("error.expired")}
             </h2>
             <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
-              This invitation for {invitation?.workspaceName} has expired. Please ask the workspace admin to send a new invitation.
+              {t("error.expiredDesc", { workspaceName: invitation?.workspaceName ?? "" })}
             </p>
           </div>
         )}
@@ -207,16 +210,16 @@ export default function InviteAcceptPage({
           <div className="text-center py-8">
             <CheckCircle className="mx-auto h-12 w-12 text-[var(--color-info)]" />
             <h2 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-              Already Joined
+              {t("error.alreadyJoined")}
             </h2>
             <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
-              You have already accepted this invitation to {invitation?.workspaceName}.
+              {t("error.alreadyJoinedDesc", { workspaceName: invitation?.workspaceName ?? "" })}
             </p>
             <button
               onClick={() => router.push("/dashboard")}
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
             >
-              Go to Dashboard <ArrowRight className="h-4 w-4" />
+              {t("error.goToDashboard")} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         )}
@@ -231,13 +234,10 @@ export default function InviteAcceptPage({
                   <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
                   <div>
                     <p className="text-body-sm font-medium text-amber-300">
-                      Wrong account
+                      {t("wrongAccount")}
                     </p>
                     <p className="mt-1 text-caption text-amber-300/80">
-                      You are signed in as{" "}
-                      <span className="font-semibold text-amber-200">{currentEmail}</span>.
-                      This invitation was sent to{" "}
-                      <span className="font-semibold text-amber-200">{invitation.email}</span>.
+                      {t("wrongAccountDesc", { currentEmail, inviteEmail: invitation.email })}
                     </p>
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function InviteAcceptPage({
                   ) : (
                     <LogOut className="h-4 w-4" />
                   )}
-                  Sign Out & Switch Account
+                  {t("signOutSwitch")}
                 </button>
               </div>
             )}
@@ -261,11 +261,10 @@ export default function InviteAcceptPage({
                 {roleIcon}
               </div>
               <h2 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-                Join {invitation.workspaceName}
+                {t("join.title", { workspaceName: invitation.workspaceName })}
               </h2>
               <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                You have been invited to join as{" "}
-                <span className="font-semibold capitalize">{invitation.role}</span>
+                {t("join.description", { role: invitation.role })}
               </p>
               <p className="mt-0.5 text-caption text-[var(--color-on-dark-muted)]">
                 {invitation.email}
@@ -281,19 +280,19 @@ export default function InviteAcceptPage({
             {!isAuthenticated ? (
               <div className="space-y-3">
                 <p className="text-caption text-center text-[var(--color-on-dark-muted)]">
-                  You need to log in with {invitation.email} to accept this invitation.
+                  {t("join.needLogin", { email: invitation.email })}
                 </p>
                 <button
                   onClick={handleLogin}
                   className="w-full flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
                 >
-                  <LogIn className="h-4 w-4" /> Log In to Accept
+                  <LogIn className="h-4 w-4" /> {t("join.loginToAccept")}
                 </button>
               </div>
             ) : emailMismatch ? (
               <div className="text-center">
                 <p className="text-caption text-[var(--color-on-dark-muted)] mb-3">
-                  Switch to {invitation.email} to accept this invitation.
+                  {t("join.switchToAccept", { email: invitation.email })}
                 </p>
                 <button
                   onClick={handleSwitchAccount}
@@ -305,7 +304,7 @@ export default function InviteAcceptPage({
                   ) : (
                     <LogOut className="h-4 w-4" />
                   )}
-                  Sign Out & Switch Account
+                  {t("signOutSwitch")}
                 </button>
               </div>
             ) : (
@@ -319,7 +318,7 @@ export default function InviteAcceptPage({
                 ) : (
                   <CheckCircle className="h-4 w-4" />
                 )}
-                Accept Invitation
+                {t("join.accept")}
               </button>
             )}
           </>

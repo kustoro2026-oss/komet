@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -32,56 +33,24 @@ const stagger = {
 };
 
 export default function MobileAppPage() {
-  const features = [
-    {
-      icon: Zap,
-      title: "Blazing Fast",
-      desc: "Native app-like performance. Navigate between calendar, posts, and analytics instantly.",
-    },
-    {
-      icon: Bell,
-      title: "Push Notifications",
-      desc: "Get notified when posts publish, comments arrive, or tokens are about to expire.",
-    },
-    {
-      icon: Wifi,
-      title: "Offline Access",
-      desc: "Browse your content calendar and draft posts even without internet connection.",
-    },
-    {
-      icon: Share2,
-      title: "Quick Share",
-      desc: "Share content directly from your phone browser or gallery to Komet in one tap.",
-    },
-    {
-      icon: Monitor,
-      title: "Seamless Sync",
-      desc: "All your data syncs instantly between desktop and mobile. Pick up where you left off.",
-    },
-    {
-      icon: Smartphone,
-      title: "Home Screen Ready",
-      desc: "Add to your home screen and use it like any other app. No app store needed.",
-    },
+  const t = useTranslations("mobile");
+
+  const featureIcons = [Zap, Bell, Wifi, Share2, Monitor, Smartphone];
+  const features = t.raw("features.items") as unknown as { title: string; desc: string }[];
+
+  const stepIcons = [Download, Share2, KometLogoIcon];
+  const steps = t.raw("install.steps") as unknown as { title: string; desc: string }[];
+
+  const stats = [
+    { value: "100%", label: t("stats.webBased") },
+    { value: "0", label: t("stats.appStoreHassle") },
+    { value: "< 2MB", label: t("stats.installSize") },
+    { value: "All OS", label: t("stats.crossPlatform") },
   ];
 
-  const steps = [
-    {
-      icon: Download,
-      title: "Open in Browser",
-      desc: "Visit app.komet.com on your phone using Chrome, Safari, or Edge.",
-    },
-    {
-      icon: Share2,
-      title: "Add to Home Screen",
-      desc: "Tap the share button (iOS) or the install prompt (Android) and select Add to Home Screen.",
-    },
-    {
-      icon: KometLogoIcon,
-      title: "Start Scheduling",
-      desc: "Launch Komet from your home screen and manage your content like a native app.",
-    },
-  ];
+  const checkmarks = t.raw("hero.checkmarks") as unknown as string[];
+
+  const comparisonRows = t.raw("comparison.rows") as unknown as { feature: string; pwa: string; native: string }[];
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-dark)]">
@@ -93,8 +62,8 @@ export default function MobileAppPage() {
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Sign In</Link>
-            <Link href="/register" className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all">Get Started</Link>
+            <Link href="/login" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("nav.signIn")}</Link>
+            <Link href="/register" className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all">{t("nav.getStarted")}</Link>
           </div>
         </nav>
       </header>
@@ -114,26 +83,18 @@ export default function MobileAppPage() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                <span className="text-xs font-medium text-emerald-400/80">PWA — No app store needed</span>
+                <span className="text-xs font-medium text-emerald-400/80">{t("badge")}</span>
               </div>
 
               <h1 className="font-display text-4xl font-bold text-[var(--color-on-dark)] sm:text-5xl lg:text-6xl">
-                Komet on{" "}
-                <span className="bg-gradient-to-r from-[var(--color-primary)] via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Mobile
-                </span>
+                {t("hero.title")}
               </h1>
               <p className="mt-4 text-lg text-[var(--color-on-dark-soft)] leading-relaxed">
-                Take your social media management on the go. Schedule posts, track analytics, and manage your inbox — all from your phone. Install as a Progressive Web App for a native-like experience.
+                {t("hero.subtitle")}
               </p>
 
               <div className="mt-8 space-y-3">
-                {[
-                  "Works on iOS, Android, and any modern browser",
-                  "Full dashboard with calendar and analytics",
-                  "Push notifications for publishing and engagement",
-                  "Automatic sync between desktop and mobile",
-                ].map((item) => (
+                {checkmarks.map((item) => (
                   <div key={item} className="flex items-center gap-3 text-sm text-[var(--color-on-dark-soft)]">
                     <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
                     {item}
@@ -147,13 +108,13 @@ export default function MobileAppPage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-xl shadow-[var(--color-primary)]/25"
                 >
                   <Download className="h-4 w-4" />
-                  Install Now
+                  {t("installNow")}
                 </a>
                 <Link
                   href="/register"
                   className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-6 py-3 text-sm font-semibold text-[var(--color-on-dark-soft)] hover:bg-white/[0.04] hover:text-[var(--color-on-dark)] transition-all"
                 >
-                  Create Free Account
+                  {t("createFreeAccount")}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -197,12 +158,7 @@ export default function MobileAppPage() {
       <section className="border-t border-white/[0.06] py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.04] md:grid-cols-4">
-            {[
-              { value: "100%", label: "Web-Based" },
-              { value: "0", label: "App Store Hassle" },
-              { value: "< 2MB", label: "Install Size" },
-              { value: "All OS", label: "Cross-Platform" },
-            ].map((stat, i) => (
+            {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
@@ -225,17 +181,17 @@ export default function MobileAppPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 text-xs font-medium tracking-wide text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-              Mobile Features
+              {t("features.heading")}
             </span>
-            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">Everything you love, now on mobile</h2>
+            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">{t("features.title")}</h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">
-              Full-featured mobile experience with zero compromises.
+              {t("features.subtitle")}
             </p>
           </motion.div>
 
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {features.map((f, i) => {
-              const Icon = f.icon;
+              const Icon = featureIcons[i];
               return (
                 <motion.div key={f.title} variants={fadeUp} custom={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-300 hover:border-white/[0.12] hover:bg-white/[0.04]">
                   <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/20">
@@ -256,17 +212,17 @@ export default function MobileAppPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 text-xs font-medium tracking-wide text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-              Installation Guide
+              {t("install.heading")}
             </span>
-            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">Install in 3 simple steps</h2>
+            <h2 className="mt-4 font-display text-4xl font-bold text-[var(--color-on-dark)]">{t("install.title")}</h2>
             <p className="mx-auto mt-3 max-w-xl text-[var(--color-on-dark-soft)]">
-              No app store, no downloads. Just a simple add to your home screen.
+              {t("install.subtitle")}
             </p>
           </motion.div>
 
           <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="mt-14 grid gap-8 md:grid-cols-3">
             {steps.map((step, i) => {
-              const Icon = step.icon;
+              const Icon = stepIcons[i];
               return (
                 <motion.div key={step.title} variants={fadeUp} custom={i} className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 text-center transition-all duration-300 hover:border-white/10">
                   <span className="font-display absolute right-5 top-4 select-none text-5xl font-bold leading-none text-white/[0.04]">
@@ -285,16 +241,16 @@ export default function MobileAppPage() {
           {/* Browser icons */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12 flex flex-wrap items-center justify-center gap-6 text-center">
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-3">
-              <p className="text-sm font-medium text-[var(--color-on-dark)]">iOS (Safari)</p>
-              <p className="mt-0.5 text-xs text-[var(--color-on-dark-muted)]">Tap Share → Add to Home Screen</p>
+              <p className="text-sm font-medium text-[var(--color-on-dark)]">{t("install.browserIos")}</p>
+              <p className="mt-0.5 text-xs text-[var(--color-on-dark-muted)]">{t("install.browserIosDesc")}</p>
             </div>
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-3">
-              <p className="text-sm font-medium text-[var(--color-on-dark)]">Android (Chrome)</p>
-              <p className="mt-0.5 text-xs text-[var(--color-on-dark-muted)]">Tap Install prompt or menu → Install App</p>
+              <p className="text-sm font-medium text-[var(--color-on-dark)]">{t("install.browserAndroid")}</p>
+              <p className="mt-0.5 text-xs text-[var(--color-on-dark-muted)]">{t("install.browserAndroidDesc")}</p>
             </div>
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-5 py-3">
-              <p className="text-sm font-medium text-[var(--color-on-dark)]">Desktop (Chrome/Edge)</p>
-              <p className="mt-0.5 text-xs text-[var(--color-on-dark-muted)]">Click Install icon in address bar</p>
+              <p className="text-sm font-medium text-[var(--color-on-dark)]">{t("install.browserDesktop")}</p>
+              <p className="mt-0.5 text-xs text-[var(--color-on-dark-muted)]">{t("install.browserDesktopDesc")}</p>
             </div>
           </motion.div>
         </div>
@@ -304,9 +260,9 @@ export default function MobileAppPage() {
       <section className="border-t border-white/[0.06] px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
-            <h2 className="font-display text-3xl font-bold text-[var(--color-on-dark)]">PWA vs Native App</h2>
+            <h2 className="font-display text-3xl font-bold text-[var(--color-on-dark)]">{t("comparison.title")}</h2>
             <p className="mt-3 text-[var(--color-on-dark-soft)]">
-              Why we chose PWA over a native mobile app.
+              {t("comparison.subtitle")}
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-10 overflow-hidden rounded-2xl border border-white/[0.06]">
@@ -314,25 +270,18 @@ export default function MobileAppPage() {
             <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-                  <th className="p-4 text-left font-semibold text-[var(--color-on-dark)]">Feature</th>
+                  <th className="p-4 text-left font-semibold text-[var(--color-on-dark)]">{t("comparison.feature")}</th>
                   <th className="p-4 text-center font-semibold text-[var(--color-on-dark)]">
                     <span className="inline-flex items-center gap-1.5 text-[var(--color-primary)]">
-                      <KometLogo size="sm" /> Komet PWA
+                      <KometLogo size="sm" /> {t("comparison.kometPwa")}
                     </span>
                   </th>
-                  <th className="p-4 text-center font-semibold text-[var(--color-on-dark-muted)]">Native App</th>
+                  <th className="p-4 text-center font-semibold text-[var(--color-on-dark-muted)]">{t("comparison.nativeApp")}</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { feature: "Install size", pwa: "< 2MB", native: "50-200MB" },
-                  { feature: "Updates", pwa: "Instant — no app store", native: "App store review required" },
-                  { feature: "Cross-platform", pwa: "iOS, Android, Desktop", native: "Separate builds per OS" },
-                  { feature: "Offline support", pwa: "Yes", native: "Yes" },
-                  { feature: "Push notifications", pwa: "Yes", native: "Yes" },
-                  { feature: "No downloads required", pwa: "Yes", native: "No" },
-                ].map((row, i) => (
-                  <tr key={row.feature} className={i < 5 ? "border-b border-white/[0.06]" : ""}>
+                {comparisonRows.map((row, i) => (
+                  <tr key={row.feature} className={i < comparisonRows.length - 1 ? "border-b border-white/[0.06]" : ""}>
                     <td className="p-4 text-[var(--color-on-dark-soft)]">{row.feature}</td>
                     <td className="p-4 text-center">
                       <span className="inline-flex items-center gap-1 text-emerald-500">
@@ -364,10 +313,10 @@ export default function MobileAppPage() {
                 <Smartphone className="h-7 w-7 text-white" />
               </div>
               <h2 className="font-display text-3xl font-bold text-[var(--color-on-dark)] sm:text-4xl">
-                Ready to manage content on the go?
+                {t("cta.title")}
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-[var(--color-on-dark-soft)]">
-                Open Komet on your phone, install instantly, and start scheduling posts from anywhere.
+                {t("cta.subtitle")}
               </p>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Link
@@ -375,11 +324,11 @@ export default function MobileAppPage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-8 py-3 text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-xl shadow-[var(--color-primary)]/25"
                 >
                   <Star className="h-4 w-4" />
-                  Get Started Free
+                  {t("cta.button")}
                 </Link>
               </div>
               <p className="mt-4 text-xs text-[var(--color-on-dark-muted)]">
-                No credit card required. Open on your phone to install.
+                {t("cta.disclaimer")}
               </p>
             </div>
           </motion.div>
@@ -394,12 +343,12 @@ export default function MobileAppPage() {
             <span className="font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
           <div className="flex gap-6 text-sm">
-            <span className="text-[var(--color-on-dark-muted)]">&copy; {new Date().getFullYear()} Komet. All rights reserved.</span>
-            <Link href="/privacy" className="text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Privacy</Link>
+            <span className="text-[var(--color-on-dark-muted)]">{t("footer.copyright", { year: new Date().getFullYear() })}</span>
+            <Link href="/privacy" className="text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footer.privacy")}</Link>
           </div>
           <div className="flex gap-4">
-            <Link href="/" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Home</Link>
-            <Link href="/login" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">Sign In</Link>
+            <Link href="/" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footer.home")}</Link>
+            <Link href="/login" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footer.signIn")}</Link>
           </div>
         </div>
       </footer>
