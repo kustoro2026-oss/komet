@@ -25,8 +25,11 @@ export async function exchangeCodeForTokens(
   const clientId = process.env[cfg.clientIdEnv] || "";
   const clientSecret = process.env[cfg.clientSecretEnv] || "";
 
+  // TikTok uses client_key instead of client_id
+  const isTikTok = platform === "tiktok";
+
   const body = new URLSearchParams({
-    client_id: clientId,
+    [isTikTok ? "client_key" : "client_id"]: clientId,
     client_secret: clientSecret,
     code,
     redirect_uri: redirectUri,
