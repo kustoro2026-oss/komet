@@ -77,6 +77,7 @@ export default function TeamPage() {
   const [inviteError, setInviteError] = useState("");
   const [lastInviteLink, setLastInviteLink] = useState("");
   const [lastEmailSent, setLastEmailSent] = useState(false);
+  const [emailDebug, setEmailDebug] = useState("");
 
   // Delete confirmation
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -165,6 +166,8 @@ export default function TeamPage() {
         // Capture invite link for manual sharing
         if (resp.inviteLink) setLastInviteLink(resp.inviteLink);
         setLastEmailSent(resp.emailSent === true);
+        // Show email debug info
+        setEmailDebug(resp._debug || (resp.emailError ? `⚠️ ${resp.emailError}` : ""));
         await fetchData(); // Refresh invitations
       } else {
         const err = await res.json();
@@ -355,6 +358,12 @@ export default function TeamPage() {
               Copy
             </button>
           </div>
+          {/* Debug: show why email failed */}
+          {emailDebug && (
+            <p className="mt-3 text-micro text-amber-400/80 bg-amber-500/5 rounded px-2 py-1.5">
+              🐞 {emailDebug}
+            </p>
+          )}
         </div>
       )}
 

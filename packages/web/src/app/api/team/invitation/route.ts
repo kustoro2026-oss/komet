@@ -182,7 +182,10 @@ export async function POST(request: NextRequest) {
       invitation,
       inviteLink,
       emailSent,
-      emailError: emailSent ? null : (emailError || "No email API key configured. Add RESEND_API_KEY to enable email delivery.")
+      emailError: emailSent ? null : (emailError || "No email API key configured. Add RESEND_API_KEY to enable email delivery."),
+      _debug: process.env.RESEND_API_KEY
+        ? `API key present (length: ${process.env.RESEND_API_KEY.length})${!emailSent ? ` — send failed: ${emailError}` : ""}`
+        : "RESEND_API_KEY is not set in environment"
     }, { status: 201 });
   } catch (error) {
     console.error("[Team Invitation POST] Error:", error);
