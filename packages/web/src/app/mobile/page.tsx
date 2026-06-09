@@ -63,9 +63,9 @@ export default function MobileAppPage() {
     },
   ];
 
-  const KometLogoImg = ({ className }: { className?: string }) => (
+  const KometLogoImg = (({ className }: { className?: string }) => (
     <img src="/logo-komet.png" alt="Komet" className={className} />
-  );
+  )) as React.ComponentType<{ className?: string }>;
 
   const steps = [
     {

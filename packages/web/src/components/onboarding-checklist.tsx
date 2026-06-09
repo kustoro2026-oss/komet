@@ -18,9 +18,9 @@ interface OnboardingChecklistProps {
   onComplete?: (stepId: string) => void;
 }
 
-const KometLogoImg = ({ className }: { className?: string }) => (
+const KometLogoImg = (({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
-);
+)) as React.ComponentType<{ className?: string }>;
 
 const DEFAULT_STEPS: OnboardingStep[] = [
   { id: "connect", title: "Connect Social Accounts", description: "Link your social media platforms", icon: LinkIcon, href: "/accounts/connect", isComplete: false },

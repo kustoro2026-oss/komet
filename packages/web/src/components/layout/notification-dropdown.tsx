@@ -24,9 +24,9 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   { id: "7", type: "system", title: "New Feature", message: "AI Content Studio is now available! Try generating content with AI.", isRead: true, link: "/ai", createdAt: "3d ago" },
 ];
 
-const KometLogoImg = ({ className }: { className?: string }) => (
+const KometLogoImg = (({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
-);
+)) as React.ComponentType<{ className?: string }>;
 
 const TYPE_ICONS: Record<string, typeof MessageSquare> = {
   comment: MessageSquare,
@@ -34,8 +34,8 @@ const TYPE_ICONS: Record<string, typeof MessageSquare> = {
   post_failed: AlertTriangle,
   post_scheduled: Calendar,
   payment: CreditCard,
-  team: KometLogoImg,
-  system: KometLogoImg,
+  team: KometLogoImg as any,
+  system: KometLogoImg as any,
 };
 
 // Maps notification types to preference keys in localStorage

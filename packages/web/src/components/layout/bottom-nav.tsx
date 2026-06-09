@@ -11,9 +11,9 @@ import {
   Settings,
 } from "lucide-react";
 
-const KometLogoImg = ({ className }: { className?: string }) => (
+const KometLogoImg = (({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
-);
+)) as React.ComponentType<{ className?: string }>;
 
 const bottomNavItems = [
   { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },

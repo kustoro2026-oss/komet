@@ -349,9 +349,9 @@ export default function CreatePostPage() {
     );
   };
 
-const KometLogoImg = ({ className }: { className?: string }) => (
+const KometLogoImg = (({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
-);
+)) as ComponentType<{ className?: string }>;
 
   const steps: { key: ComposerStep; label: string; icon: ComponentType<{ className?: string }> }[] = [
     { key: "content", label: "Content", icon: Type },

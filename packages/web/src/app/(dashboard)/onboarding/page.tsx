@@ -6,9 +6,9 @@ import Link from "next/link";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import type { OnboardingStep } from "@/components/onboarding-checklist";
 
-const KometLogoImg = ({ className }: { className?: string }) => (
+const KometLogoImg = (({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
-);
+)) as React.ComponentType<{ className?: string }>;
 
 const INITIAL_STEPS: OnboardingStep[] = [
   { id: "connect", title: "Connect Social Accounts", description: "Link your Twitter, Instagram, LinkedIn, and more", icon: KometLogoImg, href: "/accounts/connect", isComplete: false },
