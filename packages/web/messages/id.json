@@ -753,6 +753,7 @@
     "removeTeamMember": "Hapus Anggota Tim?",
     "removeTeamMemberDescription": "Mereka akan kehilangan akses ke workspace ini. Ini dapat dibatalkan dengan mengundang mereka kembali.",
     "cancel": "Batal",
+    "save": "Simpan",
     "remove": "Hapus",
     "errorNotAuthenticated": "Tidak terautentikasi",
     "errorPleaseLogIn": "Silakan masuk untuk melihat tim.",

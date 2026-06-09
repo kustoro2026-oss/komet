@@ -12,8 +12,6 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
-  Check,
-  X,
   Settings,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -485,10 +483,10 @@ export default function TeamPage() {
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-warning)]">{pendingCount}</p>
         </div>
         {workspaceId && (
-          <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
+          <div className={`rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4 ${renamingWorkspace ? "col-span-2 sm:col-span-1" : ""}`}>
             <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] flex items-center gap-2">
               {t("workspace")}
-              {isUserAdmin && (
+              {isUserAdmin && !renamingWorkspace && (
                 <Link
                   href="/settings/workspace"
                   className="ml-auto rounded p-0.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-primary-light)] transition-colors"
@@ -499,33 +497,34 @@ export default function TeamPage() {
               )}
             </p>
             {renamingWorkspace ? (
-              <div className="mt-1 space-y-1.5">
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={renameName}
-                    onChange={(e) => setRenameName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveRename();
-                      if (e.key === "Escape") handleCancelRename();
-                    }}
-                    className="w-full rounded border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-2 py-1 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    autoFocus
-                    disabled={renameLoading}
-                  />
+              <div className="mt-1 space-y-2">
+                <input
+                  type="text"
+                  value={renameName}
+                  onChange={(e) => setRenameName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveRename();
+                    if (e.key === "Escape") handleCancelRename();
+                  }}
+                  className="w-full rounded border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-2 py-1.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                  placeholder={activeWorkspace?.name}
+                  autoFocus
+                  disabled={renameLoading}
+                />
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={handleSaveRename}
                     disabled={renameLoading || !renameName.trim()}
-                    className="rounded p-1 text-[var(--color-success)] hover:bg-[var(--color-success)]/10 disabled:opacity-40"
+                    className="flex-1 sm:flex-none rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-40 transition-colors"
                   >
-                    {renameLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                    {renameLoading ? <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin" /> : t("save")}
                   </button>
                   <button
                     onClick={handleCancelRename}
                     disabled={renameLoading}
-                    className="rounded p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]"
+                    className="flex-1 sm:flex-none rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-40 transition-colors"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    {t("cancel")}
                   </button>
                 </div>
                 {renameError && (

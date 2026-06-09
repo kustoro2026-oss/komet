@@ -753,6 +753,7 @@
     "removeTeamMember": "Remove Team Member?",
     "removeTeamMemberDescription": "They will lose access to this workspace. This can be undone by re-inviting them.",
     "cancel": "Cancel",
+    "save": "Save",
     "remove": "Remove",
     "errorNotAuthenticated": "Not authenticated",
     "errorPleaseLogIn": "Please log in to view team.",
