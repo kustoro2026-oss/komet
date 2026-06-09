@@ -109,10 +109,10 @@ export function OnboardingChecklist({ steps: initialSteps, onComplete }: Onboard
             {/* Content */}
             <div className="flex-1 min-w-0">
               <h4 className={`text-body-sm font-semibold ${step.isComplete ? "text-[var(--color-success)]" : "text-[var(--color-on-dark)]"}`}>
-                {tc(`onboarding_${step.id}` as any) || step.title}
+                {tc(`onboarding_${step.id}` as Parameters<typeof tc>[0]) || step.title}
               </h4>
               <p className="text-micro text-[var(--color-on-dark-muted)]">
-                {tc(`onboarding_${step.id}_desc` as any) || step.description}
+                {tc(`onboarding_${step.id}_desc` as Parameters<typeof tc>[0]) || step.description}
               </p>
             </div>
 

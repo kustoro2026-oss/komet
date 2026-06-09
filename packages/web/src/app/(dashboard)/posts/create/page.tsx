@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, type ComponentType } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo } from "lucide-react";
 import type { Platform } from "@komet/shared";

@@ -311,7 +311,7 @@ function WebhookConfigTab() {
     } finally {
       setSaving(false);
     }
-  }, [formName, formUrl, formEvents, formSecret, createWebhook]);
+  }, [formName, formUrl, formEvents, formSecret, createWebhook, t]);
 
   const handleDelete = useCallback(async (id: string) => {
     try {
