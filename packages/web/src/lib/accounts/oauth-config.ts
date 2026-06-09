@@ -599,10 +599,13 @@ export function getPlatformAuthUrl(
   const clientId = getEnv(cfg.clientIdEnv);
   if (!clientId) return null;
 
+  // TikTok requires comma-separated scopes; most others use space
+  const scopeSeparator = platform === "tiktok" ? "," : " ";
+
   const params = new URLSearchParams({
     redirect_uri: options.redirectUri,
     response_type: "code",
-    scope: cfg.scopes.join(" "),
+    scope: cfg.scopes.join(scopeSeparator),
     state: JSON.stringify({ s: options.state, p: platform, pid: options.profileId }),
     ...cfg.extraAuthorizeParams,
   });
