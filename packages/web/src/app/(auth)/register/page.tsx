@@ -4,10 +4,21 @@ import { useState, type FormEvent } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Suspense } from "react";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl") || "/dashboard";
   const router = useRouter();
   const t = useTranslations("auth");
   const [name, setName] = useState("");
@@ -34,7 +45,7 @@ export default function RegisterPage() {
       if (error) {
         setError(error.message);
       } else {
-        router.push("/login?registered=true");
+        router.push(`/login?registered=true&returnUrl=${encodeURIComponent(returnUrl)}`);
       }
     } catch {
       setError(t("unexpectedError"));
@@ -143,7 +154,7 @@ export default function RegisterPage() {
 
       <p className="text-center text-body-sm text-[var(--color-on-dark-soft)]">
         {t("hasAccount")}{" "}
-        <Link href="/login" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
+        <Link href={`/login${returnUrl !== "/dashboard" ? `?returnUrl=${encodeURIComponent(returnUrl)}` : ""}`} className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
           {t("signIn")}
         </Link>
       </p>

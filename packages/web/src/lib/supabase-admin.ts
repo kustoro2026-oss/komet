@@ -71,7 +71,7 @@ export async function getUserFromRequest(request: NextRequest) {
     user: {
       id: prismaUserId,
       email: data.user.email || "",
-      name: data.user.user_metadata?.name,
+      name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split("@")[0],
     },
     error: null,
   };

@@ -18,6 +18,7 @@ export default function LoginPage() {
 function LoginForm() {
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
+  const returnUrl = searchParams.get("returnUrl") || "/dashboard";
   const router = useRouter();
   const t = useTranslations("auth");
   const [email, setEmail] = useState("");
@@ -41,7 +42,7 @@ function LoginForm() {
       if (error) {
         setError(error.message);
       } else {
-        router.push("/dashboard");
+        router.push(returnUrl);
         router.refresh();
       }
     } catch {
@@ -154,7 +155,7 @@ function LoginForm() {
 
       <p className="text-center text-body-sm text-[var(--color-on-dark-soft)]">
         {t("noAccount")}{" "}
-        <Link href="/register" className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
+        <Link href={`/register${returnUrl !== "/dashboard" ? `?returnUrl=${encodeURIComponent(returnUrl)}` : ""}`} className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)]">
           {t("signUp")}
         </Link>
       </p>
