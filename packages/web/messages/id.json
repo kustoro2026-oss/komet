@@ -250,7 +250,13 @@
     "delete": "Hapus",
     "reconnect": "Hubungkan Ulang",
     "expiredAccounts": "akun perlu dihubungkan ulang",
-    "expiredBannerDesc": "Akun-akun ini memiliki token yang kedaluwarsa. Hubungkan ulang untuk melanjutkan posting."
+    "expiredBannerDesc": "Akun-akun ini memiliki token kedaluwarsa. Hubungkan kembali untuk melanjutkan posting.",
+    "loading": "Memuat akun…",
+    "errorLoading": "Gagal memuat akun",
+    "noAccounts": "Belum ada akun terhubung",
+    "noAccountsDesc": "Hubungkan akun media sosial pertama Anda untuk mulai mengelola postingan di semua platform.",
+    "retry": "Coba Lagi",
+    "viewOnPlatform": "Lihat di platform"
   },
   "analyticsPage": {
     "title": "Analitik",

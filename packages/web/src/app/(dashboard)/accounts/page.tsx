@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2, RefreshCw, X } from "lucide-react";
+import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2, RefreshCw, X, Loader2 } from "lucide-react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
@@ -20,28 +20,16 @@ interface ConnectedAccount {
   connectedAt: string;
 }
 
-const MOCK_ACCOUNTS: ConnectedAccount[] = [
-  { id: "1", platform: "twitter", username: "@kometapp", displayName: "Komet", followers: 12500, isActive: true, connectedAt: "2024-01-15" },
-  { id: "2", platform: "instagram", username: "@komet_app", displayName: "Komet Official", followers: 10200, isActive: true, connectedAt: "2024-02-20" },
-  { id: "3", platform: "facebook", username: "kometapp", displayName: "Komet Page", followers: 8100, isActive: true, connectedAt: "2024-01-15" },
-  { id: "4", platform: "linkedin", username: "company/komet", displayName: "Komet Inc.", followers: 5400, isActive: true, connectedAt: "2024-03-10" },
-  { id: "5", platform: "tiktok", username: "@komet", displayName: "Komet", followers: 25300, isActive: true, connectedAt: "2024-04-01" },
-  { id: "6", platform: "youtube", username: "@komet", displayName: "Komet Channel", followers: 7400, isActive: true, connectedAt: "2024-04-15" },
-  { id: "7", platform: "pinterest", username: "komet", displayName: "Komet", followers: 3200, isActive: true, connectedAt: "2024-05-01" },
-  { id: "8", platform: "threads", username: "@komet", displayName: "Komet", followers: 2100, isActive: true, connectedAt: "2024-05-10" },
-];
-// Fallback ke mock data kalau API error / kosong
-const FALLBACK_ACCOUNTS = MOCK_ACCOUNTS;
-
 export default function AccountsPage() {
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [showExpiredBanner, setShowExpiredBanner] = useState(true);
-  const { data: apiAccounts } = useAccounts();
+  const { data: apiAccounts, isLoading, error, refetch } = useAccounts();
   const deleteAccountMutation = useDeleteAccount();
   const [isDeleting, setIsDeleting] = useState(false);
   const t = useTranslations("accountsPage");
-  const accounts: ConnectedAccount[] = (apiAccounts && apiAccounts.length > 0) ? (apiAccounts as ConnectedAccount[]) : FALLBACK_ACCOUNTS;
+
+  const accounts: ConnectedAccount[] = (apiAccounts as ConnectedAccount[]) || [];
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true);
@@ -57,12 +45,113 @@ export default function AccountsPage() {
 
   const filtered = accounts.filter(
     (a) =>
-      a.displayName.toLowerCase().includes(search.toLowerCase()) ||
-      a.username.toLowerCase().includes(search.toLowerCase())
+      a.displayName?.toLowerCase().includes(search.toLowerCase()) ||
+      a.username?.toLowerCase().includes(search.toLowerCase())
   );
 
   const expiredCount = accounts.filter((a) => !a.isActive).length;
 
+  /* ─── Loading ─── */
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{t("title")}</h1>
+            <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{t("subtitle")}</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--color-primary-light)]" />
+          <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">{t("loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── Error ─── */
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{t("title")}</h1>
+            <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{t("subtitle")}</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 p-8 text-center">
+          <AlertTriangle className="mx-auto h-8 w-8 text-[var(--color-error)]" />
+          <p className="mt-3 text-body-sm font-medium text-[var(--color-error)]">{t("errorLoading")}</p>
+          <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">{(error as Error)?.message}</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+          >
+            <RefreshCw className="h-4 w-4" />
+            {t("retry")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── Empty ─── */
+  if (accounts.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{t("title")}</h1>
+            <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{t("subtitle")}</p>
+          </div>
+          <a
+            href="/accounts/connect"
+            className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+          >
+            <Plus className="h-4 w-4" />
+            {t("connectAccount")}
+          </a>
+        </div>
+        <div className="rounded-xl border border-dashed border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]/50 py-16 px-6 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mx-auto mb-4">
+            <Plus className="h-7 w-7 text-[var(--color-primary-light)]" />
+          </div>
+          <p className="text-body-sm font-semibold text-[var(--color-on-dark)] mb-1">{t("noAccounts")}</p>
+          <p className="text-caption text-[var(--color-on-dark-soft)] max-w-sm mx-auto mb-6">{t("noAccountsDesc")}</p>
+          <a
+            href="/accounts/connect"
+            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+          >
+            <Plus className="h-4 w-4" />
+            {t("connectAccount")}
+          </a>
+        </div>
+
+        {/* Available Platforms */}
+        <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-5">
+          <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)] mb-4">
+            {t("availablePlatforms")}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {SUPPORTED_PLATFORMS.map((platform) => (
+              <a
+                key={platform}
+                href="/accounts/connect"
+                className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-[var(--color-ink-muted)] p-4 text-center hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
+              >
+                <Plus className="h-5 w-5 text-[var(--color-on-dark-muted)]" />
+                <span className="text-caption font-medium text-[var(--color-on-dark-soft)]">
+                  {PLATFORM_LABELS[platform]}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── Has accounts ─── */
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -77,7 +166,7 @@ export default function AccountsPage() {
         </div>
         <a
           href="/accounts/connect"
-          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow"
+          className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
         >
           <Plus className="h-4 w-4" />
           {t("connectAccount")}
@@ -113,7 +202,7 @@ export default function AccountsPage() {
         <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
           <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("totalReach")}</p>
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
-            {accounts.reduce((s, a) => s + ((a as { followers?: number }).followers || 0), 0).toLocaleString()}
+            {accounts.reduce((s, a) => s + (a.followers || 0), 0).toLocaleString()}
           </p>
         </div>
       </div>
@@ -167,14 +256,22 @@ export default function AccountsPage() {
                 {account.isActive ? t("active") : t("expired")}
               </span>
               <div className="flex items-center gap-1">
-                <button className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)]">
-                  <ExternalLink className="h-4 w-4" />
-                </button>
+                {account.username && (
+                  <a
+                    href={`https://${account.platform}.com/${account.username.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark)]"
+                    title={t("viewOnPlatform")}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
                 <button
                   onClick={() => setDeleteTarget(account.id)}
                   disabled={isDeleting}
                   className="text-[var(--color-on-dark-muted)] hover:text-[var(--color-error)] disabled:opacity-50 transition-colors"
-                  title="Delete account"
+                  title={t("delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -188,7 +285,7 @@ export default function AccountsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-body-sm font-medium text-[var(--color-on-dark)] truncate">
-                  {account.displayName}
+                  {account.displayName || account.username}
                 </p>
                 <p className="text-caption text-[var(--color-on-dark-muted)]">
                   {account.username}
@@ -203,7 +300,7 @@ export default function AccountsPage() {
             <div className="mt-3 flex items-center justify-between rounded-lg bg-[var(--color-surface-dark)] px-3 py-2">
               <span className="text-caption text-[var(--color-on-dark-soft)]">{t("followers")}</span>
               <span className="text-body-sm font-semibold text-[var(--color-on-dark)]">
-                {(account as { followers?: number }).followers?.toLocaleString() || "—"}
+                {account.followers?.toLocaleString() || "—"}
               </span>
             </div>
 
@@ -298,7 +395,7 @@ export default function AccountsPage() {
                 disabled={isDeleting}
                 className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90 disabled:opacity-50"
               >
-                {isDeleting ? "Deleting..." : t("delete")}
+                {isDeleting ? "..." : t("delete")}
               </button>
             </div>
           </div>

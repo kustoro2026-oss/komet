@@ -250,7 +250,13 @@
     "delete": "Delete",
     "reconnect": "Reconnect",
     "expiredAccounts": "accounts need reconnection",
-    "expiredBannerDesc": "These accounts have expired tokens. Reconnect them to continue posting."
+    "expiredBannerDesc": "These accounts have expired tokens. Reconnect them to continue posting.",
+    "loading": "Loading accounts…",
+    "errorLoading": "Failed to load accounts",
+    "noAccounts": "No connected accounts yet",
+    "noAccountsDesc": "Connect your first social media account to start managing posts across all platforms.",
+    "retry": "Retry",
+    "viewOnPlatform": "View on platform"
   },
   "analyticsPage": {
     "title": "Analytics",
