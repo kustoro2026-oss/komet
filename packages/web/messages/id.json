@@ -576,5 +576,228 @@
     "errorEmailRequired": "Email diperlukan.",
     "errorFailedToSendInvitation": "Gagal mengirim undangan.",
     "errorNetworkError": "Kesalahan jaringan. Silakan coba lagi."
+  },
+  "drafts": {
+    "heading": "Draft",
+    "draftCount": "{count} draft tersimpan",
+    "newPost": "Postingan Baru",
+    "searchPlaceholder": "Cari draft...",
+    "emptyTitle": "Tidak ada draft ditemukan",
+    "emptyCTA": "Buat postingan pertama Anda",
+    "view": "Lihat",
+    "continue": "Lanjutkan"
+  },
+  "bulkUpload": {
+    "heading": "Unggah Massal",
+    "subtitle": "Impor banyak postingan sekaligus via CSV",
+    "uploadTitle": "Unggah File CSV",
+    "uploadDescription": "Seret dan lepas atau klik untuk menelusuri",
+    "selectFile": "Pilih File",
+    "downloadTemplate": "Unduh Template",
+    "preview": "Pratinjau",
+    "rows": "{count} baris",
+    "valid": "{count} valid",
+    "errors": "{count} error",
+    "importing": "Mengimpor... {progress}%",
+    "importPosts": "Impor {count} Postingan",
+    "tableContent": "Konten",
+    "tableSchedule": "Jadwal",
+    "tablePlatforms": "Platform",
+    "tableStatus": "Status",
+    "validLabel": "Valid",
+    "showingRows": "Menampilkan 10 pertama dari {total} baris",
+    "contentRequired": "Konten diperlukan"
+  },
+  "postDetail": {
+    "loadingPost": "Memuat postingan...",
+    "backToPosts": "Kembali ke Postingan",
+    "postNotFound": "Postingan tidak ditemukan",
+    "postNotFoundDesc": "Postingan yang Anda cari tidak ada atau telah dihapus.",
+    "goToPosts": "Ke Postingan",
+    "untitledPost": "Postingan Tanpa Judul",
+    "created": "Dibuat",
+    "edit": "Edit",
+    "delete": "Hapus",
+    "unpublish": "Batalkan Publikasi",
+    "tabPreview": "Pratinjau",
+    "tabEdit": "Edit",
+    "tabHistory": "Riwayat",
+    "sectionContent": "Konten",
+    "sectionPlatforms": "Platform ({count})",
+    "noPlatforms": "Tidak ada platform dipilih",
+    "sectionStatus": "Status",
+    "sectionSchedule": "Jadwal",
+    "notScheduled": "Tidak dijadwalkan",
+    "sectionEngagement": "Engagement",
+    "cannotEditTitle": "Postingan tidak dapat diedit",
+    "cannotEditDesc": "Postingan yang gagal atau sebagian tidak dapat dimodifikasi.",
+    "editNotSupportedTitle": "Editing tidak didukung untuk platform ini",
+    "editNotSupportedDesc": "Postingan yang dipublikasikan hanya dapat diedit untuk: Twitter/X dan Discord. Postingan ini dipublikasikan ke:",
+    "editingPublishedTitle": "Mengedit postingan terpublikasi",
+    "editingPublishedDesc": "Perubahan akan diterapkan ke postingan yang telah dipublikasikan. Editing didukung untuk: Twitter/X dan Discord.",
+    "labelTitle": "Judul",
+    "titlePlaceholder": "Judul postingan (opsional)",
+    "labelContent": "Konten",
+    "contentPlaceholder": "Tulis konten postingan Anda di sini...",
+    "characters": "{count} karakter",
+    "labelHashtags": "Hashtag",
+    "addHashtagPlaceholder": "Tambah hashtag...",
+    "add": "Tambah",
+    "saveSuccess": "Perubahan berhasil disimpan",
+    "saveError": "Gagal menyimpan perubahan",
+    "saveChanges": "Simpan Perubahan",
+    "saveAndPublish": "Simpan & Publikasikan",
+    "historyDescription": "Riwayat versi untuk postingan ini",
+    "versionHistory": "Riwayat versi",
+    "versionHistoryDesc": "Riwayat versi dilacak secara otomatis.",
+    "deleteTitle": "Hapus Postingan",
+    "deletePublishedWarning": "Postingan yang dipublikasikan tidak dapat dihapus. Harap batalkan publikasi terlebih dahulu sebelum menghapus.",
+    "deleteConfirmation": "Apakah Anda yakin ingin menghapus postingan ini? Tindakan ini tidak dapat dibatalkan.",
+    "deleting": "Menghapus...",
+    "deletePostButton": "Hapus Postingan",
+    "unpublishTitle": "Batalkan Publikasi Postingan",
+    "unpublishDescription": "Ini akan menghapus postingan ini dari platform berikut. Status postingan akan berubah menjadi <strong>cancelled</strong>.",
+    "willUnpublishFrom": "Akan membatalkan publikasi dari:",
+    "cannotUnpublishFrom": "Tidak dapat membatalkan publikasi dari:",
+    "notSupportedForUnpublish": "tidak didukung untuk pembatalan publikasi",
+    "unpublishing": "Membatalkan publikasi...",
+    "cancel": "Batal"
+  },
+  "aiStudio": {
+    "heading": "Studio Konten AI",
+    "subtitle": "Hasilkan, tulis ulang, dan optimalkan konten Anda dengan AI",
+    "features": {
+      "generate": {
+        "label": "Buat Postingan",
+        "description": "Buat konten media sosial yang menarik dari prompt"
+      },
+      "hashtag": {
+        "label": "Generator Hashtag",
+        "description": "Dapatkan hashtag trending dan relevan untuk konten Anda"
+      },
+      "rewrite": {
+        "label": "Tulis Ulang & Sesuaikan",
+        "description": "Sesuaikan konten untuk berbagai platform dan tone"
+      },
+      "image": {
+        "label": "Ide Gambar",
+        "description": "Dapatkan saran konten visual untuk postingan Anda"
+      }
+    },
+    "headers": {
+      "generate": {
+        "title": "Buat Postingan",
+        "desc": "Beri tahu kami apa yang ingin Anda posting"
+      },
+      "hashtag": {
+        "title": "Generator Hashtag",
+        "desc": "Topik apa yang Anda butuhkan hashtag-nya?"
+      },
+      "rewrite": {
+        "title": "Tulis Ulang & Sesuaikan",
+        "desc": "Tempel konten Anda dan pilih cara menyesuaikannya"
+      },
+      "image": {
+        "title": "Ide Gambar",
+        "desc": "Deskripsikan konten Anda dan dapatkan saran visual"
+      }
+    },
+    "form": {
+      "contentToRewrite": "Konten untuk ditulis ulang",
+      "contentPlaceholder": "Tempel konten Anda yang sudah ada di sini...",
+      "tone": "Nada",
+      "length": "Panjang",
+      "platform": "Platform",
+      "platformOptional": "Platform (opsional)",
+      "sourcePlatform": "Platform Sumber",
+      "autoDetect": "Deteksi otomatis",
+      "general": "Umum"
+    },
+    "tone": {
+      "professional": "Profesional",
+      "casual": "Santai",
+      "enthusiastic": "Antusias",
+      "humorous": "Humoris",
+      "educational": "Edukatif"
+    },
+    "length": {
+      "short": "Pendek",
+      "medium": "Sedang",
+      "long": "Panjang"
+    },
+    "platform": {
+      "twitter": "Twitter / X",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook"
+    },
+    "sourcePlatform": {
+      "blog": "Blog",
+      "email": "Email",
+      "other": "Lainnya"
+    },
+    "generate": "Hasilkan",
+    "generating": "Menghasilkan...",
+    "results": {
+      "heading": "Konten yang Dihasilkan"
+    },
+    "empty": {
+      "generate": {
+        "line1": "Postingan yang dihasilkan akan muncul di sini",
+        "line2": "Masukkan prompt di atas dan klik Hasilkan"
+      },
+      "hashtag": {
+        "line1": "Hashtag yang dihasilkan akan muncul di sini",
+        "line2": "Masukkan topik di atas dan klik Hasilkan"
+      },
+      "rewrite": {
+        "line1": "Konten yang ditulis ulang akan muncul di sini",
+        "line2": "Tempel konten di atas dan klik Hasilkan"
+      },
+      "image": {
+        "line1": "Saran gambar akan muncul di sini",
+        "line2": "Deskripsikan konten Anda di atas dan klik Hasilkan"
+      }
+    },
+    "placeholder": {
+      "hashtag": "misal: pemasaran media sosial, tips produktivitas...",
+      "image": "misal: Postingan tentang fitur penjadwalan AI baru kami...",
+      "generate": "misal: Umumkan fitur produk baru kami untuk menjadwalkan postingan media sosial..."
+    }
+  },
+  "aiTemplates": {
+    "heading": "Template Prompt",
+    "subtitle": "Simpan dan kelola template prompt AI untuk digunakan kembali dengan cepat",
+    "newTemplate": "Template Baru",
+    "searchPlaceholder": "Cari template...",
+    "allCategories": "Semua Kategori",
+    "categories": {
+      "caption": "Caption",
+      "thread": "Thread",
+      "hashtag": "Hashtag",
+      "imagePrompt": "Prompt Gambar",
+      "reply": "Balasan"
+    },
+    "used": "Digunakan {count}x",
+    "noTemplatesFound": "Tidak ada template ditemukan",
+    "tooltip": {
+      "useTemplate": "Gunakan template",
+      "edit": "Edit",
+      "delete": "Hapus"
+    }
+  },
+  "aiAgent": {
+    "heading": "Agen AI",
+    "subtitle": "Asisten media sosial cerdas Anda",
+    "newChat": "Obrolan Baru",
+    "placeholder": "Tanyakan apa saja tentang konten Anda...",
+    "quickActions": "Aksi Cepat",
+    "actions": {
+      "writeThread": "Tulis thread Twitter",
+      "generateHashtags": "Hasilkan hashtag",
+      "analyzeEngagement": "Analisis engagement",
+      "planContent": "Rencanakan konten"
+    },
+    "welcomeMessage": "Hai! Saya asisten AI Komet Anda. Saya dapat membantu Anda membuat konten, menghasilkan ide, menganalisis performa, dan mengelola media sosial Anda. Apa yang ingin Anda lakukan?"
   }
 }

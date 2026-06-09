@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Search, Edit3, Trash2, Eye, Calendar } from "lucide-react";
 import type { Platform } from "@komet/shared";
@@ -22,6 +23,7 @@ const MOCK_DRAFTS: DraftItem[] = [
 ];
 
 export default function DraftsPage() {
+  const t = useTranslations("drafts");
   const [search, setSearch] = useState("");
 
   const filtered = MOCK_DRAFTS.filter((d) =>
@@ -32,16 +34,16 @@ export default function DraftsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">Drafts</h1>
+          <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{t("heading")}</h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            {filtered.length} draft{filtered.length !== 1 ? "s" : ""} saved
+            {t("draftCount", { count: filtered.length })}
           </p>
         </div>
         <a
           href="/posts/create"
           className="rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
         >
-          New Post
+          {t("newPost")}
         </a>
       </div>
 
@@ -52,7 +54,7 @@ export default function DraftsPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search drafts..."
+          placeholder={t("searchPlaceholder")}
           className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         />
       </div>
@@ -61,9 +63,9 @@ export default function DraftsPage() {
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center">
-            <p className="text-body-md text-[var(--color-on-dark-muted)]">No drafts found</p>
+            <p className="text-body-md text-[var(--color-on-dark-muted)]">{t("emptyTitle")}</p>
             <a href="/posts/create" className="mt-2 inline-block text-body-sm text-[var(--color-primary-light)] hover:underline">
-              Create your first post
+              {t("emptyCTA")}
             </a>
           </div>
         ) : (
@@ -100,13 +102,13 @@ export default function DraftsPage() {
                     href={`/posts/${draft.id}`}
                     className="flex items-center gap-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
                   >
-                    <Eye className="h-3.5 w-3.5" /> View
+                    <Eye className="h-3.5 w-3.5" /> {t("view")}
                   </a>
                   <a
                     href={`/posts/create?draft=${draft.id}`}
                     className="flex items-center gap-1 rounded-lg bg-[var(--color-primary)]/10 px-3 py-1.5 text-caption text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/20"
                   >
-                    <Edit3 className="h-3.5 w-3.5" /> Continue
+                    <Edit3 className="h-3.5 w-3.5" /> {t("continue")}
                   </a>
                   <button className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-caption text-[var(--color-error)] hover:bg-[var(--color-error)]/10">
                     <Trash2 className="h-3.5 w-3.5" />

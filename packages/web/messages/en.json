@@ -576,5 +576,228 @@
     "errorEmailRequired": "Email is required.",
     "errorFailedToSendInvitation": "Failed to send invitation.",
     "errorNetworkError": "Network error. Please try again."
+  },
+  "drafts": {
+    "heading": "Drafts",
+    "draftCount": "{count} draft{count, plural, one {} other {s}} saved",
+    "newPost": "New Post",
+    "searchPlaceholder": "Search drafts...",
+    "emptyTitle": "No drafts found",
+    "emptyCTA": "Create your first post",
+    "view": "View",
+    "continue": "Continue"
+  },
+  "bulkUpload": {
+    "heading": "Bulk Upload",
+    "subtitle": "Import multiple posts at once via CSV",
+    "uploadTitle": "Upload CSV File",
+    "uploadDescription": "Drag and drop or click to browse",
+    "selectFile": "Select File",
+    "downloadTemplate": "Download Template",
+    "preview": "Preview",
+    "rows": "{count} rows",
+    "valid": "{count} valid",
+    "errors": "{count} errors",
+    "importing": "Importing... {progress}%",
+    "importPosts": "Import {count} Posts",
+    "tableContent": "Content",
+    "tableSchedule": "Schedule",
+    "tablePlatforms": "Platforms",
+    "tableStatus": "Status",
+    "validLabel": "Valid",
+    "showingRows": "Showing first 10 of {total} rows",
+    "contentRequired": "Content is required"
+  },
+  "postDetail": {
+    "loadingPost": "Loading post...",
+    "backToPosts": "Back to Posts",
+    "postNotFound": "Post not found",
+    "postNotFoundDesc": "The post you're looking for doesn't exist or has been deleted.",
+    "goToPosts": "Go to Posts",
+    "untitledPost": "Untitled Post",
+    "created": "Created",
+    "edit": "Edit",
+    "delete": "Delete",
+    "unpublish": "Unpublish",
+    "tabPreview": "Preview",
+    "tabEdit": "Edit",
+    "tabHistory": "History",
+    "sectionContent": "Content",
+    "sectionPlatforms": "Platforms ({count})",
+    "noPlatforms": "No platforms selected",
+    "sectionStatus": "Status",
+    "sectionSchedule": "Schedule",
+    "notScheduled": "Not scheduled",
+    "sectionEngagement": "Engagement",
+    "cannotEditTitle": "Post cannot be edited",
+    "cannotEditDesc": "Failed or partial posts cannot be modified.",
+    "editNotSupportedTitle": "Editing not supported for this platform",
+    "editNotSupportedDesc": "Published posts can only be edited for: Twitter/X and Discord. This post was published to:",
+    "editingPublishedTitle": "Editing published post",
+    "editingPublishedDesc": "Changes will be applied to the published post. Editing is supported for: Twitter/X and Discord.",
+    "labelTitle": "Title",
+    "titlePlaceholder": "Post title (optional)",
+    "labelContent": "Content",
+    "contentPlaceholder": "Write your post content here...",
+    "characters": "{count} characters",
+    "labelHashtags": "Hashtags",
+    "addHashtagPlaceholder": "Add hashtag...",
+    "add": "Add",
+    "saveSuccess": "Changes saved successfully",
+    "saveError": "Failed to save changes",
+    "saveChanges": "Save Changes",
+    "saveAndPublish": "Save & Publish",
+    "historyDescription": "Version history for this post",
+    "versionHistory": "Version history",
+    "versionHistoryDesc": "Version history tracked automatically.",
+    "deleteTitle": "Delete Post",
+    "deletePublishedWarning": "Published posts cannot be deleted. Please unpublish the post first before deleting.",
+    "deleteConfirmation": "Are you sure you want to delete this post? This action cannot be undone.",
+    "deleting": "Deleting...",
+    "deletePostButton": "Delete Post",
+    "unpublishTitle": "Unpublish Post",
+    "unpublishDescription": "This will delete this post from the following platforms. The post status will change to <strong>cancelled</strong>.",
+    "willUnpublishFrom": "Will unpublish from:",
+    "cannotUnpublishFrom": "Cannot unpublish from:",
+    "notSupportedForUnpublish": "not supported for unpublish",
+    "unpublishing": "Unpublishing...",
+    "cancel": "Cancel"
+  },
+  "aiStudio": {
+    "heading": "AI Content Studio",
+    "subtitle": "Generate, rewrite, and optimize your content with AI",
+    "features": {
+      "generate": {
+        "label": "Generate Post",
+        "description": "Create engaging social media content from a prompt"
+      },
+      "hashtag": {
+        "label": "Hashtag Generator",
+        "description": "Get trending and relevant hashtags for your content"
+      },
+      "rewrite": {
+        "label": "Rewrite & Adapt",
+        "description": "Adapt content for different platforms and tones"
+      },
+      "image": {
+        "label": "Image Ideas",
+        "description": "Get visual content suggestions for your posts"
+      }
+    },
+    "headers": {
+      "generate": {
+        "title": "Generate Post",
+        "desc": "Tell us what you want to post about"
+      },
+      "hashtag": {
+        "title": "Hashtag Generator",
+        "desc": "What topic do you need hashtags for?"
+      },
+      "rewrite": {
+        "title": "Rewrite & Adapt",
+        "desc": "Paste your content and choose how to adapt it"
+      },
+      "image": {
+        "title": "Image Ideas",
+        "desc": "Describe your content and get visual suggestions"
+      }
+    },
+    "form": {
+      "contentToRewrite": "Content to rewrite",
+      "contentPlaceholder": "Paste your existing content here...",
+      "tone": "Tone",
+      "length": "Length",
+      "platform": "Platform",
+      "platformOptional": "Platform (optional)",
+      "sourcePlatform": "Source Platform",
+      "autoDetect": "Auto-detect",
+      "general": "General"
+    },
+    "tone": {
+      "professional": "Professional",
+      "casual": "Casual",
+      "enthusiastic": "Enthusiastic",
+      "humorous": "Humorous",
+      "educational": "Educational"
+    },
+    "length": {
+      "short": "Short",
+      "medium": "Medium",
+      "long": "Long"
+    },
+    "platform": {
+      "twitter": "Twitter / X",
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook"
+    },
+    "sourcePlatform": {
+      "blog": "Blog",
+      "email": "Email",
+      "other": "Other"
+    },
+    "generate": "Generate",
+    "generating": "Generating...",
+    "results": {
+      "heading": "Generated Content"
+    },
+    "empty": {
+      "generate": {
+        "line1": "Your generated posts will appear here",
+        "line2": "Enter a prompt above and click Generate"
+      },
+      "hashtag": {
+        "line1": "Your generated hashtags will appear here",
+        "line2": "Enter a topic above and click Generate"
+      },
+      "rewrite": {
+        "line1": "Your rewritten content will appear here",
+        "line2": "Paste content above and click Generate"
+      },
+      "image": {
+        "line1": "Your image suggestions will appear here",
+        "line2": "Describe your content above and click Generate"
+      }
+    },
+    "placeholder": {
+      "hashtag": "e.g., social media marketing, productivity tips...",
+      "image": "e.g., A post about our new AI scheduling feature...",
+      "generate": "e.g., Announce our new product feature for scheduling social media posts..."
+    }
+  },
+  "aiTemplates": {
+    "heading": "Prompt Templates",
+    "subtitle": "Save and manage AI prompt templates for quick reuse",
+    "newTemplate": "New Template",
+    "searchPlaceholder": "Search templates...",
+    "allCategories": "All Categories",
+    "categories": {
+      "caption": "Caption",
+      "thread": "Thread",
+      "hashtag": "Hashtag",
+      "imagePrompt": "Image Prompt",
+      "reply": "Reply"
+    },
+    "used": "Used {count}x",
+    "noTemplatesFound": "No templates found",
+    "tooltip": {
+      "useTemplate": "Use template",
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  },
+  "aiAgent": {
+    "heading": "AI Agent",
+    "subtitle": "Your intelligent social media assistant",
+    "newChat": "New Chat",
+    "placeholder": "Ask me anything about your content...",
+    "quickActions": "Quick Actions",
+    "actions": {
+      "writeThread": "Write a Twitter thread",
+      "generateHashtags": "Generate hashtags",
+      "analyzeEngagement": "Analyze engagement",
+      "planContent": "Plan content"
+    },
+    "welcomeMessage": "Hi! I'm your Komet AI assistant. I can help you create content, generate ideas, analyze performance, and manage your social media. What would you like to do?"
   }
 }

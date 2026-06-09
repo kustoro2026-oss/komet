@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Send,
   Bot,
@@ -21,21 +22,23 @@ interface Message {
   timestamp: Date;
 }
 
-const SUGGESTED_ACTIONS = [
-  { icon: FileText, label: "Write a Twitter thread", prompt: "Write an engaging Twitter thread about social media marketing tips" },
-  { icon: Zap, label: "Generate hashtags", prompt: "Generate 10 hashtags for a post about productivity tools" },
-  { icon: BarChart3, label: "Analyze engagement", prompt: "How can I improve my social media engagement rate?" },
-  { icon: Calendar, label: "Plan content", prompt: "Help me plan a week of content for Instagram" },
-];
-
-const WELCOME_MESSAGE: Message = {
-  id: "welcome",
-  role: "assistant",
-  content: "Hi! I'm your Komet AI assistant. I can help you create content, generate ideas, analyze performance, and manage your social media. What would you like to do?",
-  timestamp: new Date(),
-};
-
 export default function AiAgentPage() {
+  const t = useTranslations("aiAgent");
+
+  const WELCOME_MESSAGE: Message = {
+    id: "welcome",
+    role: "assistant",
+    content: t("welcomeMessage"),
+    timestamp: new Date(),
+  };
+
+  const SUGGESTED_ACTIONS = [
+    { icon: FileText, label: t("actions.writeThread"), prompt: "Write an engaging Twitter thread about social media marketing tips" },
+    { icon: Zap, label: t("actions.generateHashtags"), prompt: "Generate 10 hashtags for a post about productivity tools" },
+    { icon: BarChart3, label: t("actions.analyzeEngagement"), prompt: "How can I improve my social media engagement rate?" },
+    { icon: Calendar, label: t("actions.planContent"), prompt: "Help me plan a week of content for Instagram" },
+  ];
+
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -125,10 +128,10 @@ export default function AiAgentPage() {
           </div>
           <div>
             <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-              AI Agent
+              {t("heading")}
             </h1>
             <p className="text-body-sm text-[var(--color-on-dark-soft)]">
-              Your intelligent social media assistant
+              {t("subtitle")}
             </p>
           </div>
         </div>
@@ -137,7 +140,7 @@ export default function AiAgentPage() {
           className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-caption text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          New Chat
+          {t("newChat")}
         </button>
       </div>
 
@@ -213,7 +216,7 @@ export default function AiAgentPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me anything about your content..."
+                placeholder={t("placeholder")}
                 rows={1}
                 className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
               />
@@ -234,7 +237,7 @@ export default function AiAgentPage() {
             <div className="flex items-center gap-2 mb-4">
               <KometLogo size="sm" />
               <h3 className="font-display text-heading-xs font-semibold text-[var(--color-on-dark)]">
-                Quick Actions
+                {t("quickActions")}
               </h3>
             </div>
             <div className="space-y-2">

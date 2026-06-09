@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import {
   ArrowLeft, Calendar, Clock, Edit3, Eye, History, Save, Send, Trash2,
@@ -24,6 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
 type Tab = "preview" | "edit" | "history";
 
 export default function PostDetailPage() {
+  const t = useTranslations("postDetail");
   const params = useParams();
   const router = useRouter();
   const postId = params.postId as string;
@@ -63,9 +65,9 @@ export default function PostDetailPage() {
   }, [post]);
 
   const tabs: { id: Tab; label: string; icon: typeof Eye }[] = [
-    { id: "preview", label: "Preview", icon: Eye },
-    { id: "edit", label: "Edit", icon: Edit3 },
-    { id: "history", label: "History", icon: History },
+    { id: "preview", label: t("tabPreview"), icon: Eye },
+    { id: "edit", label: t("tabEdit"), icon: Edit3 },
+    { id: "history", label: t("tabHistory"), icon: History },
   ];
 
   // Delete handler
@@ -90,7 +92,6 @@ export default function PostDetailPage() {
     if (!post) return;
     setIsUnpublishing(true);
     try {
-      // Unpublish from each supported platform (Instagram/TikTok/Snapchat not supported)
       const platforms = unpublishablePlatforms;
       for (const platform of platforms) {
         await unpublishPostMutation.mutateAsync({ postId, platform });
@@ -136,7 +137,7 @@ export default function PostDetailPage() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Failed to save changes");
+      setSaveError(err instanceof Error ? err.message : t("saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -161,7 +162,7 @@ export default function PostDetailPage() {
       <div className="flex items-center justify-center py-32">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--color-primary-light)]" />
-          <p className="mt-4 text-body-sm text-[var(--color-on-dark-muted)]">Loading post...</p>
+          <p className="mt-4 text-body-sm text-[var(--color-on-dark-muted)]">{t("loadingPost")}</p>
         </div>
       </div>
     );
@@ -172,19 +173,19 @@ export default function PostDetailPage() {
     return (
       <div className="mx-auto max-w-4xl space-y-6">
         <a href="/posts" className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
-          <ArrowLeft className="h-4 w-4" /> Back to Posts
+          <ArrowLeft className="h-4 w-4" /> {t("backToPosts")}
         </a>
         <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-24">
           <AlertTriangle className="h-12 w-12 text-red-400 mb-4" />
-          <p className="text-body-md text-[var(--color-on-dark)] font-medium">Post not found</p>
+          <p className="text-body-md text-[var(--color-on-dark)] font-medium">{t("postNotFound")}</p>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            {error instanceof Error ? error.message : "The post you're looking for doesn't exist or has been deleted."}
+            {error instanceof Error ? error.message : t("postNotFoundDesc")}
           </p>
           <button
             onClick={() => router.push("/posts")}
             className="mt-6 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
           >
-            Go to Posts
+            {t("goToPosts")}
           </button>
         </div>
       </div>
@@ -195,7 +196,6 @@ export default function PostDetailPage() {
   const EDITABLE_PLATFORMS = ["twitter", "discord"];
 
   // Platforms that DO NOT support unpublishing published posts
-  // API docs: "Not supported on Instagram, TikTok, or Snapchat"
   const UNPUBLISH_BLOCKED_PLATFORMS = ["instagram", "tiktok", "snapchat"];
 
   // Derive platform details from post data
@@ -215,7 +215,7 @@ export default function PostDetailPage() {
   // Can the post be deleted? Only draft and scheduled posts can be deleted via API
   const canDelete = post.status === "draft" || post.status === "scheduled";
 
-  // Determine if this is a published post (needs the edit endpoint instead of update)
+  // Determine if this is a published post
   const isPublished = post.status === "published";
 
   // Does the published post have any platforms that support unpublishing?
@@ -245,12 +245,11 @@ export default function PostDetailPage() {
                 <AlertTriangle className="h-5 w-5 text-red-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">Delete Post</h3>
+                <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("deleteTitle")}</h3>
                 <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
                   {isPublished
-                    ? "Published posts cannot be deleted. Please unpublish the post first before deleting."
-                    : "Are you sure you want to delete this post? This action cannot be undone."
-                  }
+                    ? t("deletePublishedWarning")
+                    : t("deleteConfirmation")}
                 </p>
                 {post.title && (
                   <p className="mt-2 text-body-sm text-[var(--color-on-dark)] font-medium">
@@ -265,7 +264,7 @@ export default function PostDetailPage() {
                 disabled={isDeleting}
                 className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 onClick={handleDelete}
@@ -274,10 +273,10 @@ export default function PostDetailPage() {
               >
                 {isDeleting ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Deleting...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {t("deleting")}
                   </span>
                 ) : (
-                  "Delete Post"
+                  t("deletePostButton")
                 )}
               </button>
             </div>
@@ -295,13 +294,13 @@ export default function PostDetailPage() {
                 <MinusCircle className="h-5 w-5 text-amber-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">Unpublish Post</h3>
-                <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                  This will delete this post from the following platforms. The post status will change to <strong>cancelled</strong>.
-                </p>
+                <h3 className="text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("unpublishTitle")}</h3>
+                <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]"
+                  dangerouslySetInnerHTML={{ __html: t("unpublishDescription") }}
+                />
                 {unpublishablePlatforms.length > 0 && (
                   <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-                    <p className="text-body-sm text-amber-300 font-medium">Will unpublish from:</p>
+                    <p className="text-body-sm text-amber-300 font-medium">{t("willUnpublishFrom")}</p>
                     <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
                       {unpublishablePlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")}
                     </p>
@@ -309,9 +308,9 @@ export default function PostDetailPage() {
                 )}
                 {blockedUnpublishPlatforms.length > 0 && (
                   <div className="mt-2 rounded-lg border border-neutral-500/20 bg-neutral-500/5 p-3">
-                    <p className="text-body-sm text-neutral-300 font-medium">Cannot unpublish from:</p>
+                    <p className="text-body-sm text-neutral-300 font-medium">{t("cannotUnpublishFrom")}</p>
                     <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                      {blockedUnpublishPlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")} — not supported for unpublish
+                      {blockedUnpublishPlatforms.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(", ")} — {t("notSupportedForUnpublish")}
                     </p>
                   </div>
                 )}
@@ -328,7 +327,7 @@ export default function PostDetailPage() {
                 disabled={isUnpublishing}
                 className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 onClick={handleUnpublish}
@@ -337,10 +336,10 @@ export default function PostDetailPage() {
               >
                 {isUnpublishing ? (
                   <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Unpublishing...
+                    <Loader2 className="h-4 w-4 animate-spin" /> {t("unpublishing")}
                   </span>
                 ) : (
-                  "Unpublish"
+                  t("unpublish")
                 )}
               </button>
             </div>
@@ -354,7 +353,7 @@ export default function PostDetailPage() {
         className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Posts
+        {t("backToPosts")}
       </a>
 
       {/* Header */}
@@ -362,14 +361,14 @@ export default function PostDetailPage() {
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-              {post.title || "Untitled Post"}
+              {post.title || t("untitledPost")}
             </h1>
             <span className={`rounded-full px-2.5 py-0.5 text-caption font-medium ${STATUS_COLORS[post.status] || STATUS_COLORS.draft}`}>
               {post.status}
             </span>
           </div>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Created {new Date(post.createdAt).toLocaleDateString("en-US", {
+            {t("created")} {new Date(post.createdAt).toLocaleDateString("en-US", {
               year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
             })}
           </p>
@@ -380,7 +379,7 @@ export default function PostDetailPage() {
             className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
           >
             <Edit3 className="h-4 w-4" />
-            Edit
+            {t("edit")}
           </button>
           {canDelete && (
             <button
@@ -388,7 +387,7 @@ export default function PostDetailPage() {
               className="flex items-center gap-2 rounded-lg border border-red-500/20 px-3 py-2 text-button-sm text-red-400 hover:bg-red-500/10"
             >
               <Trash2 className="h-4 w-4" />
-              Delete
+              {t("delete")}
             </button>
           )}
           {isPublished && hasUnpublishablePlatforms && (
@@ -397,7 +396,7 @@ export default function PostDetailPage() {
               className="flex items-center gap-2 rounded-lg border border-amber-500/20 px-3 py-2 text-button-sm text-amber-400 hover:bg-amber-500/10"
             >
               <MinusCircle className="h-4 w-4" />
-              Unpublish
+              {t("unpublish")}
             </button>
           )}
         </div>
@@ -428,7 +427,7 @@ export default function PostDetailPage() {
           <div className="space-y-6">
             {/* Content */}
             <div>
-              <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] mb-2">Content</p>
+              <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] mb-2">{t("sectionContent")}</p>
               <div className="rounded-lg bg-[var(--color-surface-dark)] p-4">
                 {post.title && (
                   <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)] mb-2">
@@ -452,9 +451,11 @@ export default function PostDetailPage() {
 
             {/* Platforms */}
             <div>
-              <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] mb-3">Platforms ({platformAccounts.length})</p>
+              <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] mb-3">
+                {t("sectionPlatforms", { count: platformAccounts.length })}
+              </p>
               {platformAccounts.length === 0 ? (
-                <p className="text-body-sm text-[var(--color-on-dark-muted)]">No platforms selected</p>
+                <p className="text-body-sm text-[var(--color-on-dark-muted)]">{t("noPlatforms")}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {platformAccounts.map((p) => {
@@ -478,7 +479,7 @@ export default function PostDetailPage() {
             {/* Details grid */}
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
               <div className="rounded-lg bg-[var(--color-surface-dark)] p-3">
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Status</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("sectionStatus")}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)]">
                   <span className={`h-2 w-2 rounded-full ${
                     post.status === "published" ? "bg-emerald-400" :
@@ -490,14 +491,14 @@ export default function PostDetailPage() {
                 </p>
               </div>
               <div className="rounded-lg bg-[var(--color-surface-dark)] p-3">
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Created</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("created")}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-body-sm text-[var(--color-on-dark)]">
                   <Calendar className="h-3.5 w-3.5 text-[var(--color-on-dark-muted)]" />
                   {new Date(post.createdAt).toLocaleDateString()}
                 </p>
               </div>
               <div className="rounded-lg bg-[var(--color-surface-dark)] p-3">
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Schedule</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("sectionSchedule")}</p>
                 {post.scheduledFor ? (
                   <p className="mt-1 flex items-center gap-1.5 text-body-sm text-[var(--color-on-dark)]">
                     <Clock className="h-3.5 w-3.5 text-[var(--color-on-dark-muted)]" />
@@ -506,11 +507,11 @@ export default function PostDetailPage() {
                     })}
                   </p>
                 ) : (
-                  <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">Not scheduled</p>
+                  <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">{t("notScheduled")}</p>
                 )}
               </div>
               <div className="rounded-lg bg-[var(--color-surface-dark)] p-3">
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Engagement</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("sectionEngagement")}</p>
                 <p className="mt-1 text-body-sm font-medium text-[var(--color-on-dark)]">
                   {post.engagement?.toLocaleString() || "—"}
                 </p>
@@ -527,9 +528,9 @@ export default function PostDetailPage() {
               <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
                 <div>
-                  <p className="text-body-sm font-medium text-amber-400">Post cannot be edited</p>
+                  <p className="text-body-sm font-medium text-amber-400">{t("cannotEditTitle")}</p>
                   <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-                    Failed or partial posts cannot be modified.
+                    {t("cannotEditDesc")}
                   </p>
                 </div>
               </div>
@@ -538,9 +539,9 @@ export default function PostDetailPage() {
               <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
                 <div>
-                  <p className="text-body-sm font-medium text-amber-400">Editing not supported for this platform</p>
+                  <p className="text-body-sm font-medium text-amber-400">{t("editNotSupportedTitle")}</p>
                   <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-                    Published posts can only be edited for: Twitter/X and Discord. This post was published to:
+                    {t("editNotSupportedDesc")}
                     {platformAccounts.length === 0 ? " none" : platformAccounts.map((p: string) => ` ${p}`)}
                   </p>
                 </div>
@@ -550,9 +551,9 @@ export default function PostDetailPage() {
               <div className="flex items-start gap-3 rounded-lg border border-sky-500/20 bg-sky-500/10 px-4 py-3">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-sky-400" />
                 <div>
-                  <p className="text-body-sm font-medium text-sky-400">Editing published post</p>
+                  <p className="text-body-sm font-medium text-sky-400">{t("editingPublishedTitle")}</p>
                   <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-                    Changes will be applied to the published post. Editing is supported for: Twitter/X and Discord.
+                    {t("editingPublishedDesc")}
                   </p>
                 </div>
               </div>
@@ -560,12 +561,12 @@ export default function PostDetailPage() {
 
             {/* Title */}
             <div>
-              <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">Title</label>
+              <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">{t("labelTitle")}</label>
               <input
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Post title (optional)"
+                placeholder={t("titlePlaceholder")}
                 disabled={!canEdit}
                 className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
               />
@@ -573,17 +574,17 @@ export default function PostDetailPage() {
 
             {/* Content */}
             <div>
-              <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">Content</label>
+              <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">{t("labelContent")}</label>
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 rows={8}
                 disabled={!canEdit}
-                placeholder="Write your post content here..."
+                placeholder={t("contentPlaceholder")}
                 className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-y min-h-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] text-right">
-                {editContent.length} characters
+                {t("characters", { count: editContent.length })}
               </p>
             </div>
 
@@ -591,7 +592,7 @@ export default function PostDetailPage() {
             <div>
               <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
                 <Hash className="inline h-3.5 w-3.5 mr-1" />
-                Hashtags
+                {t("labelHashtags")}
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {editHashtags.map((tag) => (
@@ -615,7 +616,7 @@ export default function PostDetailPage() {
                     value={editHashtagInput}
                     onChange={(e) => setEditHashtagInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addHashtag())}
-                    placeholder="Add hashtag..."
+                    placeholder={t("addHashtagPlaceholder")}
                     className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                   />
                   <button
@@ -623,7 +624,7 @@ export default function PostDetailPage() {
                     disabled={!editHashtagInput.trim()}
                     className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
                   >
-                    Add
+                    {t("add")}
                   </button>
                 </div>
               )}
@@ -633,7 +634,7 @@ export default function PostDetailPage() {
             {saveSuccess && (
               <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5">
                 <Check className="h-4 w-4 text-emerald-400" />
-                <span className="text-body-sm text-emerald-400">Changes saved successfully</span>
+                <span className="text-body-sm text-emerald-400">{t("saveSuccess")}</span>
               </div>
             )}
             {saveError && (
@@ -656,7 +657,7 @@ export default function PostDetailPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  Save Changes
+                  {t("saveChanges")}
                 </button>
                 {post.status === "draft" && (
                   <button
@@ -669,7 +670,7 @@ export default function PostDetailPage() {
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
-                    Save &amp; Publish
+                    {t("saveAndPublish")}
                   </button>
                 )}
               </div>
@@ -680,16 +681,16 @@ export default function PostDetailPage() {
         {/* ===== History Tab ===== */}
         {activeTab === "history" && (
           <div className="space-y-4">
-            <p className="text-body-sm text-[var(--color-on-dark-soft)]">Version history for this post</p>
+            <p className="text-body-sm text-[var(--color-on-dark-soft)]">{t("historyDescription")}</p>
 
             <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-6 text-center">
               <History className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)] mb-3" />
-              <p className="text-body-sm text-[var(--color-on-dark)] font-medium">Version history</p>
+              <p className="text-body-sm text-[var(--color-on-dark)] font-medium">{t("versionHistory")}</p>
               <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">
-                Version history tracked automatically.
+                {t("versionHistoryDesc")}
               </p>
               <p className="mt-4 text-caption text-[var(--color-on-dark-muted)]">
-                Created: {new Date(post.createdAt).toLocaleString("en-US", {
+                {t("created")}: {new Date(post.createdAt).toLocaleString("en-US", {
                   year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
                 })}
               </p>

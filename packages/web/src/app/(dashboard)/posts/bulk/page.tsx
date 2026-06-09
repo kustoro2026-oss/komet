@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Upload, Download, AlertTriangle, Check, X, Loader2 } from "lucide-react";
 
 interface CsvRow {
@@ -15,6 +16,7 @@ interface CsvRow {
 }
 
 export default function BulkUploadPage() {
+  const t = useTranslations("bulkUpload");
   const [rows, setRows] = useState<CsvRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -29,7 +31,7 @@ export default function BulkUploadPage() {
       const parsed: CsvRow[] = lines.slice(1).map((line) => {
         const cols = line.split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
         const errors: string[] = [];
-        if (!cols[0]) errors.push("Content is required");
+        if (!cols[0]) errors.push(t("contentRequired"));
         return {
           content: cols[0] || "",
           scheduledFor: cols[1] || "",
@@ -78,15 +80,15 @@ export default function BulkUploadPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">Bulk Upload</h1>
-        <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">Import multiple posts at once via CSV</p>
+        <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">{t("heading")}</h1>
+        <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{t("subtitle")}</p>
       </div>
 
       {/* Upload Zone */}
       <div className="rounded-xl border-2 border-dashed border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center hover:border-[var(--color-primary)]/50 transition-colors">
         <Upload className="mx-auto h-12 w-12 text-[var(--color-on-dark-muted)]" />
-        <h3 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">Upload CSV File</h3>
-        <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">Drag and drop or click to browse</p>
+        <h3 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("uploadTitle")}</h3>
+        <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{t("uploadDescription")}</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -99,13 +101,13 @@ export default function BulkUploadPage() {
             onClick={() => fileInputRef.current?.click()}
             className="rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
           >
-            Select File
+            {t("selectFile")}
           </button>
           <button
             onClick={downloadTemplate}
             className="flex items-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
           >
-            <Download className="h-4 w-4" /> Download Template
+            <Download className="h-4 w-4" /> {t("downloadTemplate")}
           </button>
         </div>
       </div>
@@ -115,16 +117,16 @@ export default function BulkUploadPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">Preview</h2>
+              <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">{t("preview")}</h2>
               <span className="rounded-full bg-[var(--color-surface-dark-raised)] px-2.5 py-0.5 text-caption text-[var(--color-on-dark-soft)]">
-                {rows.length} rows
+                {t("rows", { count: rows.length })}
               </span>
               <span className="flex items-center gap-1 text-caption text-[var(--color-success)]">
-                <Check className="h-3 w-3" /> {validCount} valid
+                <Check className="h-3 w-3" /> {t("valid", { count: validCount })}
               </span>
               {validCount < rows.length && (
                 <span className="flex items-center gap-1 text-caption text-[var(--color-error)]">
-                  <X className="h-3 w-3" /> {rows.length - validCount} errors
+                  <X className="h-3 w-3" /> {t("errors", { count: rows.length - validCount })}
                 </span>
               )}
             </div>
@@ -134,7 +136,9 @@ export default function BulkUploadPage() {
               className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
             >
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {importing ? `Importing... ${progress}%` : `Import ${validCount} Posts`}
+              {importing
+                ? t("importing", { progress })
+                : t("importPosts", { count: validCount })}
             </button>
           </div>
 
@@ -152,10 +156,10 @@ export default function BulkUploadPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-raised)]">
-                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">Content</th>
-                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">Schedule</th>
-                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">Platforms</th>
-                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">Status</th>
+                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableContent")}</th>
+                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableSchedule")}</th>
+                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tablePlatforms")}</th>
+                  <th className="px-4 py-3 text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableStatus")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -167,7 +171,7 @@ export default function BulkUploadPage() {
                     <td className="px-4 py-3">
                       {row.valid ? (
                         <span className="flex items-center gap-1 text-caption text-[var(--color-success)]">
-                          <Check className="h-3 w-3" /> Valid
+                          <Check className="h-3 w-3" /> {t("validLabel")}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-caption text-[var(--color-error)]" title={row.errors.join(", ")}>
@@ -181,7 +185,9 @@ export default function BulkUploadPage() {
             </table>
             {rows.length > 10 && (
               <div className="border-t border-[var(--color-ink-muted)] px-4 py-3">
-                <p className="text-caption text-[var(--color-on-dark-muted)]">Showing first 10 of {rows.length} rows</p>
+                <p className="text-caption text-[var(--color-on-dark-muted)]">
+                  {t("showingRows", { total: rows.length })}
+                </p>
               </div>
             )}
           </div>

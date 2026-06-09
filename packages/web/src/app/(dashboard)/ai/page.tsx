@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Zap,
   FileText,
@@ -29,37 +30,6 @@ interface FeatureConfig {
   gradient: string;
 }
 
-const AI_FEATURES: FeatureConfig[] = [
-  {
-    mode: "generate",
-    icon: FileText,
-    label: "Generate Post",
-    description: "Create engaging social media content from a prompt",
-    gradient: "from-[var(--color-primary)] to-[var(--color-accent)]",
-  },
-  {
-    mode: "hashtag",
-    icon: Hash,
-    label: "Hashtag Generator",
-    description: "Get trending and relevant hashtags for your content",
-    gradient: "from-[var(--color-accent)] to-[var(--color-primary)]",
-  },
-  {
-    mode: "rewrite",
-    icon: MessageSquare,
-    label: "Rewrite & Adapt",
-    description: "Adapt content for different platforms and tones",
-    gradient: "from-[var(--color-success)] to-[var(--color-primary)]",
-  },
-  {
-    mode: "image",
-    icon: ImageIcon,
-    label: "Image Ideas",
-    description: "Get visual content suggestions for your posts",
-    gradient: "from-[var(--color-warning)] to-[var(--color-accent)]",
-  },
-];
-
 interface GeneratedResult {
   id: string;
   content: string;
@@ -68,49 +38,8 @@ interface GeneratedResult {
   type?: "text" | "image";
 }
 
-const FEATURE_HEADERS: Record<FeatureMode, { title: string; icon: React.ComponentType<{ className?: string }>; desc: string }> = {
-  generate: {
-    title: "Generate Post",
-    icon: Zap,
-    desc: "Tell us what you want to post about",
-  },
-  hashtag: {
-    title: "Hashtag Generator",
-    icon: Tags,
-    desc: "What topic do you need hashtags for?",
-  },
-  rewrite: {
-    title: "Rewrite & Adapt",
-    icon: PencilLine,
-    desc: "Paste your content and choose how to adapt it",
-  },
-  image: {
-    title: "Image Ideas",
-    icon: Palette,
-    desc: "Describe your content and get visual suggestions",
-  },
-};
-
-const EMPTY_MESSAGES: Record<FeatureMode, { line1: string; line2: string }> = {
-  generate: {
-    line1: "Your generated posts will appear here",
-    line2: "Enter a prompt above and click Generate",
-  },
-  hashtag: {
-    line1: "Your generated hashtags will appear here",
-    line2: "Enter a topic above and click Generate",
-  },
-  rewrite: {
-    line1: "Your rewritten content will appear here",
-    line2: "Paste content above and click Generate",
-  },
-  image: {
-    line1: "Your image suggestions will appear here",
-    line2: "Describe your content above and click Generate",
-  },
-};
-
 export default function AIPage() {
+  const t = useTranslations("aiStudio");
   const router = useRouter();
   const setComposerState = usePostStore((s) => s.setComposerState);
   const [mode, setMode] = useState<FeatureMode>("generate");
@@ -124,6 +53,79 @@ export default function AIPage() {
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<GeneratedResult[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const AI_FEATURES: FeatureConfig[] = [
+    {
+      mode: "generate",
+      icon: FileText,
+      label: t("features.generate.label"),
+      description: t("features.generate.description"),
+      gradient: "from-[var(--color-primary)] to-[var(--color-accent)]",
+    },
+    {
+      mode: "hashtag",
+      icon: Hash,
+      label: t("features.hashtag.label"),
+      description: t("features.hashtag.description"),
+      gradient: "from-[var(--color-accent)] to-[var(--color-primary)]",
+    },
+    {
+      mode: "rewrite",
+      icon: MessageSquare,
+      label: t("features.rewrite.label"),
+      description: t("features.rewrite.description"),
+      gradient: "from-[var(--color-success)] to-[var(--color-primary)]",
+    },
+    {
+      mode: "image",
+      icon: ImageIcon,
+      label: t("features.image.label"),
+      description: t("features.image.description"),
+      gradient: "from-[var(--color-warning)] to-[var(--color-accent)]",
+    },
+  ];
+
+  const FEATURE_HEADERS: Record<FeatureMode, { title: string; icon: React.ComponentType<{ className?: string }>; desc: string }> = {
+    generate: {
+      title: t("headers.generate.title"),
+      icon: Zap,
+      desc: t("headers.generate.desc"),
+    },
+    hashtag: {
+      title: t("headers.hashtag.title"),
+      icon: Tags,
+      desc: t("headers.hashtag.desc"),
+    },
+    rewrite: {
+      title: t("headers.rewrite.title"),
+      icon: PencilLine,
+      desc: t("headers.rewrite.desc"),
+    },
+    image: {
+      title: t("headers.image.title"),
+      icon: Palette,
+      desc: t("headers.image.desc"),
+    },
+  };
+
+  const EMPTY_MESSAGES: Record<FeatureMode, { line1: string; line2: string }> = {
+    generate: {
+      line1: t("empty.generate.line1"),
+      line2: t("empty.generate.line2"),
+    },
+    hashtag: {
+      line1: t("empty.hashtag.line1"),
+      line2: t("empty.hashtag.line2"),
+    },
+    rewrite: {
+      line1: t("empty.rewrite.line1"),
+      line2: t("empty.rewrite.line2"),
+    },
+    image: {
+      line1: t("empty.image.line1"),
+      line2: t("empty.image.line2"),
+    },
+  };
 
   const buildPrompt = (): string => {
     switch (mode) {
@@ -256,15 +258,46 @@ export default function AIPage() {
   const emptyMsg = EMPTY_MESSAGES[mode];
   const HeaderIcon = header.icon;
 
+  const TONE_OPTIONS: { value: string; label: string }[] = [
+    { value: "professional", label: t("tone.professional") },
+    { value: "casual", label: t("tone.casual") },
+    { value: "enthusiastic", label: t("tone.enthusiastic") },
+    { value: "humorous", label: t("tone.humorous") },
+    { value: "educational", label: t("tone.educational") },
+  ];
+
+  const LENGTH_OPTIONS: { value: string; label: string }[] = [
+    { value: "short", label: t("length.short") },
+    { value: "medium", label: t("length.medium") },
+    { value: "long", label: t("length.long") },
+  ];
+
+  const PLATFORM_OPTIONS: { value: string; label: string }[] = [
+    { value: "twitter", label: t("platform.twitter") },
+    { value: "instagram", label: t("platform.instagram") },
+    { value: "linkedin", label: t("platform.linkedin") },
+    { value: "facebook", label: t("platform.facebook") },
+  ];
+
+  const SOURCE_PLATFORM_OPTIONS: { value: string; label: string }[] = [
+    { value: "twitter", label: t("platform.twitter") },
+    { value: "instagram", label: t("platform.instagram") },
+    { value: "linkedin", label: t("platform.linkedin") },
+    { value: "facebook", label: t("platform.facebook") },
+    { value: "blog", label: t("sourcePlatform.blog") },
+    { value: "email", label: t("sourcePlatform.email") },
+    { value: "other", label: t("sourcePlatform.other") },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-          AI Content Studio
+          {t("heading")}
         </h1>
         <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-          Generate, rewrite, and optimize your content with AI
+          {t("subtitle")}
         </p>
       </div>
 
@@ -317,12 +350,12 @@ export default function AIPage() {
         {mode === "rewrite" ? (
           <div>
             <label className="block text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-              Content to rewrite
+              {t("form.contentToRewrite")}
             </label>
             <textarea
               value={rewriteText}
               onChange={(e) => setRewriteText(e.target.value)}
-              placeholder="Paste your existing content here..."
+              placeholder={t("form.contentPlaceholder")}
               rows={4}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-3 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
             />
@@ -337,10 +370,10 @@ export default function AIPage() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={
                 mode === "hashtag"
-                  ? "e.g., social media marketing, productivity tips..."
+                  ? t("placeholder.hashtag")
                   : mode === "image"
-                    ? "e.g., A post about our new AI scheduling feature..."
-                    : 'e.g., Announce our new product feature for scheduling social media posts...'
+                    ? t("placeholder.image")
+                    : t("placeholder.generate")
               }
               rows={4}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-3 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none"
@@ -353,80 +386,72 @@ export default function AIPage() {
           {(mode === "generate" || mode === "rewrite") && (
             <>
               <div>
-                <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Tone</label>
+                <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">{t("form.tone")}</label>
                 <select
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
                   className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
-                  <option value="professional">Professional</option>
-                  <option value="casual">Casual</option>
-                  <option value="enthusiastic">Enthusiastic</option>
-                  <option value="humorous">Humorous</option>
-                  <option value="educational">Educational</option>
+                  {TONE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Length</label>
+                <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">{t("form.length")}</label>
                 <select
                   value={length}
                   onChange={(e) => setLength(e.target.value)}
                   className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
                 >
-                  <option value="short">Short</option>
-                  <option value="medium">Medium</option>
-                  <option value="long">Long</option>
+                  {LENGTH_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
             </>
           )}
           {(mode === "hashtag" || mode === "image") && (
             <div className="col-span-2">
-              <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Platform (optional)</label>
+              <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">{t("form.platformOptional")}</label>
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
                 className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               >
-                <option value="">General</option>
-                <option value="twitter">Twitter / X</option>
-                <option value="instagram">Instagram</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="facebook">Facebook</option>
+                <option value="">{t("form.general")}</option>
+                {PLATFORM_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
           )}
           {(mode === "generate" || mode === "rewrite") && (
             <div>
-              <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Platform</label>
+              <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">{t("form.platform")}</label>
               <select
                 value={platform}
                 onChange={(e) => setPlatform(e.target.value)}
                 className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               >
-                <option value="">Auto-detect</option>
-                <option value="twitter">Twitter / X</option>
-                <option value="instagram">Instagram</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="facebook">Facebook</option>
+                <option value="">{t("form.autoDetect")}</option>
+                {PLATFORM_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
           )}
           {mode === "rewrite" && (
             <div>
-              <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">Source Platform</label>
+              <label className="block text-caption text-[var(--color-on-dark-muted)] mb-1">{t("form.sourcePlatform")}</label>
               <select
                 value={sourcePlatform}
                 onChange={(e) => setSourcePlatform(e.target.value)}
                 className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               >
-                <option value="twitter">Twitter / X</option>
-                <option value="instagram">Instagram</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="facebook">Facebook</option>
-                <option value="blog">Blog</option>
-                <option value="email">Email</option>
-                <option value="other">Other</option>
+                {SOURCE_PLATFORM_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
           )}
@@ -440,12 +465,12 @@ export default function AIPage() {
                 {isGenerating ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    Generating...
+                    {t("generating")}
                   </>
                 ) : (
                   <>
                     <Zap className="h-4 w-4" />
-                    Generate
+                    {t("generate")}
                   </>
                 )}
               </button>
@@ -466,12 +491,12 @@ export default function AIPage() {
               {isGenerating ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  Generating...
+                  {t("generating")}
                 </>
               ) : (
                 <>
                   <Zap className="h-4 w-4" />
-                  Generate
+                  {t("generate")}
                 </>
               )}
             </button>
@@ -489,7 +514,7 @@ export default function AIPage() {
       {/* Results */}
       <div>
         <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)] mb-4">
-          Generated Content
+          {t("results.heading")}
         </h2>
         {results.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-16">
@@ -515,7 +540,7 @@ export default function AIPage() {
                     </span>
                   </div>
                   <div className="flex items-start justify-between gap-4">
-      <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0">
                       {result.type === "image" && result.imageUrl ? (
                         <div className="space-y-3">
                           <div className="relative aspect-square max-w-sm rounded-lg overflow-hidden border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">

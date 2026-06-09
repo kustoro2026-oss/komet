@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   Search,
@@ -25,22 +26,6 @@ interface PromptTemplate {
   usageCount: number;
 }
 
-const CATEGORY_ICONS: Record<string, typeof FileText> = {
-  caption: FileText,
-  thread: MessageSquare,
-  hashtag: Hash,
-  image_prompt: Image,
-  reply: MessageSquare,
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  caption: "Caption",
-  thread: "Thread",
-  hashtag: "Hashtag",
-  image_prompt: "Image Prompt",
-  reply: "Reply",
-};
-
 const INITIAL_TEMPLATES: PromptTemplate[] = [
   { id: "1", name: "Product Launch", description: "Announce a new product or feature", prompt: "We're excited to announce {{product}}! {{key_feature}} is now available. Try it today at {{link}}.", category: "caption", variables: ["product", "key_feature", "link"], usageCount: 47 },
   { id: "2", name: "Weekly Tips Thread", description: "Share tips in a thread format", prompt: "Here are {{number}} tips about {{topic}}:\n\n1. {{tip1}}\n2. {{tip2}}\n3. {{tip3}}\n\nWhich one was your favorite?", category: "thread", variables: ["number", "topic", "tip1", "tip2", "tip3"], usageCount: 32 },
@@ -51,14 +36,31 @@ const INITIAL_TEMPLATES: PromptTemplate[] = [
 ];
 
 export default function AiTemplatesPage() {
+  const t = useTranslations("aiTemplates");
   const [templates] = useState<PromptTemplate[]>(INITIAL_TEMPLATES);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
-  const filtered = templates.filter((t) => {
-    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = filterCategory === "all" || t.category === filterCategory;
+  const CATEGORY_ICONS: Record<string, typeof FileText> = {
+    caption: FileText,
+    thread: MessageSquare,
+    hashtag: Hash,
+    image_prompt: Image,
+    reply: MessageSquare,
+  };
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    caption: t("categories.caption"),
+    thread: t("categories.thread"),
+    hashtag: t("categories.hashtag"),
+    image_prompt: t("categories.imagePrompt"),
+    reply: t("categories.reply"),
+  };
+
+  const filtered = templates.filter((tpl) => {
+    const matchesSearch = tpl.name.toLowerCase().includes(search.toLowerCase()) ||
+      tpl.description.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = filterCategory === "all" || tpl.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -68,15 +70,15 @@ export default function AiTemplatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Prompt Templates
+            {t("heading")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Save and manage AI prompt templates for quick reuse
+            {t("subtitle")}
           </p>
         </div>
         <button className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow">
           <Plus className="h-4 w-4" />
-          New Template
+          {t("newTemplate")}
         </button>
       </div>
 
@@ -87,7 +89,7 @@ export default function AiTemplatesPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search templates..."
+            placeholder={t("searchPlaceholder")}
             className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] pl-10 pr-4 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           />
         </div>
@@ -96,7 +98,7 @@ export default function AiTemplatesPage() {
           onChange={(e) => setFilterCategory(e.target.value)}
           className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         >
-          <option value="all">All Categories</option>
+          <option value="all">{t("allCategories")}</option>
           {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
           ))}
@@ -107,7 +109,7 @@ export default function AiTemplatesPage() {
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center">
           <KometLogo size="lg" className="mx-auto mb-1" />
-          <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">No templates found</p>
+          <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">{t("noTemplatesFound")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -155,18 +157,18 @@ export default function AiTemplatesPage() {
                     ))}
                   </div>
                   <span className="text-micro text-[var(--color-on-dark-muted)]">
-                    Used {template.usageCount}x
+                    {t("used", { count: template.usageCount })}
                   </span>
                 </div>
 
                 <div className="mt-3 flex items-center justify-end gap-1 border-t border-[var(--color-ink-muted)] pt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title="Use template">
+                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title={t("tooltip.useTemplate")}>
                     <Copy className="h-4 w-4" />
                   </button>
-                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title="Edit">
+                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)]" title={t("tooltip.edit")}>
                     <Edit3 className="h-4 w-4" />
                   </button>
-                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)]" title="Delete">
+                  <button className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)]" title={t("tooltip.delete")}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
