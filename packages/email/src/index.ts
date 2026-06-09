@@ -124,10 +124,38 @@ export class EmailService {
 
   async send(payload: EmailPayload): Promise<boolean> {
     try {
-      // Resend API integration placeholder
-      console.log(`[EmailService] Sending to ${payload.to}: ${payload.subject}`);
+      if (!this.apiKey) {
+        console.log(`[EmailService] No API key configured — logging only`);
+        console.log(`[EmailService] To: ${payload.to}`);
+        console.log(`[EmailService] Subject: ${payload.subject}`);
+        console.log(`[EmailService] Body (first 200 chars): ${payload.html.substring(0, 200)}`);
+        return true; // Don't fail — just log
+      }
+
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: payload.from || "Komet <team@komet.so>",
+          to: payload.to,
+          subject: payload.subject,
+          html: payload.html,
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        console.error(`[EmailService] Resend API error ${res.status}: ${errBody}`);
+        return false;
+      }
+
+      console.log(`[EmailService] Sent to ${payload.to}: ${payload.subject}`);
       return true;
-    } catch {
+    } catch (err) {
+      console.error("[EmailService] Failed to send:", err);
       return false;
     }
   }

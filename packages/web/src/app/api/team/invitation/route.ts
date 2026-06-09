@@ -147,6 +147,31 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Send invitation email
+    try {
+      const { emailService } = await import("@komet/email");
+      const w = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { name: true },
+      });
+      const inviterUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true },
+      });
+      const inviterName = inviterUser?.name || inviterUser?.email?.split("@")[0] || "Someone";
+      const workspaceName = w?.name || "Workspace";
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://komet.so";
+      const inviteLink = `${baseUrl}/invite/${token}`;
+      emailService.sendTemplate("team_invite", email.toLowerCase(), {
+        workspaceName,
+        inviterName,
+        inviteLink,
+      }).catch((e: unknown) => console.error("[Invite email] Failed to send:", e));
+    } catch (emailErr) {
+      console.error("[Invite email] Error:", emailErr);
+      // Don't fail the request — invitation is created, email is best-effort
+    }
+
     return NextResponse.json({ invitation }, { status: 201 });
   } catch (error) {
     console.error("[Team Invitation POST] Error:", error);
