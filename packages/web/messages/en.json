@@ -389,6 +389,7 @@
     "workspaceDeleteTitle": "Delete \"{name}\"?",
     "workspaceDeleteDescription": "This action cannot be undone.",
     "cancelButton": "Cancel",
+    "saveButton": "Save",
     "deletePermanentlyButton": "Delete Permanently",
     "createWorkspaceButton": "Create Workspace",
     "createWorkspaceTitle": "Create New Workspace",

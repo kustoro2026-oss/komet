@@ -520,20 +520,23 @@ export default function SettingsPage() {
                       {ws.name.charAt(0).toUpperCase()}
                     </div>
                     {editingWsId === ws.id ? (
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 min-w-0">
                         <input
                           value={editWsName}
                           onChange={(e) => setEditWsName(e.target.value)}
                           onKeyDown={(e) => { if (e.key === "Enter") handleRenameWorkspace(); if (e.key === "Escape") setEditingWsId(null); }}
-                          className="flex-1 min-w-0 rounded border border-[var(--color-primary)] bg-[var(--color-surface-dark)] px-2 py-1 text-sm text-[var(--color-on-dark)] focus:outline-none"
+                          className="flex-1 min-w-0 rounded border border-[var(--color-primary)] bg-[var(--color-surface-dark)] px-2 py-1.5 text-sm text-[var(--color-on-dark)] focus:outline-none"
+                          placeholder={ws.name}
                           autoFocus
                         />
-                        <button onClick={handleRenameWorkspace} disabled={savingWsName} className="rounded p-1 text-emerald-500 hover:bg-emerald-500/10">
-                          {savingWsName ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                        </button>
-                        <button onClick={() => setEditingWsId(null)} className="rounded p-1 text-[var(--color-on-dark-muted)] hover:text-red-400">
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={handleRenameWorkspace} disabled={savingWsName} className="flex-1 sm:flex-none rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-primary-hover)] disabled:opacity-50">
+                            {savingWsName ? <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" /> : t("saveButton")}
+                          </button>
+                          <button onClick={() => setEditingWsId(null)} className="flex-1 sm:flex-none rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs text-[var(--color-on-dark-soft)] hover:text-red-400">
+                            {t("cancelButton")}
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="min-w-0">
@@ -542,23 +545,25 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => { setEditingWsId(ws.id); setEditWsName(ws.name); }} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/10 transition-colors" title={t("renameButton")}>
-                      <Edit3 className="h-3.5 w-3.5" />
-                    </button>
-                    {ws.id !== activeWorkspace?.id ? (
-                      <>
-                        <button onClick={() => setActiveWorkspace(ws)} className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                          {t("switchButton")}
-                        </button>
-                        <button onClick={() => setDeleteConfirmId(ws.id)} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-red-400 hover:bg-red-400/10 transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <span className="text-xs font-medium text-[var(--color-primary-light)]">{t("activeLabel")}</span>
-                    )}
-                  </div>
+                  {editingWsId !== ws.id && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => { setEditingWsId(ws.id); setEditWsName(ws.name); }} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-[var(--color-primary-light)] hover:bg-[var(--color-primary)]/10 transition-colors" title={t("renameButton")}>
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                      {ws.id !== activeWorkspace?.id ? (
+                        <>
+                          <button onClick={() => setActiveWorkspace(ws)} className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
+                            {t("switchButton")}
+                          </button>
+                          <button onClick={() => setDeleteConfirmId(ws.id)} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-red-400 hover:bg-red-400/10 transition-colors">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs font-medium text-[var(--color-primary-light)]">{t("activeLabel")}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

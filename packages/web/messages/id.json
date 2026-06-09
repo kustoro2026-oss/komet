@@ -389,6 +389,7 @@
     "workspaceDeleteTitle": "Hapus \"{name}\"?",
     "workspaceDeleteDescription": "Tindakan ini tidak dapat dibatalkan.",
     "cancelButton": "Batal",
+    "saveButton": "Simpan",
     "deletePermanentlyButton": "Hapus Permanen",
     "createWorkspaceButton": "Buat Workspace",
     "createWorkspaceTitle": "Buat Workspace Baru",
