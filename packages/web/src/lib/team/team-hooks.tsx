@@ -108,7 +108,6 @@ export function useTeamRemoveMember(workspaceId: string | null, onSuccess: () =>
 import { Shield, ShieldCheck, Eye } from "lucide-react";
 
 export function getRoleIcon(role: string) {
-  const cls = "h-3.5 w-3.5";
   if (role === "admin") return ShieldCheck;
   if (role === "editor") return Shield;
   return Eye;
