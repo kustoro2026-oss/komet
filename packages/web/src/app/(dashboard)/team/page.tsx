@@ -12,8 +12,12 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
+  Check,
+  X,
+  Settings,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { createClient } from "@/lib/supabase/client";
@@ -80,6 +84,12 @@ export default function TeamPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Workspace rename
+  const [renamingWorkspace, setRenamingWorkspace] = useState(false);
+  const [renameName, setRenameName] = useState("");
+  const [renameLoading, setRenameLoading] = useState(false);
+  const [renameError, setRenameError] = useState("");
+
   // Current user's role
   const currentMember = members.find((m) => m.supabaseId === user?.id);
   // Check if user is owner, OR has admin role
@@ -88,6 +98,56 @@ export default function TeamPage() {
   const isUserAdmin = isOwner || activeWorkspace?.role === "admin" || currentMember?.role === "Admin";
 
   const workspaceId = activeWorkspace?.id;
+
+  /* ─── Rename workspace ─── */
+  const handleStartRename = () => {
+    setRenameName(activeWorkspace?.name || "");
+    setRenameError("");
+    setRenamingWorkspace(true);
+  };
+
+  const handleCancelRename = () => {
+    setRenamingWorkspace(false);
+    setRenameName("");
+    setRenameError("");
+  };
+
+  const handleSaveRename = async () => {
+    const trimmed = renameName.trim();
+    if (!trimmed || !workspaceId) return;
+    if (trimmed === activeWorkspace?.name) {
+      setRenamingWorkspace(false);
+      return;
+    }
+    setRenameLoading(true);
+    setRenameError("");
+    try {
+      const token = await getAuthToken();
+      if (!token) { setRenameError(t("errorNotAuthenticated")); return; }
+
+      const res = await fetch(`/api/workspace/${workspaceId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: trimmed }),
+      });
+
+      if (res.ok) {
+        // Update the store
+        useWorkspaceStore.getState().updateWorkspace?.(workspaceId, { name: trimmed });
+        setRenamingWorkspace(false);
+      } else {
+        const err = await res.json();
+        setRenameError(err.error || t("errorFailedRename"));
+      }
+    } catch {
+      setRenameError(t("errorNetworkError"));
+    } finally {
+      setRenameLoading(false);
+    }
+  };
 
   // Role label lookup
   const roleLabels: Record<string, string> = {
@@ -424,10 +484,78 @@ export default function TeamPage() {
           <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("pending")}</p>
           <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-warning)]">{pendingCount}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
-          <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("workspace")}</p>
-          <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">{activeWorkspace?.name || t("notAvailable")}</p>
-        </div>
+        {workspaceId && (
+          <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
+            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)] flex items-center gap-2">
+              {t("workspace")}
+              {isUserAdmin && (
+                <Link
+                  href="/settings/workspace"
+                  className="ml-auto rounded p-0.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-primary-light)] transition-colors"
+                  title={t("workspaceSettings")}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </p>
+            {renamingWorkspace ? (
+              <div className="mt-1 space-y-1.5">
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={renameName}
+                    onChange={(e) => setRenameName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveRename();
+                      if (e.key === "Escape") handleCancelRename();
+                    }}
+                    className="w-full rounded border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-2 py-1 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                    autoFocus
+                    disabled={renameLoading}
+                  />
+                  <button
+                    onClick={handleSaveRename}
+                    disabled={renameLoading || !renameName.trim()}
+                    className="rounded p-1 text-[var(--color-success)] hover:bg-[var(--color-success)]/10 disabled:opacity-40"
+                  >
+                    {renameLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  </button>
+                  <button
+                    onClick={handleCancelRename}
+                    disabled={renameLoading}
+                    className="rounded p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {renameError && (
+                  <p className="text-micro text-[var(--color-error)]">{renameError}</p>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mt-1">
+                <p className="font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
+                  {activeWorkspace?.name || t("notAvailable")}
+                </p>
+                {isUserAdmin && (
+                  <button
+                    onClick={handleStartRename}
+                    className="rounded p-0.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-primary-light)] transition-colors"
+                    title={t("renameWorkspace")}
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        {!workspaceId && (
+          <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
+            <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("workspace")}</p>
+            <p className="mt-1 font-display text-heading-lg font-bold text-[var(--color-on-dark)]">{t("notAvailable")}</p>
+          </div>
+        )}
       </div>
 
       {/* Error */}

@@ -759,7 +759,10 @@
     "errorFailedToLoad": "Gagal memuat data tim.",
     "errorEmailRequired": "Email diperlukan.",
     "errorFailedToSendInvitation": "Gagal mengirim undangan.",
-    "errorNetworkError": "Kesalahan jaringan. Silakan coba lagi."
+    "errorNetworkError": "Kesalahan jaringan. Silakan coba lagi.",
+    "errorFailedRename": "Gagal mengganti nama workspace",
+    "renameWorkspace": "Ganti nama workspace",
+    "workspaceSettings": "Pengaturan workspace"
   },
   "drafts": {
     "heading": "Draft",

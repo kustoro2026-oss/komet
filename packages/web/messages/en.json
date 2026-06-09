@@ -759,7 +759,10 @@
     "errorFailedToLoad": "Failed to load team data.",
     "errorEmailRequired": "Email is required.",
     "errorFailedToSendInvitation": "Failed to send invitation.",
-    "errorNetworkError": "Network error. Please try again."
+    "errorNetworkError": "Network error. Please try again.",
+    "errorFailedRename": "Failed to rename workspace",
+    "renameWorkspace": "Rename workspace",
+    "workspaceSettings": "Workspace settings"
   },
   "drafts": {
     "heading": "Drafts",
