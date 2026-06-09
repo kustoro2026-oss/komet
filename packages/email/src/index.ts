@@ -134,7 +134,7 @@ export class EmailService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: payload.from || "Komet <team@komet.so>",
+        from: payload.from || "Komet <team@kontenmumelesat.com>",
         to: payload.to,
         subject: payload.subject,
         html: payload.html,

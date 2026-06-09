@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Generate a unique token
     const token = crypto.randomUUID();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://komet.so";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://kontenmumelesat.com";
     const inviteLink = `${baseUrl}/invite/${token}`;
 
     // Create invitation (expires in 7 days)
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       });
       const inviterName = inviterUser?.name || inviterUser?.email?.split("@")[0] || "Someone";
       const workspaceName = w?.name || "Workspace";
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://komet.so";
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://kontenmumelesat.com";
       const inviteLink = `${baseUrl}/invite/${token}`;
       emailSent = await emailService.sendTemplate("team_invite", email.toLowerCase(), {
         workspaceName,
