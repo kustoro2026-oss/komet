@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { usePost, useUpdatePost, useDeletePost, useUnpublishPost } from "@/lib/posts/hooks";
+import { usePost, useUpdatePost, useDeletePost, useUnpublishPost, usePublishPost } from "@/lib/posts/hooks";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
@@ -33,7 +33,7 @@ export default function PostDetailPage() {
   // Data
   const { data: post, isLoading, isError, error } = usePost(postId);
   const updatePostMutation = useUpdatePost();
-  const editPostMutation = useUpdatePost();
+  const publishPostMutation = usePublishPost();
   const deletePostMutation = useDeletePost();
   const unpublishPostMutation = useUnpublishPost();
 
@@ -113,27 +113,22 @@ export default function PostDetailPage() {
     setSaveSuccess(false);
 
     try {
-      if (isPublished) {
-        await editPostMutation.mutateAsync({
-          postId,
-          data: {
-            title: editTitle || undefined,
-            content: editContent,
-            hashtags: editHashtags.length > 0 ? editHashtags : undefined,
-            publishNow,
-          },
-        });
-      } else {
-        await updatePostMutation.mutateAsync({
-          postId,
-          data: {
-            title: editTitle || undefined,
-            content: editContent,
-            hashtags: editHashtags.length > 0 ? editHashtags : undefined,
-            publishNow,
-          },
-        });
+      // Step 1: Always save content changes
+      await updatePostMutation.mutateAsync({
+        postId,
+        data: {
+          title: editTitle || undefined,
+          content: editContent,
+          hashtags: editHashtags.length > 0 ? editHashtags : undefined,
+          ...(publishNow ? { publishNow: true, status: "published" } : {}),
+        },
+      });
+
+      // Step 2: If publishing, trigger the actual publish
+      if (publishNow && post.status === "draft") {
+        await publishPostMutation.mutateAsync(postId);
       }
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
