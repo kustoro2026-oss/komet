@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 interface TeamMember {
   id: string;
   userId: string;
+  supabaseId: string;
   name: string;
   email: string;
   role: "Admin" | "Editor" | "Viewer";
@@ -84,7 +85,7 @@ export default function TeamPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Current user's role
-  const currentMember = members.find((m) => m.userId === user?.id);
+  const currentMember = members.find((m) => m.supabaseId === user?.id);
   // Check if user is owner, OR has admin role
   const isUserId = user?.id;
   const isOwner = !!(activeWorkspace?.ownerId && isUserId && activeWorkspace.ownerId === isUserId);

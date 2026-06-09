@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         user: {
           select: {
             id: true,
+            supabaseId: true,
             name: true,
             email: true,
             avatarUrl: true,
@@ -54,9 +55,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const result = members.map((m: { id: string; role: string; user: { id: string; name: string | null; email: string; avatarUrl: string | null; createdAt: Date } }) => ({
+    const result = members.map((m: { id: string; role: string; user: { id: string; supabaseId: string; name: string | null; email: string; avatarUrl: string | null; createdAt: Date } }) => ({
       id: m.id,
       userId: m.user.id,
+      supabaseId: m.user.supabaseId,
       name: m.user.name || m.user.email,
       email: m.user.email,
       avatarUrl: m.user.avatarUrl,

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const owned = await prisma.workspace.findMany({
       where: { ownerId: kometUser.id, isDeleted: false },
       orderBy: { createdAt: "desc" },
-      select: { id: true, name: true, slug: true },
+      select: { id: true, name: true, slug: true, ownerId: true },
     });
 
     // Workspaces where user is a member (but not owner)
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         workspaceId: true,
         role: true,
         workspace: {
-          select: { id: true, name: true, slug: true },
+          select: { id: true, name: true, slug: true, ownerId: true },
         },
       },
     });
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         id: w.id,
         name: w.name,
         slug: w.slug,
+        ownerId: w.ownerId,
         role: "admin" as const,
       })),
       ...memberships
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
           id: m.workspace.id,
           name: m.workspace.name,
           slug: m.workspace.slug,
+          ownerId: m.workspace.ownerId,
           role: (m.role || "viewer") as "admin" | "editor" | "viewer",
         })),
     ];
