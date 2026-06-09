@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   XCircle,
   LogIn,
+  LogOut,
   ArrowRight,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
@@ -29,13 +30,14 @@ export default function InviteAcceptPage({
   params: { token: string };
 }) {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const token = params.token;
   const [invitation, setInvitation] = useState<InvitationInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [switching, setSwitching] = useState(false);
   const [status, setStatus] = useState<"loading" | "valid" | "expired" | "accepted" | "not_found" | "error">("loading");
 
   // Validate invitation
@@ -67,6 +69,10 @@ export default function InviteAcceptPage({
       .finally(() => setLoading(false));
   }, [token]);
 
+  // Check if the logged-in user's email matches the invitation
+  const currentEmail = user?.email || "";
+  const emailMismatch = isAuthenticated && invitation && currentEmail.toLowerCase() !== invitation.email.toLowerCase();
+
   // Accept invitation
   const handleAccept = useCallback(async () => {
     setAccepting(true);
@@ -91,7 +97,6 @@ export default function InviteAcceptPage({
 
       if (res.ok) {
         setSuccess(true);
-        // Redirect to dashboard after 2s
         setTimeout(() => router.push("/dashboard"), 2000);
       } else {
         setError(data.error || "Failed to accept invitation.");
@@ -104,6 +109,19 @@ export default function InviteAcceptPage({
   }, [token, router]);
 
   const handleLogin = () => {
+    const returnUrl = encodeURIComponent(`/invite/${token}`);
+    router.push(`/login?returnUrl=${returnUrl}`);
+  };
+
+  const handleSwitchAccount = async () => {
+    setSwitching(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      useAuthStore.getState().clearUser();
+    } catch {
+      // proceed even if signOut fails
+    }
     const returnUrl = encodeURIComponent(`/invite/${token}`);
     router.push(`/login?returnUrl=${returnUrl}`);
   };
@@ -206,6 +224,38 @@ export default function InviteAcceptPage({
         {/* Valid invitation */}
         {status === "valid" && invitation && (
           <>
+            {/* Email mismatch warning */}
+            {emailMismatch && (
+              <div className="mb-5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
+                  <div>
+                    <p className="text-body-sm font-medium text-amber-300">
+                      Wrong account
+                    </p>
+                    <p className="mt-1 text-caption text-amber-300/80">
+                      You are signed in as{" "}
+                      <span className="font-semibold text-amber-200">{currentEmail}</span>.
+                      This invitation was sent to{" "}
+                      <span className="font-semibold text-amber-200">{invitation.email}</span>.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSwitchAccount}
+                  disabled={switching}
+                  className="mt-3 w-full flex items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/20 px-4 py-2 text-button-sm font-medium text-amber-200 hover:bg-amber-500/30 disabled:opacity-50 transition-colors"
+                >
+                  {switching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  Sign Out & Switch Account
+                </button>
+              </div>
+            )}
+
             <div className="text-center mb-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mx-auto mb-3">
                 {roleIcon}
@@ -238,6 +288,24 @@ export default function InviteAcceptPage({
                   className="w-full flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
                 >
                   <LogIn className="h-4 w-4" /> Log In to Accept
+                </button>
+              </div>
+            ) : emailMismatch ? (
+              <div className="text-center">
+                <p className="text-caption text-[var(--color-on-dark-muted)] mb-3">
+                  Switch to {invitation.email} to accept this invitation.
+                </p>
+                <button
+                  onClick={handleSwitchAccount}
+                  disabled={switching}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg border border-[var(--color-ink-muted)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 transition-colors"
+                >
+                  {switching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  Sign Out & Switch Account
                 </button>
               </div>
             ) : (

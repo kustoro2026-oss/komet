@@ -79,6 +79,7 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
     } catch {
       // proceed to redirect even if signOut fails
     }
+    useAuthStore.getState().clearUser();
     router.push("/login");
   };
 
