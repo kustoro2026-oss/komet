@@ -9,9 +9,9 @@ interface KometLogoProps {
 }
 
 const sizes = {
-  sm: { w: 64, h: 64 },
-  md: { w: 128, h: 128 },
-  lg: { w: 240, h: 240 },
+  sm: { w: 64, h: 51 },
+  md: { w: 128, h: 101 },
+  lg: { w: 240, h: 190 },
 } as const;
 
 /**
