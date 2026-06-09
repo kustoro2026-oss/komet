@@ -58,7 +58,7 @@ export function PaymentReceipt({ plan, amount, date }: { plan: string; amount: s
 
 export function AccountExpiring({ platform, username, daysLeft }: { platform: string; username: string; daysLeft: number }) {
   return React.createElement("div", null,
-    React.createElement("h2", null, `Account Token Expiring Soon`),
+    React.createElement("h2", null, "Account Token Expiring Soon"),
     React.createElement("p", null, `Your ${platform} account (${username}) token will expire in ${daysLeft} days.`),
     React.createElement("a", { href: "/accounts" }, "Reconnect now"),
   );
@@ -122,40 +122,32 @@ export class EmailService {
   }
 
   async send(payload: EmailPayload): Promise<boolean> {
-    try {
-      const apiKey = this.getApiKey();
-      if (!apiKey) {
-        console.warn("[EmailService] No RESEND_API_KEY configured — email not sent.");
-        console.warn(`[EmailService] Would have sent to: ${payload.to}, subject: ${payload.subject}`);
-        return false;
-      }
-
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: payload.from || "Komet <team@komet.so>",
-          to: payload.to,
-          subject: payload.subject,
-          html: payload.html,
-        }),
-      });
-
-      if (!res.ok) {
-        const errBody = await res.text();
-        console.error(`[EmailService] Resend API error ${res.status}: ${errBody}`);
-        return false;
-      }
-
-      console.log(`[EmailService] Sent to ${payload.to}: ${payload.subject}`);
-      return true;
-    } catch (err) {
-      console.error("[EmailService] Failed to send:", err);
-      return false;
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY is not set in environment variables");
     }
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: payload.from || "Komet <team@komet.so>",
+        to: payload.to,
+        subject: payload.subject,
+        html: payload.html,
+      }),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`Resend API error ${res.status}: ${errBody}`);
+    }
+
+    console.log(`[EmailService] Sent to ${payload.to}: ${payload.subject}`);
+    return true;
   }
 
   async sendTemplate(type: EmailType, to: string, data: Record<string, unknown>): Promise<boolean> {
