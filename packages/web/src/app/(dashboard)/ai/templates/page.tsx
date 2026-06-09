@@ -13,6 +13,8 @@ import {
   Image,
 } from "lucide-react";
 
+import { KometLogo } from "@/components/ui/komet-logo";
+
 interface PromptTemplate {
   id: string;
   name: string;
@@ -104,7 +106,7 @@ export default function AiTemplatesPage() {
       {/* Template Grid */}
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center">
-          <img src="/logo-komet.png" alt="Komet" className="mx-auto h-8 w-8 object-contain" />
+          <KometLogo size="lg" className="mx-auto mb-1" />
           <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">No templates found</p>
         </div>
       ) : (

@@ -5,6 +5,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth");
@@ -40,7 +41,7 @@ export default function ForgotPasswordPage() {
     <div className="space-y-6">
       <div className="text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-primary)]">
-          <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
+          <KometLogo size="md" />
         </div>
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
           {t("forgotTitle")}

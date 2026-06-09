@@ -17,6 +17,7 @@ import {
   Palette,
 } from "lucide-react";
 import { usePostStore } from "@/stores/post-store";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 type FeatureMode = "generate" | "hashtag" | "rewrite" | "image";
 
@@ -492,7 +493,7 @@ export default function AIPage() {
         </h2>
         {results.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-16">
-            <img src="/logo-komet.png" alt="Komet" className="h-10 w-10 object-contain mb-3" />
+            <KometLogo size="lg" className="mb-3" />
             <p className="text-body-sm text-[var(--color-on-dark-muted)]">{emptyMsg.line1}</p>
             <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">{emptyMsg.line2}</p>
           </div>

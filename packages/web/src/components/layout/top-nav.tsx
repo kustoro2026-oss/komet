@@ -6,6 +6,7 @@ import { NotificationDropdown } from "./notification-dropdown";
 import { useAuthStore } from "@/stores/auth-store";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -65,7 +66,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
 
       {/* Logo - Centered */}
       <div className="flex items-center gap-2">
-        <img src="/logo-komet.png" alt="Komet" className="h-5 w-5 object-contain" />
+        <KometLogo size="md" />
         <span className="font-display text-base font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
           Komet
         </span>

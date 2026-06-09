@@ -11,6 +11,7 @@ import { useWorkspaceStore } from "@/stores/workspace-store";
 import { LanguageSwitcher } from "./language-switcher";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
+import { KometLogo } from "@/components/ui/komet-logo";
 import {
   LayoutDashboard,
   Calendar,
@@ -121,11 +122,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
         )}
       >
         {collapsed ? (
-          <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
+          <KometLogo size="md" />
         ) : (
           <>
             <Link href="/dashboard" className="flex items-center gap-2">
-              <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
+              <KometLogo size="md" />
               <span className="font-display text-lg font-semibold text-[var(--color-on-dark)] light:text-[var(--color-ink)]">
                 Komet
               </span>

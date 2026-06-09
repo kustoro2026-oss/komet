@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 export default function RegisterPage() {
   return (
@@ -79,7 +80,7 @@ function RegisterForm() {
 
       <div className="text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-primary)]">
-          <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
+          <KometLogo size="md" />
         </div>
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
           {t("registerTitle")}

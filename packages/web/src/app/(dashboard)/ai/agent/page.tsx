@@ -12,6 +12,7 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 interface Message {
   id: string;
@@ -231,7 +232,7 @@ export default function AiAgentPage() {
         <div className="hidden lg:flex flex-col w-72 shrink-0">
           <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
             <div className="flex items-center gap-2 mb-4">
-              <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
+              <KometLogo size="sm" />
               <h3 className="font-display text-heading-xs font-semibold text-[var(--color-on-dark)]">
                 Quick Actions
               </h3>

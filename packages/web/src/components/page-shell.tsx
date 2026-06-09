@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 interface PageShellProps {
   title: string;
@@ -19,7 +20,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/25">
-              <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
+              <KometLogo size="sm" />
             </div>
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>

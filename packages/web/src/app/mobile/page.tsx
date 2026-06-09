@@ -14,6 +14,8 @@ import {
   Monitor,
   Star,
 } from "lucide-react";
+import { KometLogoIcon } from "@/components/ui/komet-logo";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -63,10 +65,6 @@ export default function MobileAppPage() {
     },
   ];
 
-  const KometLogoImg = (({ className }: { className?: string }) => (
-    <img src="/logo-komet.png" alt="Komet" className={className} />
-  )) as React.ComponentType<{ className?: string }>;
-
   const steps = [
     {
       icon: Download,
@@ -79,7 +77,7 @@ export default function MobileAppPage() {
       desc: "Tap the share button (iOS) or the install prompt (Android) and select Add to Home Screen.",
     },
     {
-      icon: KometLogoImg,
+      icon: KometLogoIcon,
       title: "Start Scheduling",
       desc: "Launch Komet from your home screen and manage your content like a native app.",
     },
@@ -92,7 +90,7 @@ export default function MobileAppPage() {
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/25">
-              <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
+              <KometLogo size="sm" />
             </div>
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
@@ -168,7 +166,7 @@ export default function MobileAppPage() {
                 <div className="h-full w-full overflow-hidden rounded-[2rem] bg-gradient-to-b from-[#1a1a2e] to-[#0c0c13]">
                   <div className="flex items-center gap-2 border-b border-white/[0.06] px-4 py-3">
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600">
-                      <img src="/logo-komet.png" alt="Komet" className="h-3.5 w-3.5 object-contain" />
+                      <KometLogo size="sm" />
                     </div>
                     <span className="text-xs font-semibold text-white">Komet</span>
                   </div>
@@ -323,7 +321,7 @@ export default function MobileAppPage() {
                   <th className="p-4 text-left font-semibold text-[var(--color-on-dark)]">Feature</th>
                   <th className="p-4 text-center font-semibold text-[var(--color-on-dark)]">
                     <span className="inline-flex items-center gap-1.5 text-[var(--color-primary)]">
-                      <img src="/logo-komet.png" alt="Komet" className="h-3.5 w-3.5 object-contain" /> Komet PWA
+                      <KometLogo size="sm" /> Komet PWA
                     </span>
                   </th>
                   <th className="p-4 text-center font-semibold text-[var(--color-on-dark-muted)]">Native App</th>
@@ -397,7 +395,7 @@ export default function MobileAppPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600">
-              <img src="/logo-komet.png" alt="Komet" className="h-3.5 w-3.5 object-contain" />
+              <KometLogo size="sm" />
             </div>
             <span className="font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>

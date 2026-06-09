@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useNotificationService, EVENT_CATEGORIES, EVENT_CATEGORY_GROUPS } from "@/lib/notification-service";
 import type { NotificationItem } from "@/lib/notification-service";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 interface WebhookItem {
   _id: string;
@@ -70,7 +71,7 @@ function EventIcon({ eventType }: { eventType: string }) {
     case "reaction":
       return <div className={className} style={style}><Zap className="h-4 w-4" /></div>;
     case "review":
-      return <div className={className} style={style}><img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" /></div>;
+      return <div className={className} style={style}><KometLogo size="sm" /></div>;
     case "lead":
       return <div className={className} style={style}><CreditCard className="h-4 w-4" /></div>;
     case "ad":

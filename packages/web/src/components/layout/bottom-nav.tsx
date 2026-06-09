@@ -10,16 +10,13 @@ import {
   Inbox,
   Settings,
 } from "lucide-react";
-
-const KometLogoImg = (({ className }: { className?: string }) => (
-  <img src="/logo-komet.png" alt="Komet" className={className} />
-)) as React.ComponentType<{ className?: string }>;
+import { KometLogoIcon } from "@/components/ui/komet-logo";
 
 const bottomNavItems = [
   { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/posts", labelKey: "posts", icon: FileText },
   { href: "/inbox", labelKey: "inbox", icon: Inbox },
-  { href: "/ai", labelKey: "aiStudio", icon: KometLogoImg },
+  { href: "/ai", labelKey: "aiStudio", icon: KometLogoIcon },
   { href: "/settings", labelKey: "settings", icon: Settings },
 ];
 

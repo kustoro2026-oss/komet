@@ -10,6 +10,7 @@ import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/s
 import { useCreatePost, uploadMedia } from "@/lib/posts/hooks";
 import { useProfiles, useAccounts } from "@/lib/accounts/hooks";
 import { useWorkspaceStore } from "@/stores/workspace-store";
+import { KometLogoIcon } from "@/components/ui/komet-logo";
 import { usePostStore } from "@/stores/post-store";
 
 type ComposerStep = "content" | "platforms" | "schedule" | "review";
@@ -349,13 +350,9 @@ export default function CreatePostPage() {
     );
   };
 
-const KometLogoImg = (({ className }: { className?: string }) => (
-  <img src="/logo-komet.png" alt="Komet" className={className} />
-)) as ComponentType<{ className?: string }>;
-
   const steps: { key: ComposerStep; label: string; icon: ComponentType<{ className?: string }> }[] = [
     { key: "content", label: "Content", icon: Type },
-    { key: "platforms", label: "Platforms", icon: KometLogoImg },
+    { key: "platforms", label: "Platforms", icon: KometLogoIcon },
     { key: "schedule", label: "Schedule", icon: Calendar },
     { key: "review", label: "Review", icon: Check },
   ];

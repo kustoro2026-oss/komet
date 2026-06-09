@@ -23,6 +23,7 @@ import { HeaderLanguageSwitcher } from "@/components/layout/header-language-swit
 import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Platform } from "@komet/shared";
+import { KometLogo } from "@/components/ui/komet-logo";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -133,7 +134,7 @@ export default function LandingPage() {
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/25">
-              <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
+              <KometLogo size="sm" />
             </div>
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>
@@ -505,7 +506,7 @@ export default function LandingPage() {
             <div className="col-span-2 lg:col-span-2">
               <Link href="/" className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/20">
-                  <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
+                  <KometLogo size="sm" />
                 </div>
                 <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
               </Link>
