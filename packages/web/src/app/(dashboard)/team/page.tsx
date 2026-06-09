@@ -89,6 +89,7 @@ export default function TeamPage() {
   const [renameError, setRenameError] = useState("");
 
   // Current user's role
+  const workspaceId = activeWorkspace?.id;
   const currentMember = members.find((m) => m.supabaseId === user?.id);
   // Check if user is owner, OR has admin role
   // Fallback: if members haven't loaded yet (empty array), default to admin for safety
@@ -99,8 +100,6 @@ export default function TeamPage() {
     activeWorkspace?.role === "admin" ||
     currentMember?.role === "Admin" ||
     (members.length === 0 && !!workspaceId); // fresh workspace, no members loaded yet
-
-  const workspaceId = activeWorkspace?.id;
 
   /* ─── Rename workspace ─── */
   const handleStartRename = () => {
