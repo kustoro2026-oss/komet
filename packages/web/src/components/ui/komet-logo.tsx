@@ -1,23 +1,22 @@
 import Image from "next/image";
 
 interface KometLogoProps {
-  /** Predefined size — sm=64, md=128, lg=240 */
   size?: "sm" | "md" | "lg";
-  /** Additional Tailwind classes (e.g. for margin) */
+  /** Additional Tailwind classes */
   className?: string;
-  /** Set true for above-the-fold logos to skip lazy loading */
+  /** Set true for above-the-fold logos */
   priority?: boolean;
 }
 
 const sizes = {
-  sm: { w: 64, h: 49 },
-  md: { w: 128, h: 97 },
-  lg: { w: 240, h: 182 },
+  sm: { w: 64, h: 64 },
+  md: { w: 128, h: 128 },
+  lg: { w: 240, h: 240 },
 } as const;
 
 /**
- * Komet brand logo — transparent background, responsive sizes.
- * Uses next/image for automatic optimization.
+ * Komet brand logo — circular gradient K with glow.
+ * Uses next/image for optimization.
  */
 export function KometLogo({ size = "md", className = "", priority = false }: KometLogoProps) {
   const { w, h } = sizes[size];
@@ -34,16 +33,16 @@ export function KometLogo({ size = "md", className = "", priority = false }: Kom
 }
 
 /**
- * Icon version — for use in icon arrays where className controls sizing.
- * Accepts Tailwind sizing classes like h-5 w-5.
+ * Icon-only version — transparent K, no background.
+ * For use in icon arrays, nav items, etc.
  */
 export function KometLogoIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
     <Image
-      src="/logo-komet.png"
+      src="/logo-komet-icon.png"
       alt="Komet"
       width={64}
-      height={49}
+      height={64}
       className={`object-contain ${className}`}
     />
   );
