@@ -100,10 +100,9 @@ const templates: Record<EmailType, EmailTemplate<any>> = {
 
 // ===== Email Service =====
 export class EmailService {
-  private apiKey: string;
-
-  constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.RESEND_API_KEY || "";
+  /** Read API key fresh every call — avoids stale value from module import cache */
+  private getApiKey(): string {
+    return process.env.RESEND_API_KEY || "";
   }
 
   getTemplate(type: EmailType): EmailTemplate | undefined {
@@ -124,16 +123,17 @@ export class EmailService {
 
   async send(payload: EmailPayload): Promise<boolean> {
     try {
-      if (!this.apiKey) {
-        console.warn(`[EmailService] No RESEND_API_KEY configured — email not sent.`);
+      const apiKey = this.getApiKey();
+      if (!apiKey) {
+        console.warn("[EmailService] No RESEND_API_KEY configured — email not sent.");
         console.warn(`[EmailService] Would have sent to: ${payload.to}, subject: ${payload.subject}`);
-        return false; // API key missing → email not actually sent
+        return false;
       }
 
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${this.apiKey}`,
+          "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
