@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine post status
-    const status = publishNow ? "draft" : scheduledFor ? "scheduled" : "draft";
+    const status = publishNow ? "draft" : (scheduledFor && !isNaN(new Date(scheduledFor).getTime())) ? "scheduled" : "draft";
 
     // Create post with platform relations
     const post = await prisma.post.create({
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
         title: title || null,
         content,
         status,
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
+        scheduledFor: (scheduledFor && !isNaN(new Date(scheduledFor).getTime())) ? new Date(scheduledFor) : null,
         timezone: timezone || "UTC",
         publishNow: publishNow ?? false,
         isDraft: status === "draft",
@@ -289,7 +289,7 @@ export async function PUT(request: NextRequest) {
     if (content !== undefined) updateData.content = content;
     if (title !== undefined) updateData.title = title;
     if (status !== undefined) updateData.status = status;
-    if (scheduledFor !== undefined) updateData.scheduledFor = scheduledFor ? new Date(scheduledFor) : null;
+    if (scheduledFor !== undefined) updateData.scheduledFor = (scheduledFor && !isNaN(new Date(scheduledFor).getTime())) ? new Date(scheduledFor) : null;
     if (timezone !== undefined) updateData.timezone = timezone;
     if (hashtags !== undefined) updateData.hashtags = hashtags;
     if (tags !== undefined) updateData.tags = tags;

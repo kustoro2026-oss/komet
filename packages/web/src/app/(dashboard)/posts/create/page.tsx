@@ -273,7 +273,9 @@ export default function CreatePostPage() {
     try {
       const scheduledFor = publishNow
         ? undefined
-        : `${form.scheduledFor}T${form.scheduledTime}:00`;
+        : (form.scheduledFor && form.scheduledTime)
+          ? `${form.scheduledFor}T${form.scheduledTime}:00`
+          : undefined;
 
       // Map platform names to {platform, accountId} format
       // Use the first connected account for each selected platform
