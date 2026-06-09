@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import type { ComponentType } from "react";
 import { Bell, Check, Trash2, MessageSquare, Calendar, AlertTriangle, CreditCard } from "lucide-react";
 import Link from "next/link";
 
@@ -28,14 +29,14 @@ const KometLogoImg = (({ className }: { className?: string }) => (
   <img src="/logo-komet.png" alt="Komet" className={className} />
 )) as React.ComponentType<{ className?: string }>;
 
-const TYPE_ICONS: Record<string, typeof MessageSquare> = {
+const TYPE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   comment: MessageSquare,
   mention: MessageSquare,
   post_failed: AlertTriangle,
   post_scheduled: Calendar,
   payment: CreditCard,
-  team: KometLogoImg as any,
-  system: KometLogoImg as any,
+  team: KometLogoImg,
+  system: KometLogoImg,
 };
 
 // Maps notification types to preference keys in localStorage
