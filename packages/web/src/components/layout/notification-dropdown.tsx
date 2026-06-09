@@ -34,6 +34,33 @@ const TYPE_ICONS: Record<string, typeof MessageSquare> = {
   system: Sparkles,
 };
 
+// Maps notification types to preference keys in localStorage
+const TYPE_TO_PREF: Record<string, string> = {
+  comment: "new_comments",
+  mention: "new_messages",
+  team: "team_invitations",
+  system: "product_updates",
+  // post_failed, post_scheduled, payment are always shown (critical)
+};
+
+function loadNotifPrefs(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem("komet-notif-prefs");
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function getFilteredNotifications(all: Notification[], prefs: Record<string, boolean>) {
+  return all.filter((n) => {
+    const prefKey = TYPE_TO_PREF[n.type];
+    if (!prefKey) return true; // critical notifications always shown
+    const enabled = prefs[prefKey];
+    return enabled !== false; // default to true if not set
+  });
+}
+
 const TYPE_COLORS: Record<string, string> = {
   comment: "bg-[var(--color-primary)]/10 text-[var(--color-primary-light)]",
   mention: "bg-[var(--color-accent)]/10 text-[var(--color-accent)]",
@@ -47,9 +74,19 @@ const TYPE_COLORS: Record<string, string> = {
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [prefs, setPrefs] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  // Load preferences on mount and on open
+  useEffect(() => {
+    setPrefs(loadNotifPrefs());
+  }, []);
+  useEffect(() => {
+    if (isOpen) setPrefs(loadNotifPrefs());
+  }, [isOpen]);
+
+  const filtered = getFilteredNotifications(notifications, prefs);
+  const unreadCount = filtered.filter((n) => !n.isRead).length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,13 +148,13 @@ export function NotificationDropdown() {
 
           {/* List */}
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {filtered.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <Bell className="mx-auto h-6 w-6 text-[var(--color-on-dark-muted)]" />
                 <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">No notifications</p>
               </div>
             ) : (
-              notifications.slice(0, 10).map((notif) => {
+              filtered.slice(0, 10).map((notif) => {
                 const Icon = TYPE_ICONS[notif.type];
                 const colorClass = TYPE_COLORS[notif.type];
 
