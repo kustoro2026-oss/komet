@@ -41,6 +41,7 @@ interface PostForm {
 }
 
 export default function CreatePostPage() {
+  const t = useTranslations("posts");
   const [step, setStep] = useState<ComposerStep>("content");
   const [form, setForm] = useState<PostForm>({
     content: "",
