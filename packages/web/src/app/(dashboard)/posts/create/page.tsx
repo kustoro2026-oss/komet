@@ -281,16 +281,16 @@ export default function CreatePostPage() {
           : undefined;
 
       // Map platform names to {platform, accountId} format
-      // Use the first connected account for each selected platform
       const platforms = form.platforms
         .map((p) => {
           const connectedAccount = accounts?.find((a) => a.platform === p && a.isActive);
-          if (!connectedAccount) return null;
-          return { platform: p, accountId: connectedAccount.id };
+          // For drafts, allow platforms without connected accounts
+          return { platform: p, accountId: connectedAccount?.id || "" };
         })
-        .filter(Boolean) as { platform: string; accountId: string }[];
+        .filter((p) => publishNow ? p.accountId : true) as { platform: string; accountId: string }[];
 
-      if (platforms.length === 0) {
+      // Only require connected accounts when publishing
+      if (publishNow && platforms.length === 0) {
         throw new Error("No connected accounts found for selected platforms. Please connect an account first.");
       }
 
@@ -298,7 +298,7 @@ export default function CreatePostPage() {
         profileId: profileId,
         content: form.content,
         title: form.title || undefined,
-        platforms,
+        platforms: publishNow ? platforms : platforms.map(p => ({ platform: p.platform, accountId: p.accountId || undefined })),
         publishNow,
         scheduledFor,
         timezone: form.timezone,

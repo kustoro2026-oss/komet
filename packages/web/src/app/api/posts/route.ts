@@ -193,17 +193,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!platforms || !Array.isArray(platforms) || platforms.length === 0) {
+    if (!platforms || !Array.isArray(platforms)) {
       return NextResponse.json(
-        { error: "At least one platform is required" },
+        { error: "Platforms must be an array" },
         { status: 400 }
       );
     }
 
     // Determine post status
-    const status = publishNow ? "draft" : (scheduledFor && !isNaN(new Date(scheduledFor).getTime())) ? "scheduled" : "draft";
+    const status = publishNow ? "published" : (scheduledFor && !isNaN(new Date(scheduledFor).getTime())) ? "scheduled" : "draft";
 
-    // Create post with platform relations
+    // Platforms required only when publishing
+    if (status !== "draft" && platforms.length === 0) {
+      return NextResponse.json(
+        { error: "At least one platform is required to publish or schedule" },
+        { status: 400 }
+      );
+    }
+
+    // Create post (only attach platforms that have a valid accountId)
+    const validPlatforms = platforms.filter((p: { accountId?: string }) => p.accountId);
+    const platformData = validPlatforms.length > 0 ? {
+      platforms: {
+        create: validPlatforms.map((p: { platform: string; accountId: string }) => ({
+          accountId: p.accountId,
+          platform: p.platform,
+          status: "pending",
+          customContent: platformOverrides?.[p.platform] || null,
+        })),
+      },
+    } : {};
+
     const post = await prisma.post.create({
       data: {
         profileId,
@@ -218,14 +238,7 @@ export async function POST(request: NextRequest) {
         hashtags: hashtags || [],
         tags: tags || [],
         mediaItems: mediaItems || [],
-        platforms: {
-          create: platforms.map((p: { platform: string; accountId: string }) => ({
-            accountId: p.accountId,
-            platform: p.platform,
-            status: "pending",
-            customContent: platformOverrides?.[p.platform] || null,
-          })),
-        },
+        ...platformData,
       },
       include: {
         platforms: true,
