@@ -49,7 +49,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">6. Contact</h2>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed">
-            Questions about these Terms? Contact us at <span className="text-[var(--color-primary)]">hello@komet.so</span>.
+            Questions about these Terms? Contact us at <span className="text-[var(--color-primary)]">hello@kontenmumelesat.com</span>.
           </p>
         </section>
       </div>

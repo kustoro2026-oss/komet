@@ -33,7 +33,7 @@ export default function ApiReferencePage() {
               <h3 className="font-semibold text-[var(--color-on-dark)] text-sm">Base URL</h3>
             </div>
             <p className="text-sm text-[var(--color-on-dark-soft)] leading-relaxed">
-              <code className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[var(--color-primary)] text-xs break-all">https://api.komet.so/v1</code>
+              <code className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[var(--color-primary)] text-xs break-all">https://api.kontenmumelesat.com/v1</code>
             </p>
           </div>
         </div>

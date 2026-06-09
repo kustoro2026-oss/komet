@@ -42,7 +42,7 @@ export default function CookiesPage() {
         <section>
           <h2 className="text-lg font-semibold text-[var(--color-on-dark)] mb-3">Contact</h2>
           <p className="text-[var(--color-on-dark-soft)] leading-relaxed">
-            Questions about our Cookie Policy? Contact us at <span className="text-[var(--color-primary)]">hello@komet.so</span>.
+            Questions about our Cookie Policy? Contact us at <span className="text-[var(--color-primary)]">hello@kontenmumelesat.com</span>.
           </p>
         </section>
       </div>

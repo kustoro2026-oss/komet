@@ -4,7 +4,7 @@ import { Mail, MapPin, Clock, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 const contacts = [
-  { icon: Mail, title: "Email Us", desc: "hello@komet.so", detail: "We reply within 24 hours on weekdays." },
+  { icon: Mail, title: "Email Us", desc: "hello@kontenmumelesat.com", detail: "We reply within 24 hours on weekdays." },
   { icon: MapPin, title: "Location", desc: "Remote-first", detail: "Our team works from around the globe." },
   { icon: Clock, title: "Support Hours", desc: "Mon–Fri, 9 AM–6 PM UTC", detail: "Enterprise customers get 24/7 priority support." },
 ];
