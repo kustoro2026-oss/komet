@@ -26,6 +26,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useTranslations } from "next-intl";
 import { useAutoReplyStore } from "@/stores/auto-reply-store";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -43,6 +44,7 @@ const ALL_PLATFORMS: Platform[] = [
 ];
 
 export default function AutoReplyPage() {
+  const t = useTranslations("autoReply");
   const { rules, addRule, toggleRule, deleteRule, updateRule } =
     useAutoReplyStore();
   const [search, setSearch] = useState("");
@@ -146,7 +148,7 @@ export default function AutoReplyPage() {
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)] flex items-center gap-2">
             <Bot className="h-7 w-7 text-[var(--color-accent)]" />
-            Auto Reply
+            {t("page.title")}
             {syncStatus === "syncing" && (
               <RefreshCw className="h-4 w-4 text-[var(--color-accent)] animate-spin" />
             )}
@@ -158,9 +160,9 @@ export default function AutoReplyPage() {
             )}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Automatically respond to comments and messages with smart rules
+            {t("page.description")}
             {syncStatus === "synced" && (
-              <span className="ml-2 text-micro text-[var(--color-success)]">• Auto-sync active</span>
+              <span className="ml-2 text-micro text-[var(--color-success)]">{t("page.autoSyncActive")}</span>
             )}
           </p>
         </div>
@@ -175,14 +177,14 @@ export default function AutoReplyPage() {
             ) : (
               <Play className="h-4 w-4" />
             )}
-            Process Now
+            {t("actions.processNow")}
           </button>
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] shadow-glow transition-all active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            New Rule
+            {t("actions.newRule")}
           </button>
         </div>
       </div>
@@ -195,7 +197,7 @@ export default function AutoReplyPage() {
               <Hash className="h-3.5 w-3.5 text-[var(--color-primary-light)]" />
             </div>
             <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">
-              Total Rules
+              {t("stats.totalRules")}
             </p>
           </div>
           <p className="font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
@@ -208,7 +210,7 @@ export default function AutoReplyPage() {
               <CheckCircle2 className="h-3.5 w-3.5 text-[var(--color-success)]" />
             </div>
             <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">
-              Active
+              {t("stats.active")}
             </p>
           </div>
           <p className="font-display text-heading-lg font-bold text-[var(--color-success)]">
@@ -221,7 +223,7 @@ export default function AutoReplyPage() {
               <BarChart3 className="h-3.5 w-3.5 text-[var(--color-accent)]" />
             </div>
             <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">
-              This Session
+              {t("stats.thisSession")}
             </p>
           </div>
           <p className="font-display text-heading-lg font-bold text-[var(--color-on-dark)]">
@@ -234,7 +236,7 @@ export default function AutoReplyPage() {
               <AlertCircle className="h-3.5 w-3.5 text-[var(--color-warning)]" />
             </div>
             <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">
-              Failed
+              {t("stats.failed")}
             </p>
           </div>
           <p className="font-display text-heading-lg font-bold text-[var(--color-warning)]">
@@ -250,7 +252,7 @@ export default function AutoReplyPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search rules by name or reply text..."
+            placeholder={t("search.placeholder")}
             className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] pl-10 pr-4 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
           />
         </div>
@@ -259,10 +261,10 @@ export default function AutoReplyPage() {
           onChange={(e) => setFilterSource(e.target.value)}
           className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         >
-          <option value="all">All Sources</option>
-          <option value="comments">Comments</option>
-          <option value="messages">Messages</option>
-          <option value="both">Both</option>
+          <option value="all">{t("filter.allSources")}</option>
+          <option value="comments">{t("filter.comments")}</option>
+          <option value="messages">{t("filter.messages")}</option>
+          <option value="both">{t("filter.both")}</option>
         </select>
       </div>
 
@@ -284,8 +286,8 @@ export default function AutoReplyPage() {
               )}
               <h3 className="font-semibold text-body-sm text-[var(--color-on-dark)]">
                 {processError
-                  ? "Processing Error"
-                  : `Processed ${processResult.length} comment(s)`}
+                  ? t("results.processingError")
+                  : t("results.processed", { count: processResult.length })}
               </h3>
             </div>
             <button
@@ -318,7 +320,7 @@ export default function AutoReplyPage() {
                     {entry.ruleName}
                   </span>
                   <span className="text-[var(--color-on-dark-soft)]">
-                    replied to &ldquo;{entry.commentText}&rdquo;
+                    {t("results.repliedTo")} &ldquo;{entry.commentText}&rdquo;
                   </span>
                   <span className="text-[var(--color-on-dark-muted)] ml-auto">
                     {entry.status}
@@ -346,20 +348,20 @@ export default function AutoReplyPage() {
                     onCheckedChange={() => toggleRule(rule.id)}
                   />
                   <span className="text-micro font-medium text-[var(--color-on-dark-soft)] w-6">
-                    {rule.isActive ? "On" : "Off"}
+                    {rule.isActive ? t("ruleCard.on") : t("ruleCard.off")}
                   </span>
                 </div>
                 <button
                   onClick={() => handleEdit(rule)}
                   className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-primary-light)] transition-colors"
-                  title="Edit rule"
+                  title={t("ruleCard.editRule")}
                 >
                   <Edit3 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => deleteRule(rule.id)}
                   className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark)] hover:text-[var(--color-error)] transition-colors"
-                  title="Delete rule"
+                  title={t("ruleCard.deleteRule")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -385,7 +387,7 @@ export default function AutoReplyPage() {
                           : "bg-[var(--color-on-dark-muted)]"
                       }`}
                     />
-                    {rule.isActive ? "Active" : "Inactive"}
+                    {rule.isActive ? t("ruleCard.active") : t("ruleCard.inactive")}
                   </span>
                   <div className="flex items-center gap-1">
                     {rule.source === "comments" ? (
@@ -397,10 +399,10 @@ export default function AutoReplyPage() {
                     )}
                     <span className="text-micro text-[var(--color-on-dark-muted)]">
                       {rule.source === "both"
-                        ? "Comments & DMs"
+                        ? t("ruleCard.commentsAndDms")
                         : rule.source === "comments"
-                          ? "Comments"
-                          : "DMs"}
+                          ? t("ruleCard.comments")
+                          : t("ruleCard.dms")}
                     </span>
                   </div>
                 </div>
@@ -410,7 +412,7 @@ export default function AutoReplyPage() {
                   {rule.trigger.type === "all" ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent)]/10 px-2.5 py-0.5 text-micro font-medium text-[var(--color-accent)]">
                       <Zap className="h-3 w-3" />
-                      Match all comments
+                      {t("ruleCard.matchAll")}
                     </span>
                   ) : (
                     rule.trigger.keywords?.map((kw) => (
@@ -461,12 +463,12 @@ export default function AutoReplyPage() {
               <Bot className="h-8 w-8 text-[var(--color-primary-light)]" />
             </div>
             <h3 className="mt-4 text-body-sm font-semibold text-[var(--color-on-dark)]">
-              No rules found
+              {t("empty.title")}
             </h3>
             <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">
               {search
-                ? "Try adjusting your search or filters"
-                : "Create your first auto-reply rule to get started"}
+                ? t("empty.searchHint")
+                : t("empty.createHint")}
             </p>
             {!search && (
               <button
@@ -474,7 +476,7 @@ export default function AutoReplyPage() {
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-white hover:bg-[var(--color-primary-hover)] transition-all"
               >
                 <Plus className="h-4 w-4" />
-                Create Rule
+                {t("empty.createRule")}
               </button>
             )}
           </div>
@@ -503,6 +505,7 @@ function RuleModal({
   onClose: () => void;
   onSave: (rule: AutoReplyRule) => void;
 }) {
+  const t = useTranslations("autoReply");
   const isEditing = !!rule;
   const initialTriggerType: "keyword" | "all" =
     rule?.trigger?.type === "keyword" || rule?.trigger?.type === "all"
@@ -563,7 +566,7 @@ function RuleModal({
               <Bot className="h-4 w-4 text-white" />
             </div>
             <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-              {isEditing ? "Edit Rule" : "New Auto Reply Rule"}
+              {isEditing ? t("modal.editRule") : t("modal.newRule")}
             </h2>
           </div>
           <button
@@ -579,12 +582,12 @@ function RuleModal({
           {/* Rule Name */}
           <div>
             <label className="block text-caption font-semibold text-[var(--color-on-dark)] mb-1.5">
-              Rule Name
+              {t("modal.ruleName")}
             </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Thank You Reply"
+              placeholder={t("modal.ruleNamePlaceholder")}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
             />
           </div>
@@ -592,7 +595,7 @@ function RuleModal({
           {/* Trigger Type */}
           <div>
             <label className="block text-caption font-semibold text-[var(--color-on-dark)] mb-2">
-              Trigger Type
+              {t("modal.triggerType")}
             </label>
             <div className="flex gap-2">
               <button
@@ -604,7 +607,7 @@ function RuleModal({
                 }`}
               >
                 <Hash className="inline h-3.5 w-3.5 mr-1.5" />
-                Keywords
+                {t("modal.keywords")}
               </button>
               <button
                 onClick={() => setTriggerType("all")}
@@ -615,7 +618,7 @@ function RuleModal({
                 }`}
               >
                 <Zap className="inline h-3.5 w-3.5 mr-1.5" />
-                All Messages
+                {t("modal.allMessages")}
               </button>
             </div>
           </div>
@@ -624,12 +627,12 @@ function RuleModal({
           {triggerType === "keyword" && (
             <div>
               <label className="block text-caption font-semibold text-[var(--color-on-dark)] mb-1.5">
-                Keywords
+                {t("modal.keywordsLabel")}
               </label>
               <input
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
-                placeholder="thanks, pricing, help, support..."
+                placeholder={t("modal.keywordsPlaceholder")}
                 className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
               />
               {keywords.length > 0 && (
@@ -657,7 +660,7 @@ function RuleModal({
                 </div>
               )}
               <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">
-                Separate keywords with commas
+                {t("modal.keywordsSeparateHint")}
               </p>
             </div>
           )}
@@ -665,12 +668,12 @@ function RuleModal({
           {/* Reply Message */}
           <div>
             <label className="block text-caption font-semibold text-[var(--color-on-dark)] mb-1.5">
-              Reply Message
+              {t("modal.replyMessage")}
             </label>
             <textarea
               value={reply}
               onChange={(e) => setReply(e.target.value)}
-              placeholder="Type your auto-reply message..."
+              placeholder={t("modal.replyPlaceholder")}
               rows={4}
               maxLength={500}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] resize-none transition-all"

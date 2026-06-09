@@ -27,6 +27,7 @@ import {
 import { useNotificationService, EVENT_CATEGORIES, EVENT_CATEGORY_GROUPS } from "@/lib/notification-service";
 import type { NotificationItem } from "@/lib/notification-service";
 import { KometLogo } from "@/components/ui/komet-logo";
+import { useTranslations } from "next-intl";
 
 interface WebhookItem {
   _id: string;
@@ -91,6 +92,7 @@ const ALL_WEBHOOK_EVENTS = Object.keys(EVENT_CATEGORIES).filter((e) => e !== "we
    ═══════════════════════════════════════ */
 
 function NotificationsTab() {
+  const t = useTranslations("notificationsPage");
   const {
     notifications,
     unreadCount,
@@ -113,10 +115,10 @@ function NotificationsTab() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total", value: notifications.length, color: "var(--color-on-dark)" },
-          { label: "Unread", value: unreadCount, color: "var(--color-error)" },
-          { label: "Read", value: notifications.length - unreadCount, color: "var(--color-success)" },
-          { label: "Today", value: notifications.filter((n) => n.receivedAt.includes("h ago") || n.receivedAt.includes("m ago") || n.receivedAt === "just now").length, color: "var(--color-primary-light)" },
+          { label: t("stats.total"), value: notifications.length, color: "var(--color-on-dark)" },
+          { label: t("stats.unread"), value: unreadCount, color: "var(--color-error)" },
+          { label: t("stats.read"), value: notifications.length - unreadCount, color: "var(--color-success)" },
+          { label: t("stats.today"), value: notifications.filter((n) => n.receivedAt.includes("h ago") || n.receivedAt.includes("m ago") || n.receivedAt === "just now").length, color: "var(--color-primary-light)" },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4">
             <p className="text-caption-uppercase tracking-wider text-[var(--color-on-dark-muted)]">{s.label}</p>
@@ -143,17 +145,17 @@ function NotificationsTab() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={refresh} className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] transition-colors" title="Refresh">
+          <button onClick={refresh} className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] transition-colors" title={t("notificationsTab.refresh")}>
             <RefreshCw className="h-4 w-4" />
           </button>
           {unreadCount > 0 && (
             <button onClick={markAllAsRead} className="flex items-center gap-1.5 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption font-medium text-[var(--color-primary-light)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-              <CheckCheck className="h-3.5 w-3.5" /> Mark All Read
+              <CheckCheck className="h-3.5 w-3.5" /> {t("notificationsTab.markAllRead")}
             </button>
           )}
           {notifications.length > 0 && (
             <button onClick={clearAll} className="flex items-center gap-1.5 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption font-medium text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-              <Trash2 className="h-3.5 w-3.5" /> Clear
+              <Trash2 className="h-3.5 w-3.5" /> {t("notificationsTab.clear")}
             </button>
           )}
         </div>
@@ -163,14 +165,14 @@ function NotificationsTab() {
       {loading ? (
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-16 text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--color-primary-light)]" />
-          <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">Loading events…</p>
+          <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">{t("notificationsTab.loading")}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-16 text-center">
           <Bell className="mx-auto h-12 w-12 text-[var(--color-on-dark-muted)]" />
-          <h3 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">No notifications yet</h3>
+          <h3 className="mt-4 font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("notificationsTab.emptyTitle")}</h3>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)] max-w-sm mx-auto">
-            Webhook events will appear here. Configure a webhook in the <strong>Webhook Config</strong> tab and point it to your endpoint.
+            {t("notificationsTab.emptyDesc")}
           </p>
         </div>
       ) : (
@@ -204,11 +206,11 @@ function NotificationsTab() {
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                   {!notif.isRead && (
-                    <button onClick={() => markAsRead(notif.id)} className="rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-success)]" title="Mark read">
+                    <button onClick={() => markAsRead(notif.id)} className="rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-success)]" title={t("notificationsTab.markRead")}>
                       <CheckCheck className="h-3.5 w-3.5" />
                     </button>
                   )}
-                  <button onClick={() => removeNotification(notif.id)} className="rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-error)]" title="Remove">
+                  <button onClick={() => removeNotification(notif.id)} className="rounded-lg p-1 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-error)]" title={t("notificationsTab.remove")}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -223,7 +225,7 @@ function NotificationsTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedEvent(null)}>
           <div className="w-full max-w-lg rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-5 py-4">
-              <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">Event Detail</h3>
+              <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("notificationsTab.eventDetail")}</h3>
               <button onClick={() => setSelectedEvent(null)} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]">
                 <X className="h-4 w-4" />
               </button>
@@ -238,7 +240,7 @@ function NotificationsTab() {
               </div>
               <p className="text-body-sm text-[var(--color-on-dark-soft)]">{selectedEvent.message}</p>
               <details className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
-                <summary className="cursor-pointer px-4 py-2 text-caption font-medium text-[var(--color-on-dark-muted)] select-none">Raw Payload</summary>
+                <summary className="cursor-pointer px-4 py-2 text-caption font-medium text-[var(--color-on-dark-muted)] select-none">{t("notificationsTab.rawPayload")}</summary>
                 <pre className="border-t border-[var(--color-ink-muted)] p-4 text-micro text-[var(--color-on-dark-soft)] overflow-auto max-h-48 whitespace-pre-wrap break-all">
                   {JSON.stringify(selectedEvent.payload, null, 2)}
                 </pre>
@@ -256,6 +258,7 @@ function NotificationsTab() {
    ═══════════════════════════════════════ */
 
 function WebhookConfigTab() {
+  const t = useTranslations("notificationsPage");
   const {
     webhooks,
     webhooksLoading,
@@ -286,7 +289,7 @@ function WebhookConfigTab() {
 
   const handleCreate = useCallback(async () => {
     if (!formName || !formUrl || formEvents.length === 0) {
-      setError("Name, URL, and at least 1 event are required.");
+      setError(t("webhookConfig.errorRequired"));
       return;
     }
     setSaving(true);
@@ -304,7 +307,7 @@ function WebhookConfigTab() {
       setFormEvents([]);
       setShowForm(false);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create webhook");
+      setError(err instanceof Error ? err.message : t("webhookConfig.errorCreate"));
     } finally {
       setSaving(false);
     }
@@ -348,9 +351,9 @@ function WebhookConfigTab() {
             <Webhook className="h-4 w-4 text-[var(--color-primary-light)]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">Your Webhook Endpoint</p>
+            <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">{t("webhookConfig.endpointTitle")}</p>
             <p className="mt-0.5 text-caption text-[var(--color-on-dark-soft)]">
-              Point your webhooks to this URL to receive real-time events:
+              {t("webhookConfig.endpointDesc")}
             </p>
             <div className="mt-2 flex items-center gap-2">
               <code className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-micro text-[var(--color-on-dark)] break-all select-all">
@@ -371,14 +374,14 @@ function WebhookConfigTab() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-            Webhook Configurations
+            {t("webhookConfig.heading")}
           </h3>
           <p className="mt-0.5 text-body-sm text-[var(--color-on-dark-soft)]">
-            {webhooks.length} of 10 webhooks configured
+            {t("webhookConfig.countLabel", { count: webhooks.length })}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={refreshWebhooks} className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] transition-colors" title="Refresh">
+          <button onClick={refreshWebhooks} className="rounded-lg p-2 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] transition-colors" title={t("webhookConfig.refresh")}>
             <RefreshCw className="h-4 w-4" />
           </button>
           <button
@@ -386,7 +389,7 @@ function WebhookConfigTab() {
             disabled={webhooks.length >= 10}
             className="flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" /> Add Webhook
+            <Plus className="h-3.5 w-3.5" /> {t("webhookConfig.addWebhook")}
           </button>
         </div>
       </div>
@@ -401,15 +404,15 @@ function WebhookConfigTab() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mx-auto mb-3">
             <Webhook className="h-6 w-6 text-[var(--color-primary-light)]" />
           </div>
-          <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">No webhooks configured</p>
+          <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">{t("webhookConfig.emptyTitle")}</p>
           <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] max-w-xs mx-auto">
-            Add your first webhook to start receiving real-time events from your platform.
+            {t("webhookConfig.emptyDesc")}
           </p>
           <button
             onClick={() => setShowForm(true)}
             className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-colors"
           >
-            <Plus className="h-3.5 w-3.5" /> Add Webhook
+            <Plus className="h-3.5 w-3.5" /> {t("webhookConfig.addWebhook")}
           </button>
         </div>
       ) : (
@@ -424,11 +427,11 @@ function WebhookConfigTab() {
                       <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">{wh.name}</p>
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro font-medium ${isActive ? "bg-[var(--color-success)]/15 text-[var(--color-success)]" : "bg-[var(--color-on-dark-muted)]/15 text-[var(--color-on-dark-muted)]"}`}>
                         {isActive ? <Power className="h-3 w-3" /> : <PowerOff className="h-3 w-3" />}
-                        {isActive ? "Active" : "Inactive"}
+                        {isActive ? t("webhookConfig.active") : t("webhookConfig.inactive")}
                       </span>
                       {(wh.failureCount ?? 0) > 0 && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-error)]/15 px-2 py-0.5 text-micro font-medium text-[var(--color-error)]">
-                          <AlertTriangle className="h-3 w-3" /> {wh.failureCount ?? 0} failures
+                          <AlertTriangle className="h-3 w-3" /> {t("webhookConfig.failures", { count: wh.failureCount ?? 0 })}
                         </span>
                       )}
                     </div>
@@ -445,7 +448,7 @@ function WebhookConfigTab() {
                     </div>
                     {wh.lastFiredAt && (
                       <p className="mt-2 text-micro text-[var(--color-on-dark-muted)]">
-                        Last fired: {new Date(wh.lastFiredAt).toLocaleString()}
+                        {t("webhookConfig.lastFired")} {new Date(wh.lastFiredAt).toLocaleString()}
                       </p>
                     )}
                   </div>
@@ -454,21 +457,21 @@ function WebhookConfigTab() {
                       onClick={() => handleTest(wh._id)}
                       disabled={testingId === wh._id}
                       className="rounded-lg border border-[var(--color-ink-muted)] px-2.5 py-1.5 text-caption font-medium text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 transition-colors"
-                      title="Send test event"
+                      title={t("webhookConfig.sendTestEvent")}
                     >
-                      {testingId === wh._id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Test"}
+                      {testingId === wh._id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("webhookConfig.test")}
                     </button>
                     <button
                       onClick={() => copyUrl(wh.url, wh._id)}
                       className="rounded-lg border border-[var(--color-ink-muted)] p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] transition-colors"
-                      title="Copy URL"
+                      title={t("webhookConfig.copyUrl")}
                     >
                       {copiedId === wh._id ? <Check className="h-3.5 w-3.5 text-[var(--color-success)]" /> : <Copy className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       onClick={() => setDeleteId(wh._id)}
                       className="rounded-lg border border-[var(--color-ink-muted)] p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] hover:border-[var(--color-error)]/30 transition-colors"
-                      title="Delete"
+                      title={t("webhookConfig.delete")}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -485,7 +488,7 @@ function WebhookConfigTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowForm(false)}>
           <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-[var(--color-ink-muted)] px-5 py-4">
-              <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">Create Webhook</h3>
+              <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("webhookConfig.createTitle")}</h3>
               <button onClick={() => setShowForm(false)} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)]">
                 <X className="h-4 w-4" />
               </button>
@@ -498,23 +501,23 @@ function WebhookConfigTab() {
               )}
 
               <div>
-                <label className={labelClass}>Webhook Name</label>
-                <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Production Webhook" className={inputClass} maxLength={50} />
+                <label className={labelClass}>{t("webhookConfig.formName")}</label>
+                <input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("webhookConfig.formNamePlaceholder")} className={inputClass} maxLength={50} />
               </div>
 
               <div>
-                <label className={labelClass}>Endpoint URL</label>
-                <input value={formUrl} onChange={(e) => setFormUrl(e.target.value)} placeholder="https://example.com/webhook" className={inputClass} />
+                <label className={labelClass}>{t("webhookConfig.formUrl")}</label>
+                <input value={formUrl} onChange={(e) => setFormUrl(e.target.value)} placeholder={t("webhookConfig.formUrlPlaceholder")} className={inputClass} />
               </div>
 
               <div>
-                <label className={labelClass}>Secret (optional)</label>
-                <input value={formSecret} onChange={(e) => setFormSecret(e.target.value)} placeholder="HMAC-SHA256 signing secret" className={inputClass} />
-                <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">Used to verify webhook signatures via X-Signature header.</p>
+                <label className={labelClass}>{t("webhookConfig.formSecret")}</label>
+                <input value={formSecret} onChange={(e) => setFormSecret(e.target.value)} placeholder={t("webhookConfig.formSecretPlaceholder")} className={inputClass} />
+                <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">{t("webhookConfig.formSecretHint")}</p>
               </div>
 
               <div>
-                <label className={labelClass}>Events ({formEvents.length} selected)</label>
+                <label className={labelClass}>{t("webhookConfig.formEvents", { count: formEvents.length })}</label>
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-2 space-y-0.5">
                   {ALL_WEBHOOK_EVENTS.map((e) => {
                     const selected = formEvents.includes(e);
@@ -540,10 +543,10 @@ function WebhookConfigTab() {
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--color-ink-muted)]">
                 <button onClick={() => setShowForm(false)} className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                  Cancel
+                  {t("webhookConfig.cancel")}
                 </button>
                 <button onClick={handleCreate} disabled={saving} className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Webhook"}
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("webhookConfig.createButton")}
                 </button>
               </div>
             </div>
@@ -560,13 +563,13 @@ function WebhookConfigTab() {
                 <AlertTriangle className="h-4 w-4 text-[var(--color-error)]" />
               </div>
               <div>
-                <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">Delete Webhook?</p>
-                <p className="text-caption text-[var(--color-on-dark-soft)] mt-0.5">This will permanently stop delivering events to this endpoint. This cannot be undone.</p>
+                <p className="text-body-sm font-semibold text-[var(--color-on-dark)]">{t("webhookConfig.deleteTitle")}</p>
+                <p className="text-caption text-[var(--color-on-dark-soft)] mt-0.5">{t("webhookConfig.deleteDesc")}</p>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteId(null)} className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-1.5 text-caption font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">Cancel</button>
-              <button onClick={() => handleDelete(deleteId)} className="rounded-lg bg-[var(--color-error)] px-4 py-1.5 text-caption font-semibold text-white hover:bg-[var(--color-error)]/85 transition-colors">Delete</button>
+              <button onClick={() => setDeleteId(null)} className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-1.5 text-caption font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">{t("webhookConfig.deleteCancel")}</button>
+              <button onClick={() => handleDelete(deleteId)} className="rounded-lg bg-[var(--color-error)] px-4 py-1.5 text-caption font-semibold text-white hover:bg-[var(--color-error)]/85 transition-colors">{t("webhookConfig.deleteConfirm")}</button>
             </div>
           </div>
         </div>
@@ -585,6 +588,7 @@ const TABS = [
 ] as const;
 
 export default function NotificationsPage() {
+  const t = useTranslations("notificationsPage");
   const { unreadCount } = useNotificationService();
   const [activeTab, setActiveTab] = useState<string>("notifications");
 
@@ -594,17 +598,19 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Notifications
+            {t("page.title")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Real-time webhook events &amp; configuration
+            {t("page.subtitle")}
           </p>
         </div>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-[var(--color-ink-muted)]">
-        {TABS.map((tab) => (
+        {TABS.map((tab) => {
+          const label = tab.id === "notifications" ? t("tabs.notifications") : t("tabs.webhookConfig");
+          return (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -615,12 +621,13 @@ export default function NotificationsPage() {
             }`}
           >
             <tab.icon className="h-4 w-4" />
-            {tab.label}
+            {label}
             {tab.id === "notifications" && unreadCount > 0 && (
               <span className="ml-1 rounded-full bg-[var(--color-error)] px-1.5 py-0.5 text-micro font-bold text-white">{unreadCount}</span>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {/* Tab content */}

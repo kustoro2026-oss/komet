@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Upload,
   Search,
@@ -27,15 +28,9 @@ const TYPE_ICONS: Record<string, typeof ImageIcon> = {
   document: File,
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  image: "Image",
-  video: "Video",
-  audio: "Audio",
-  document: "Document",
-};
-
 export default function MediaPage() {
   const router = useRouter();
+  const t = useTranslations("media");
   const { items, deleteItems, addItem, incrementUsedIn, isUploading, uploadProgress, setUploading, setUploadProgress } =
     useMediaStore();
   const { setComposerState } = usePostStore();
@@ -46,6 +41,13 @@ export default function MediaPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  const TYPE_LABELS: Record<string, string> = useMemo(() => ({
+    image: t("typeLabelImage"),
+    video: t("typeLabelVideo"),
+    audio: t("typeLabelAudio"),
+    document: t("typeLabelDocument"),
+  }), [t]);
 
   const filtered = items.filter((m) => {
     const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase());
@@ -94,16 +96,16 @@ export default function MediaPage() {
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
                 resolve(JSON.parse(xhr.responseText));
-              } catch { reject(new Error("Invalid response")); }
+              } catch { reject(new Error(t("invalidResponse"))); }
             } else {
               try {
                 const err = JSON.parse(xhr.responseText);
-                reject(new Error(err.error || `Error ${xhr.status}`));
-              } catch { reject(new Error(`Error ${xhr.status}`)); }
+                reject(new Error(err.error || t("errorStatus", { status: xhr.status })));
+              } catch { reject(new Error(t("errorStatus", { status: xhr.status }))); }
             }
           };
 
-          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.onerror = () => reject(new Error(t("networkError")));
           xhr.send(formData);
         });
         addItem({
@@ -119,13 +121,13 @@ export default function MediaPage() {
           usedIn: 0,
         });
       } catch (err) {
-        setUploadError(err instanceof Error ? err.message : "Upload failed");
+        setUploadError(err instanceof Error ? err.message : t("uploadError"));
       }
       setUploadProgress(Math.round(((i + 1) / fileArray.length) * 100));
     }
 
     setUploading(false);
-  }, [addItem, setUploading, setUploadProgress]);
+  }, [addItem, setUploading, setUploadProgress, t]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -166,10 +168,10 @@ export default function MediaPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Media Library
+            {t("heading")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Upload and manage your images, videos, and files
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -180,7 +182,7 @@ export default function MediaPage() {
                 className="rounded-lg border border-[var(--color-error)]/30 px-3 py-2 text-caption text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1.5 inline" />
-                Delete ({selected.length})
+                {t("deleteSelected", { count: selected.length })}
               </button>
             </>
           )}
@@ -202,7 +204,7 @@ export default function MediaPage() {
             ) : (
               <Upload className="h-4 w-4" />
             )}
-            {isUploading ? `Uploading ${uploadProgress}%` : "Upload"}
+            {isUploading ? t("uploading", { progress: uploadProgress }) : t("upload")}
           </button>
         </div>
       </div>
@@ -226,7 +228,7 @@ export default function MediaPage() {
           <>
             <Loader2 className="mx-auto h-10 w-10 text-[var(--color-primary)] animate-spin" />
             <p className="mt-3 text-body-sm font-medium text-[var(--color-on-dark)]">
-              Uploading files...
+              {t("uploadingFiles")}
             </p>
             <div className="mt-3 mx-auto max-w-xs bg-[var(--color-surface-dark)] rounded-full h-2 overflow-hidden">
               <div
@@ -242,10 +244,10 @@ export default function MediaPage() {
           <>
             <Upload className={`mx-auto h-10 w-10 ${isDragging ? "text-[var(--color-primary)]" : "text-[var(--color-on-dark-muted)]"}`} />
             <p className={`mt-3 text-body-sm font-medium ${isDragging ? "text-[var(--color-primary-light)]" : "text-[var(--color-on-dark)]"}`}>
-              {isDragging ? "Drop files here" : "Drag & drop files here, or click to browse"}
+              {isDragging ? t("dropHere") : t("dropOrBrowse")}
             </p>
             <p className="mt-1 text-micro text-[var(--color-on-dark-muted)]">
-              Supports images, videos, audio, and documents up to 50MB
+              {t("supportedFormats")}
             </p>
           </>
         )}
@@ -265,7 +267,7 @@ export default function MediaPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search media..."
+              placeholder={t("searchPlaceholder")}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] pl-10 pr-4 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             />
           </div>
@@ -274,11 +276,11 @@ export default function MediaPage() {
             onChange={(e) => setFilterType(e.target.value)}
             className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           >
-            <option value="all">All Types</option>
-            <option value="image">Images</option>
-            <option value="video">Videos</option>
-            <option value="audio">Audio</option>
-            <option value="document">Documents</option>
+            <option value="all">{t("allTypes")}</option>
+            <option value="image">{t("typeImages")}</option>
+            <option value="video">{t("typeVideos")}</option>
+            <option value="audio">{t("typeAudio")}</option>
+            <option value="document">{t("typeDocuments")}</option>
           </select>
         </div>
         <div className="flex items-center gap-1 rounded-lg border border-[var(--color-ink-muted)] p-1">
@@ -332,14 +334,14 @@ export default function MediaPage() {
                       <button
                         className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-white/30 transition-colors"
                         onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
-                        title="Use in post"
+                        title={t("useInPost")}
                       >
                         <ImagePlus className="h-3.5 w-3.5" />
                       </button>
                       <button
                         className="rounded-lg bg-white/20 p-1.5 text-white hover:bg-red-400/30 transition-colors"
                         onClick={(e) => { e.stopPropagation(); deleteItems([item.id]); }}
-                        title="Delete"
+                        title={t("delete")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -371,14 +373,14 @@ export default function MediaPage() {
                     <div className="flex items-center gap-1">
                       {item.usedIn > 0 && (
                         <span className="text-micro text-[var(--color-on-dark-muted)]">
-                          Used {item.usedIn}x
+                          {t("usedCount", { count: item.usedIn })}
                         </span>
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
                         className="text-micro text-[var(--color-accent)] hover:text-[var(--color-primary-light)] transition-colors font-medium"
                       >
-                        Use
+                        {t("use")}
                       </button>
                     </div>
                   </div>
@@ -393,12 +395,12 @@ export default function MediaPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-[var(--color-ink-muted)]">
-                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">File</th>
-                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">Type</th>
-                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">Size</th>
-                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">Dimensions</th>
-                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">Used In</th>
-                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">Date</th>
+                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableFile")}</th>
+                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableType")}</th>
+                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableSize")}</th>
+                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableDimensions")}</th>
+                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableUsedIn")}</th>
+                <th className="px-4 py-3 text-left text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("tableDate")}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -425,14 +427,14 @@ export default function MediaPage() {
                     <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{TYPE_LABELS[item.type]}</td>
                     <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{item.size}</td>
                     <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{item.dimensions || "-"}</td>
-                    <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{item.usedIn} posts</td>
+                    <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{t("usedInPosts", { count: item.usedIn })}</td>
                     <td className="px-4 py-3 text-body-sm text-[var(--color-on-dark-soft)]">{item.createdAt}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button
                           className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-primary-light)]"
                           onClick={(e) => { e.stopPropagation(); handleUseInPost(item); }}
-                          title="Use in post"
+                          title={t("useInPost")}
                         >
                           <ImagePlus className="h-3.5 w-3.5" />
                         </button>
@@ -453,12 +455,12 @@ export default function MediaPage() {
             <ImageIcon className="h-8 w-8 text-[var(--color-primary-light)]" />
           </div>
           <p className="mt-4 text-body-sm font-semibold text-[var(--color-on-dark)]">
-            {search ? "No matching media found" : "Your media library is empty"}
+            {search ? t("noMatchTitle") : t("emptyTitle")}
           </p>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-muted)]">
             {search
-              ? "Try adjusting your search or filters"
-              : "Upload images, videos, audio, or documents to get started"}
+              ? t("noMatchSubtitle")
+              : t("emptySubtitle")}
           </p>
           {!search && (
             <button
@@ -466,7 +468,7 @@ export default function MediaPage() {
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm font-medium text-white hover:bg-[var(--color-primary-hover)] transition-all"
             >
               <Upload className="h-4 w-4" />
-              Upload Media
+              {t("uploadMedia")}
             </button>
           )}
         </div>
