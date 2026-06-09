@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Sparkles,
   Zap,
   FileText,
   MessageSquare,
@@ -68,7 +67,7 @@ interface GeneratedResult {
   type?: "text" | "image";
 }
 
-const FEATURE_HEADERS: Record<FeatureMode, { title: string; icon: typeof Sparkles; desc: string }> = {
+const FEATURE_HEADERS: Record<FeatureMode, { title: string; icon: React.ComponentType<{ className?: string }>; desc: string }> = {
   generate: {
     title: "Generate Post",
     icon: Zap,
@@ -493,7 +492,7 @@ export default function AIPage() {
         </h2>
         {results.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-16">
-            <Sparkles className="h-10 w-10 text-[var(--color-on-dark-muted)] mb-3" />
+            <img src="/logo-komet.png" alt="Komet" className="h-10 w-10 object-contain mb-3" />
             <p className="text-body-sm text-[var(--color-on-dark-muted)]">{emptyMsg.line1}</p>
             <p className="mt-1 text-caption text-[var(--color-on-dark-muted)]">{emptyMsg.line2}</p>
           </div>

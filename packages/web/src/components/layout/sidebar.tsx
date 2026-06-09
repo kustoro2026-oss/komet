@@ -19,7 +19,6 @@ import {
   BarChart3,
   Inbox,
   Bell,
-  Sparkles,
   Bot,
   Image,
   Settings,
@@ -121,11 +120,11 @@ export function Sidebar({ mobileOpen = false, onMobileClose, className }: Sideba
         )}
       >
         {collapsed ? (
-          <Sparkles className="h-6 w-6 text-[var(--color-primary)]" />
+          <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
         ) : (
           <>
             <Link href="/dashboard" className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-[var(--color-primary)]" />
+              <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
               <span className="font-display text-lg font-semibold text-[var(--color-on-dark)] light:text-[var(--color-ink)]">
                 Komet
               </span>

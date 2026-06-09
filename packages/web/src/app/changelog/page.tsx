@@ -1,13 +1,17 @@
 "use client";
 import { PageShell } from "@/components/page-shell";
-import { Sparkles, Zap, Bug, Star } from "lucide-react";
+import { Zap, Bug, Star } from "lucide-react";
 import { motion } from "framer-motion";
+
+const KometLogoImg = ({ className }: { className?: string }) => (
+  <img src="/logo-komet.png" alt="Komet" className={className} />
+);
 
 const changelog = [
   {
     date: "June 2026",
     title: "v1.4 — Marquee platform showcase",
-    icon: Sparkles,
+    icon: KometLogoImg,
     items: ["New auto-scrolling marquee on landing page for platform integrations", "Responsive padding improvements across all cards on mobile", "Footer redesigned with multi-column SaaS layout"],
   },
   {

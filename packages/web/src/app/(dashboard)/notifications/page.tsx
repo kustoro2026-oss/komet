@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Calendar,
   CreditCard,
-  Sparkles,
   Plug,
   Power,
   PowerOff,
@@ -71,7 +70,7 @@ function EventIcon({ eventType }: { eventType: string }) {
     case "reaction":
       return <div className={className} style={style}><Zap className="h-4 w-4" /></div>;
     case "review":
-      return <div className={className} style={style}><Sparkles className="h-4 w-4" /></div>;
+      return <div className={className} style={style}><img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" /></div>;
     case "lead":
       return <div className={className} style={style}><CreditCard className="h-4 w-4" /></div>;
     case "ad":

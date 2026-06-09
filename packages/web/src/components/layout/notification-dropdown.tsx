@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell, Check, Trash2, MessageSquare, Calendar, AlertTriangle, CreditCard, Sparkles } from "lucide-react";
+import { Bell, Check, Trash2, MessageSquare, Calendar, AlertTriangle, CreditCard } from "lucide-react";
 import Link from "next/link";
 
 interface Notification {
@@ -24,14 +24,18 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   { id: "7", type: "system", title: "New Feature", message: "AI Content Studio is now available! Try generating content with AI.", isRead: true, link: "/ai", createdAt: "3d ago" },
 ];
 
+const KometLogoImg = ({ className }: { className?: string }) => (
+  <img src="/logo-komet.png" alt="Komet" className={className} />
+);
+
 const TYPE_ICONS: Record<string, typeof MessageSquare> = {
   comment: MessageSquare,
   mention: MessageSquare,
   post_failed: AlertTriangle,
   post_scheduled: Calendar,
   payment: CreditCard,
-  team: Sparkles,
-  system: Sparkles,
+  team: KometLogoImg,
+  system: KometLogoImg,
 };
 
 // Maps notification types to preference keys in localStorage

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
-import { Sparkles, Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo } from "lucide-react";
+import { Calendar, Check, ArrowLeft, ArrowRight, Send, Save, Image as ImageIcon, Hash, Type, Loader2, CheckCircle2, AlertCircle, Upload, Trash2, FileVideo } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { SUPPORTED_PLATFORMS, PLATFORM_LABELS, CHARACTER_LIMITS } from "@komet/shared";
 import { useCreatePost, uploadMedia } from "@/lib/posts/hooks";
@@ -349,9 +349,13 @@ export default function CreatePostPage() {
     );
   };
 
+const KometLogoImg = ({ className }: { className?: string }) => (
+  <img src="/logo-komet.png" alt="Komet" className={className} />
+);
+
   const steps: { key: ComposerStep; label: string; icon: typeof Type }[] = [
     { key: "content", label: "Content", icon: Type },
-    { key: "platforms", label: "Platforms", icon: Sparkles },
+    { key: "platforms", label: "Platforms", icon: KometLogoImg },
     { key: "schedule", label: "Schedule", icon: Calendar },
     { key: "review", label: "Review", icon: Check },
   ];

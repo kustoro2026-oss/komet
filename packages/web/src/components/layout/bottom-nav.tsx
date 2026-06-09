@@ -8,15 +8,18 @@ import {
   LayoutDashboard,
   FileText,
   Inbox,
-  Sparkles,
   Settings,
 } from "lucide-react";
+
+const KometLogoImg = ({ className }: { className?: string }) => (
+  <img src="/logo-komet.png" alt="Komet" className={className} />
+);
 
 const bottomNavItems = [
   { href: "/dashboard", labelKey: "dashboard", icon: LayoutDashboard },
   { href: "/posts", labelKey: "posts", icon: FileText },
   { href: "/inbox", labelKey: "inbox", icon: Inbox },
-  { href: "/ai", labelKey: "aiStudio", icon: Sparkles },
+  { href: "/ai", labelKey: "aiStudio", icon: KometLogoImg },
   { href: "/settings", labelKey: "settings", icon: Settings },
 ];
 

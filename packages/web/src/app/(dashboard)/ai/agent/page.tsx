@@ -5,7 +5,6 @@ import {
   Send,
   Bot,
   User,
-  Sparkles,
   RefreshCw,
   Zap,
   BarChart3,
@@ -232,7 +231,7 @@ export default function AiAgentPage() {
         <div className="hidden lg:flex flex-col w-72 shrink-0">
           <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-4">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-4 w-4 text-[var(--color-accent)]" />
+              <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
               <h3 className="font-display text-heading-xs font-semibold text-[var(--color-on-dark)]">
                 Quick Actions
               </h3>

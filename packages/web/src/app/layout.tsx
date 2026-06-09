@@ -40,11 +40,15 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
-    apple: "/komet-icon.svg",
+    apple: "/favicon-new.png",
     other: [
       {
         rel: "apple-touch-icon-precomposed",
-        url: "/komet-icon.svg",
+        url: "/favicon-new.png",
+      },
+      {
+        rel: "icon",
+        url: "/favicon-new.png",
       },
     ],
   },

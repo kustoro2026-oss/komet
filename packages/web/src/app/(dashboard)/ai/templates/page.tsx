@@ -11,7 +11,6 @@ import {
   MessageSquare,
   Hash,
   Image,
-  Sparkles,
 } from "lucide-react";
 
 interface PromptTemplate {
@@ -105,7 +104,7 @@ export default function AiTemplatesPage() {
       {/* Template Grid */}
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-12 text-center">
-          <Sparkles className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)]" />
+          <img src="/logo-komet.png" alt="Komet" className="mx-auto h-8 w-8 object-contain" />
           <p className="mt-3 text-body-sm text-[var(--color-on-dark-soft)]">No templates found</p>
         </div>
       ) : (

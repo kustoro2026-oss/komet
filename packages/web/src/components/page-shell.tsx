@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
@@ -19,7 +19,7 @@ export function PageShell({ title, description, children }: PageShellProps) {
         <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-md shadow-[var(--color-primary)]/25">
-              <Sparkles className="h-4 w-4 text-white" />
+              <img src="/logo-komet.png" alt="Komet" className="h-4 w-4 object-contain" />
             </div>
             <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
           </Link>

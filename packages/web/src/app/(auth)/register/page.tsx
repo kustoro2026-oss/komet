@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -79,7 +79,7 @@ function RegisterForm() {
 
       <div className="text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-primary)]">
-          <Sparkles className="h-6 w-6 text-[var(--color-on-primary)]" />
+          <img src="/logo-komet.png" alt="Komet" className="h-6 w-6 object-contain" />
         </div>
         <h1 className="mt-4 font-display text-display-sm font-bold text-[var(--color-on-dark)]">
           {t("registerTitle")}

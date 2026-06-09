@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Smartphone, Download, Sparkles } from "lucide-react";
+import { X, Smartphone, Download } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -68,7 +68,7 @@ export function PwaInstallBanner() {
 
         <div className="relative flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-purple-600 shadow-lg shadow-[var(--color-primary)]/25">
-            <Sparkles className="h-5 w-5 text-white" />
+            <img src="/logo-komet.png" alt="Komet" className="h-5 w-5 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">

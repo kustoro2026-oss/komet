@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Sparkles, User, Settings, LogOut } from "lucide-react";
+import { Menu, User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationDropdown } from "./notification-dropdown";
 import { useAuthStore } from "@/stores/auth-store";
@@ -65,7 +65,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
 
       {/* Logo - Centered */}
       <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-[var(--color-primary)]" />
+        <img src="/logo-komet.png" alt="Komet" className="h-5 w-5 object-contain" />
         <span className="font-display text-base font-semibold text-[var(--color-ink)] dark:text-[var(--color-on-dark)]">
           Komet
         </span>

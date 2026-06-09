@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronRight, Sparkles, Calendar, Users, Bell, Image, Link as LinkIcon } from "lucide-react";
+import { Check, ChevronRight, Calendar, Users, Bell, Image, Link as LinkIcon } from "lucide-react";
 import NextLink from "next/link";
 
 export interface OnboardingStep {
   id: string;
   title: string;
   description: string;
-  icon: typeof Sparkles;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
   isComplete: boolean;
 }
@@ -18,11 +18,15 @@ interface OnboardingChecklistProps {
   onComplete?: (stepId: string) => void;
 }
 
+const KometLogoImg = ({ className }: { className?: string }) => (
+  <img src="/logo-komet.png" alt="Komet" className={className} />
+);
+
 const DEFAULT_STEPS: OnboardingStep[] = [
   { id: "connect", title: "Connect Social Accounts", description: "Link your social media platforms", icon: LinkIcon, href: "/accounts/connect", isComplete: false },
   { id: "first_post", title: "Create Your First Post", description: "Write and schedule your first content", icon: Calendar, href: "/posts/create", isComplete: false },
   { id: "invite_team", title: "Invite Team Members", description: "Collaborate with your team", icon: Users, href: "/team", isComplete: false },
-  { id: "setup_ai", title: "Explore AI Features", description: "Try AI content generation", icon: Sparkles, href: "/ai", isComplete: false },
+  { id: "setup_ai", title: "Explore AI Features", description: "Try AI content generation", icon: KometLogoImg, href: "/ai", isComplete: false },
   { id: "upload_media", title: "Upload Media", description: "Add images and videos to your library", icon: Image, href: "/media", isComplete: false },
   { id: "notifications", title: "Configure Notifications", description: "Set up your notification preferences", icon: Bell, href: "/settings", isComplete: false },
 ];
@@ -48,7 +52,7 @@ export function OnboardingChecklist({ steps: initialSteps, onComplete }: Onboard
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)]">
-            <Sparkles className="h-5 w-5 text-white" />
+            <img src="/logo-komet.png" alt="Komet" className="h-5 w-5 object-contain" />
           </div>
           <div>
             <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">

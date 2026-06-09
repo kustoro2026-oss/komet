@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Sparkles, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import type { OnboardingStep } from "@/components/onboarding-checklist";
 
+const KometLogoImg = ({ className }: { className?: string }) => (
+  <img src="/logo-komet.png" alt="Komet" className={className} />
+);
+
 const INITIAL_STEPS: OnboardingStep[] = [
-  { id: "connect", title: "Connect Social Accounts", description: "Link your Twitter, Instagram, LinkedIn, and more", icon: Sparkles, href: "/accounts/connect", isComplete: false },
-  { id: "first_post", title: "Create Your First Post", description: "Write, customize, and schedule your first piece of content", icon: Sparkles, href: "/posts/create", isComplete: false },
-  { id: "profile", title: "Complete Your Profile", description: "Set up your workspace, avatar, and preferences", icon: Sparkles, href: "/settings", isComplete: false },
-  { id: "invite_team", title: "Invite Team Members", description: "Bring your collaborators on board", icon: Sparkles, href: "/team", isComplete: false },
-  { id: "explore_ai", title: "Explore AI Studio", description: "Try generating content with artificial intelligence", icon: Sparkles, href: "/ai", isComplete: false },
-  { id: "media_upload", title: "Upload Media Assets", description: "Add images and videos to your media library", icon: Sparkles, href: "/media", isComplete: false },
+  { id: "connect", title: "Connect Social Accounts", description: "Link your Twitter, Instagram, LinkedIn, and more", icon: KometLogoImg, href: "/accounts/connect", isComplete: false },
+  { id: "first_post", title: "Create Your First Post", description: "Write, customize, and schedule your first piece of content", icon: KometLogoImg, href: "/posts/create", isComplete: false },
+  { id: "profile", title: "Complete Your Profile", description: "Set up your workspace, avatar, and preferences", icon: KometLogoImg, href: "/settings", isComplete: false },
+  { id: "invite_team", title: "Invite Team Members", description: "Bring your collaborators on board", icon: KometLogoImg, href: "/team", isComplete: false },
+  { id: "explore_ai", title: "Explore AI Studio", description: "Try generating content with artificial intelligence", icon: KometLogoImg, href: "/ai", isComplete: false },
+  { id: "media_upload", title: "Upload Media Assets", description: "Add images and videos to your media library", icon: KometLogoImg, href: "/media", isComplete: false },
 ];
 
 export default function OnboardingPage() {
@@ -44,7 +48,7 @@ export default function OnboardingPage() {
           {isAllComplete ? (
             <CheckCircle className="h-8 w-8 text-white" />
           ) : (
-            <Sparkles className="h-8 w-8 text-white" />
+            <img src="/logo-komet.png" alt="Komet" className="h-8 w-8 object-contain" />
           )}
         </div>
         <h1 className="font-display text-4xl font-bold text-[var(--color-on-dark)]">
