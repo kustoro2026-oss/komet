@@ -5,6 +5,7 @@ export interface Workspace {
   name: string;
   slug: string;
   role: "admin" | "editor" | "viewer";
+  ownerId?: string;
 }
 
 interface WorkspaceState {
