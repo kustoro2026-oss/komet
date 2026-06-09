@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { useAccounts, useDeleteAccount } from "@/lib/accounts/hooks";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 
 export default function AccountDetailPage() {
+  const t = useTranslations("accountDetail");
   const params = useParams();
   const router = useRouter();
   const accountId = params.accountId as string;
@@ -34,17 +36,17 @@ export default function AccountDetailPage() {
     return (
       <div className="mx-auto max-w-4xl space-y-6">
         <button onClick={() => router.push("/accounts")} className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
-          <ArrowLeft className="h-4 w-4" /> Back to Accounts
+          <ArrowLeft className="h-4 w-4" /> {t("backToAccounts")}
         </button>
         <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] py-24">
           <AlertTriangle className="h-12 w-12 text-amber-400 mb-4" />
-          <p className="text-body-md text-[var(--color-on-dark)] font-medium">Account not found</p>
-          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">The account you&apos;re looking for doesn&apos;t exist or has been disconnected.</p>
+          <p className="text-body-md text-[var(--color-on-dark)] font-medium">{t("notFound")}</p>
+          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">{t("notFoundDescription")}</p>
           <button
             onClick={() => router.push("/accounts")}
             className="mt-6 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
           >
-            Go to Accounts
+            {t("goToAccounts")}
           </button>
         </div>
       </div>
@@ -67,7 +69,7 @@ export default function AccountDetailPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       {/* Back button */}
       <button onClick={() => router.push("/accounts")} className="inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]">
-        <ArrowLeft className="h-4 w-4" /> Back to Accounts
+        <ArrowLeft className="h-4 w-4" /> {t("backToAccounts")}
       </button>
 
       {/* Account Header */}
@@ -87,7 +89,7 @@ export default function AccountDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className={`rounded-full px-3 py-1 text-caption font-medium ${account.isActive ? "bg-[var(--color-success)]/10 text-[var(--color-success)]" : "bg-[var(--color-warning)]/10 text-[var(--color-warning)]"}`}>
-            {account.isActive ? "Active" : "Expired"}
+            {account.isActive ? t("active") : t("expired")}
           </span>
           <a
             href="/accounts/connect"
@@ -111,13 +113,13 @@ export default function AccountDetailPage() {
           onClick={() => setActiveView("overview")}
           className={`flex items-center gap-2 rounded-md px-4 py-2 text-button-sm font-medium ${activeView === "overview" ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]" : "text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]"}`}
         >
-          <Activity className="h-4 w-4" /> Overview
+          <Activity className="h-4 w-4" /> {t("overview")}
         </button>
         <button
           onClick={() => setActiveView("posts")}
           className={`flex items-center gap-2 rounded-md px-4 py-2 text-button-sm font-medium ${activeView === "posts" ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]" : "text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]"}`}
         >
-          <BarChart3 className="h-4 w-4" /> Recent Posts
+          <BarChart3 className="h-4 w-4" /> {t("recentPosts")}
         </button>
       </div>
 
@@ -125,36 +127,36 @@ export default function AccountDetailPage() {
       <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] p-6">
         {activeView === "overview" ? (
           <div className="space-y-4">
-            <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">Account Info</h3>
+            <h3 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">{t("accountInfo")}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Platform</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("platform")}</p>
                 <p className="text-body-sm text-[var(--color-on-dark)]">{PLATFORM_LABELS[account.platform as Platform] || account.platform}</p>
               </div>
               <div>
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Username</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("username")}</p>
                 <p className="text-body-sm text-[var(--color-on-dark)]">@{account.username}</p>
               </div>
               <div>
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Account ID</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("accountId")}</p>
                 <p className="text-body-sm text-[var(--color-on-dark)] font-mono text-caption">{account.id}</p>
               </div>
               <div>
-                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">Status</p>
-                <p className="text-body-sm text-[var(--color-on-dark)]">{account.isActive ? "Active" : "Expired"}</p>
+                <p className="text-caption-uppercase text-[var(--color-on-dark-muted)]">{t("status")}</p>
+                <p className="text-body-sm text-[var(--color-on-dark)]">{account.isActive ? t("active") : t("expired")}</p>
               </div>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
             <BarChart3 className="h-12 w-12 text-[var(--color-on-dark-muted)] mb-3" />
-            <p className="text-body-sm text-[var(--color-on-dark)] font-medium">Post history available soon</p>
-            <p className="mt-1 text-caption text-[var(--color-on-dark-soft)]">View published posts from this account in the Posts section.</p>
+            <p className="text-body-sm text-[var(--color-on-dark)] font-medium">{t("postHistoryAvailable")}</p>
+            <p className="mt-1 text-caption text-[var(--color-on-dark-soft)]">{t("postHistoryDescription")}</p>
             <button
               onClick={() => router.push("/posts")}
               className="mt-4 flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
             >
-              <ExternalLink className="h-4 w-4" /> View Posts
+              <ExternalLink className="h-4 w-4" /> {t("viewPosts")}
             </button>
           </div>
         )}
@@ -170,12 +172,12 @@ export default function AccountDetailPage() {
                 <AlertTriangle className="h-5 w-5 text-[var(--color-error)]" />
               </div>
               <div>
-                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">Disconnect Account</h3>
-                <p className="text-caption text-[var(--color-on-dark-soft)]">This action will disconnect the account from Zernio.</p>
+                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{t("disconnectTitle")}</h3>
+                <p className="text-caption text-[var(--color-on-dark-soft)]">{t("disconnectDescription")}</p>
               </div>
             </div>
             <p className="text-body-sm text-[var(--color-on-dark-soft)] mb-4">
-              Are you sure you want to disconnect <span className="font-medium text-[var(--color-on-dark)]">{account.displayName}</span>?
+              {t("disconnectConfirm", { name: account.displayName })}
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
@@ -183,14 +185,14 @@ export default function AccountDetailPage() {
                 disabled={isDeleting}
                 className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="rounded-lg bg-[var(--color-error)] px-3 py-1.5 text-button-sm text-white hover:bg-[var(--color-error)]/90 disabled:opacity-50"
               >
-                {isDeleting ? "Disconnecting..." : "Disconnect"}
+                {isDeleting ? t("disconnecting") : t("disconnect")}
               </button>
             </div>
           </div>

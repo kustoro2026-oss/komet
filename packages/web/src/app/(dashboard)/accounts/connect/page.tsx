@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, ExternalLink, Check, Loader2, Search, Shield, Globe, MessageSquare, Video, ChevronRight, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useProfiles, useAccounts } from "@/lib/accounts/hooks";
@@ -27,11 +28,11 @@ const PLATFORM_COLORS: Record<Platform, string> = {
   whatsapp: "#25D366",
 };
 
-const PLATFORM_CATEGORIES: { label: string; icon: typeof Globe; platforms: Platform[] }[] = [
-  { label: "Social Media", icon: Globe, platforms: ["twitter", "instagram", "facebook", "linkedin", "threads", "pinterest", "reddit", "snapchat"] },
-  { label: "Video & Music", icon: Video, platforms: ["youtube", "tiktok"] },
-  { label: "Messaging", icon: MessageSquare, platforms: ["telegram", "discord", "whatsapp"] },
-  { label: "Business & Other", icon: Shield, platforms: ["bluesky", "googlebusiness"] },
+const PLATFORM_CATEGORIES: { categoryKey: string; icon: typeof Globe; platforms: Platform[] }[] = [
+  { categoryKey: "categorySocialMedia", icon: Globe, platforms: ["twitter", "instagram", "facebook", "linkedin", "threads", "pinterest", "reddit", "snapchat"] },
+  { categoryKey: "categoryVideoMusic", icon: Video, platforms: ["youtube", "tiktok"] },
+  { categoryKey: "categoryMessaging", icon: MessageSquare, platforms: ["telegram", "discord", "whatsapp"] },
+  { categoryKey: "categoryBusinessOther", icon: Shield, platforms: ["bluesky", "googlebusiness"] },
 ];
 
 const container = {
@@ -48,6 +49,7 @@ const itemAnim = {
 };
 
 export default function ConnectAccountPage() {
+  const t = useTranslations("connectAccount");
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -81,7 +83,7 @@ export default function ConnectAccountPage() {
         })
           .then((res) => res.json())
           .then((p) => setProfileId(p.id))
-          .catch((err: Error) => setError(err.message || "Failed to create profile"));
+          .catch((err: Error) => setError(err.message || t("errorProfileFailed")));
       }
     }
   }, [profiles, profilesLoading]);
@@ -94,7 +96,7 @@ export default function ConnectAccountPage() {
     try {
       if (selectedPlatform === "bluesky") {
         if (!blueskyIdentifier || !blueskyAppPassword) {
-          setError("Please enter your Bluesky identifier and app password");
+          setError(t("errorBlueskyRequired"));
           setConnecting(false);
           return;
         }
@@ -109,7 +111,7 @@ export default function ConnectAccountPage() {
 
       setConnected(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect account");
+      setError(err instanceof Error ? err.message : t("errorConnectFailed"));
     } finally {
       setConnecting(false);
     }
@@ -157,10 +159,10 @@ export default function ConnectAccountPage() {
           transition={{ delay: 0.2 }}
         >
           <h2 className="font-display text-heading-lg font-semibold text-[var(--color-on-dark)]">
-            Account Connected!
+            {t("successTitle")}
           </h2>
           <p className="mt-2 text-body-sm text-[var(--color-on-dark-soft)]">
-            Your <span className="font-medium text-[var(--color-on-dark)]">{selectedPlatform && PLATFORM_LABELS[selectedPlatform]}</span> account has been successfully connected.
+            {t("successMessage", { platform: selectedPlatform ? PLATFORM_LABELS[selectedPlatform] : "" })}
           </p>
         </motion.div>
 
@@ -174,14 +176,14 @@ export default function ConnectAccountPage() {
             href="/accounts"
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-button-sm font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] transition-all active:scale-95 shadow-glow"
           >
-            View Accounts
+            {t("viewAccounts")}
             <ChevronRight className="h-4 w-4" />
           </a>
           <button
             onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); }}
             className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
-            Connect Another
+            {t("connectAnother")}
           </button>
         </motion.div>
       </motion.div>
@@ -208,7 +210,7 @@ export default function ConnectAccountPage() {
           className="group inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-          Back to platforms
+          {t("backToPlatforms")}
         </button>
 
         <div className="mt-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] overflow-hidden">
@@ -226,12 +228,12 @@ export default function ConnectAccountPage() {
               </motion.div>
               <div>
                 <h2 className="font-display text-heading-md font-semibold text-[var(--color-on-dark)]">
-                  Connect {PLATFORM_LABELS[selectedPlatform]}
+                  {t("connectPlatform", { platform: PLATFORM_LABELS[selectedPlatform] })}
                 </h2>
                 <p className="mt-0.5 text-body-sm text-[var(--color-on-dark-soft)]">
                   {isBluesky
-                    ? "Enter your Bluesky credentials to connect"
-                    : `Authorize Komet to manage your ${PLATFORM_LABELS[selectedPlatform]} account`}
+                    ? t("blueskyDescription")
+                    : t("oauthDescription", { platform: PLATFORM_LABELS[selectedPlatform] })}
                 </p>
               </div>
             </div>
@@ -250,14 +252,14 @@ export default function ConnectAccountPage() {
                   <div>
                     <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-                      Bluesky Identifier
+                      {t("blueskyIdentifier")}
                     </label>
                     <div className="relative">
                       <input
                         type="text"
                         value={blueskyIdentifier}
                         onChange={(e) => setBlueskyIdentifier(e.target.value)}
-                        placeholder="your-handle.bsky.social"
+                        placeholder={t("blueskyIdentifierPlaceholder")}
                         className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
                       />
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-on-dark-muted)]">
@@ -268,21 +270,21 @@ export default function ConnectAccountPage() {
                   <div>
                     <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-                      App Password
+                      {t("appPassword")}
                     </label>
                     <div className="relative">
                       <input
                         type="password"
                         value={blueskyAppPassword}
                         onChange={(e) => setBlueskyAppPassword(e.target.value)}
-                        placeholder="xxxx-xxxx-xxxx-xxxx"
+                        placeholder={t("appPasswordPlaceholder")}
                         className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
                       />
                       <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
                     </div>
                     <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
                       <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      Generate an app password in your Bluesky settings &gt; App Passwords
+                      {t("blueskyPasswordHint")}
                     </p>
                   </div>
                 </div>
@@ -295,16 +297,19 @@ export default function ConnectAccountPage() {
                   </div>
                   <div>
                     <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                      OAuth Authorization Required
+                      {t("oauthTitle")}
                     </p>
                     <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                      You will be redirected to <strong className="text-[var(--color-on-dark)]">{PLATFORM_LABELS[selectedPlatform]}</strong> to authorize Komet.
+                      {t.rich("oauthRedirectText", {
+                        platform: PLATFORM_LABELS[selectedPlatform],
+                        strong: (chunks) => <strong className="text-[var(--color-on-dark)]">{chunks}</strong>,
+                      })}
                     </p>
                     <ul className="mt-2 space-y-1">
                       {[
-                        "Read your profile and posts",
-                        "Publish content on your behalf",
-                        "View engagement metrics",
+                        t("permissionReadProfile"),
+                        t("permissionPublish"),
+                        t("permissionViewMetrics"),
                       ].map((item, i) => (
                         <li key={i} className="flex items-center gap-2 text-caption text-[var(--color-on-dark-muted)]">
                           <Check className="h-3 w-3 text-[var(--color-success)]" />
@@ -313,7 +318,7 @@ export default function ConnectAccountPage() {
                       ))}
                     </ul>
                     <p className="mt-2 text-caption text-[var(--color-on-dark-soft)] italic">
-                      After authorization, you&apos;ll be redirected back to your accounts page.
+                      {t("oauthAfterAuthNote")}
                     </p>
                   </div>
                 </div>
@@ -359,12 +364,12 @@ export default function ConnectAccountPage() {
               {connecting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Connecting...
+                  {t("connecting")}
                 </>
               ) : (
                 <>
                   <PlatformIcon platform={selectedPlatform} className="h-4 w-4" />
-                  Connect {PLATFORM_LABELS[selectedPlatform]}
+                  {t("connectPlatform", { platform: PLATFORM_LABELS[selectedPlatform] })}
                   {!isBluesky && <ExternalLink className="h-4 w-4" />}
                 </>
               )}
@@ -382,10 +387,10 @@ export default function ConnectAccountPage() {
       <motion.div variants={itemAnim} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">
-            Connect Account
+            {t("heading")}
           </h1>
           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-            Choose a platform to connect to your workspace
+            {t("description")}
           </p>
         </div>
 
@@ -396,7 +401,7 @@ export default function ConnectAccountPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search platforms..."
+            placeholder={t("searchPlaceholder")}
             className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] pl-9 pr-8 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
           />
           {searchQuery && (
@@ -424,7 +429,7 @@ export default function ConnectAccountPage() {
           ))}
         </div>
         <span>
-          {connectedPlatforms.size} of {SUPPORTED_PLATFORMS.length} platforms connected
+          {t("platformsCount", { connected: connectedPlatforms.size, total: SUPPORTED_PLATFORMS.length })}
         </span>
       </motion.div>
 
@@ -446,13 +451,13 @@ export default function ConnectAccountPage() {
                 <Search className="h-8 w-8 text-[var(--color-on-dark-muted)]" />
               </div>
               <p className="mt-4 text-body-sm text-[var(--color-on-dark-muted)]">
-                No platforms found for &quot;{searchQuery}&quot;
+                {t("noPlatformsFound", { query: searchQuery })}
               </p>
               <button
                 onClick={() => setSearchQuery("")}
                 className="mt-2 text-caption font-medium text-[var(--color-primary-light)] hover:underline"
               >
-                Clear search
+                {t("clearSearch")}
               </button>
             </div>
           )}
@@ -461,13 +466,13 @@ export default function ConnectAccountPage() {
         /* Categories */
         <div className="space-y-8">
           {PLATFORM_CATEGORIES.map((category) => (
-            <motion.div key={category.label} variants={itemAnim}>
+            <motion.div key={category.categoryKey} variants={itemAnim}>
               <div className="flex items-center gap-2.5 mb-3">
                 <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--color-surface-dark-raised)]">
                   <category.icon className="h-4 w-4 text-[var(--color-on-dark-muted)]" />
                 </div>
                 <h2 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-                  {category.label}
+                  {t(category.categoryKey)}
                 </h2>
                 <div className="h-px flex-1 bg-[var(--color-ink-muted)]" />
               </div>
@@ -499,6 +504,7 @@ function PlatformCard({
   isConnected: boolean;
   onSelect: (p: Platform) => void;
 }) {
+  const t = useTranslations("connectAccount");
   const color = PLATFORM_COLORS[platform];
 
   return (
@@ -524,7 +530,7 @@ function PlatformCard({
           style={{ backgroundColor: color + "15", color: color }}
         >
           <Check className="h-2.5 w-2.5" />
-          Connected
+          {t("connected")}
         </div>
       )}
 
@@ -546,7 +552,7 @@ function PlatformCard({
 
       {/* Action hint */}
       <span className="text-micro text-[var(--color-on-dark-muted)] group-hover:text-[var(--color-on-dark-soft)] transition-colors">
-        {isConnected ? "Reconnect →" : "Connect →"}
+        {isConnected ? t("reconnectHint") : t("connectHint")}
       </span>
     </motion.button>
   );

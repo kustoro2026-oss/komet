@@ -31,7 +31,7 @@ import { createClient } from "@/lib/supabase/client";
 /* ───────── Settings grouped for sidebar ───────── */
 const SETTINGS_GROUPS = [
   {
-    label: "Account",
+    labelKey: "accountGroup",
     items: [
       { id: "general", labelKey: "general", icon: User },
       { id: "security", labelKey: "security", icon: Shield },
@@ -39,21 +39,21 @@ const SETTINGS_GROUPS = [
     ],
   },
   {
-    label: "Preferences",
+    labelKey: "preferencesGroup",
     items: [
       { id: "appearance", labelKey: "appearance", icon: Palette },
       { id: "notifications", labelKey: "notifications", icon: Bell },
     ],
   },
   {
-    label: "Workspace",
+    labelKey: "workspaceGroup",
     items: [
       { id: "workspace", labelKey: "workspace", icon: Users },
       { id: "billing", labelKey: "billing", icon: CreditCard },
     ],
   },
   {
-    label: "Developer",
+    labelKey: "developerGroup",
     items: [
       { id: "api-keys", labelKey: "apiKeys", icon: Key },
       { id: "webhooks", labelKey: "webhooks", icon: Webhook },
@@ -81,23 +81,23 @@ function SectionHeading({ title, description }: { title: string; description?: s
 
 /* ───────── Theme cards ───────── */
 const THEMES = [
-  { id: "dark", label: "Dark", icon: Moon },
-  { id: "light", label: "Light", icon: Sun },
-  { id: "system", label: "System", icon: Monitor },
+  { id: "dark", labelKey: "themeDark", icon: Moon },
+  { id: "light", labelKey: "themeLight", icon: Sun },
+  { id: "system", labelKey: "themeSystem", icon: Monitor },
 ] as const;
 
 /* ═══════════════════════════════════════════
    NOTIFICATION TOGGLES (localStorage)
    ═══════════════════════════════════════════ */
 const NOTIF_ITEMS = [
-  { key: "post_published", label: "Post published", desc: "When a scheduled post is successfully published" },
-  { key: "post_failed", label: "Post failed", desc: "When a post fails to publish" },
-  { key: "new_comments", label: "New comments", desc: "When you receive new comments on your posts" },
-  { key: "new_messages", label: "New messages", desc: "When you receive new direct messages" },
-  { key: "team_invitations", label: "Team invitations", desc: "When you're invited to a workspace" },
-  { key: "ai_complete", label: "AI generation complete", desc: "When AI finishes generating content" },
-  { key: "weekly_digest", label: "Weekly digest", desc: "A summary of your weekly activity" },
-  { key: "product_updates", label: "Product updates", desc: "New features and improvements" },
+  { key: "post_published", labelKey: "notifPostPublished", descKey: "notifPostPublishedDesc" },
+  { key: "post_failed", labelKey: "notifPostFailed", descKey: "notifPostFailedDesc" },
+  { key: "new_comments", labelKey: "notifNewComments", descKey: "notifNewCommentsDesc" },
+  { key: "new_messages", labelKey: "notifNewMessages", descKey: "notifNewMessagesDesc" },
+  { key: "team_invitations", labelKey: "notifTeamInvitations", descKey: "notifTeamInvitationsDesc" },
+  { key: "ai_complete", labelKey: "notifAiComplete", descKey: "notifAiCompleteDesc" },
+  { key: "weekly_digest", labelKey: "notifWeeklyDigest", descKey: "notifWeeklyDigestDesc" },
+  { key: "product_updates", labelKey: "notifProductUpdates", descKey: "notifProductUpdatesDesc" },
 ];
 
 function loadNotifPrefs(): Record<string, boolean> {
@@ -202,15 +202,15 @@ export default function SettingsPage() {
     setPassError("");
     setPassSuccess("");
     if (!currentPass || !newPass || !confirmPass) {
-      setPassError("All fields are required.");
+      setPassError(t("passwordErrorAllFields"));
       return;
     }
     if (newPass.length < 8) {
-      setPassError("Password must be at least 8 characters.");
+      setPassError(t("passwordRequirements"));
       return;
     }
     if (newPass !== confirmPass) {
-      setPassError("New passwords do not match.");
+      setPassError(t("passwordErrorMismatch"));
       return;
     }
     setSavingPass(true);
@@ -218,7 +218,7 @@ export default function SettingsPage() {
       // Step 1: Re-authenticate — Supabase requires recent auth to change password
       const userEmail = email;
       if (!userEmail) {
-        setPassError("Cannot verify identity. Please log out and log back in.");
+        setPassError(t("passwordErrorIdentity"));
         return;
       }
       const { error: reauthError } = await supabase.auth.signInWithPassword({
@@ -226,18 +226,18 @@ export default function SettingsPage() {
         password: currentPass,
       });
       if (reauthError) {
-        setPassError("Current password is incorrect.");
+        setPassError(t("passwordErrorIncorrect"));
         return;
       }
       // Step 2: Now update the password
       const { error } = await supabase.auth.updateUser({ password: newPass });
       if (error) throw error;
-      setPassSuccess("Password updated successfully.");
+      setPassSuccess(t("passwordUpdateSuccess"));
       setCurrentPass("");
       setNewPass("");
       setConfirmPass("");
     } catch (err: unknown) {
-      setPassError(err instanceof Error ? err.message : "Failed to update password.");
+      setPassError(err instanceof Error ? err.message : t("passwordUpdateFailed"));
     } finally {
       setSavingPass(false);
     }
@@ -272,7 +272,7 @@ export default function SettingsPage() {
       case "general":
         return (
           <>
-            <SectionHeading title={t("profileSettings")} description="Update your personal information." />
+            <SectionHeading title={t("profileSettings")} description={t("profileDescription")} />
             <div className="flex items-center gap-5 mb-6 p-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] text-lg font-bold text-white shadow-sm">
                 {initials}
@@ -284,22 +284,22 @@ export default function SettingsPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
               <div>
-                <label className={labelClass}>Full Name</label>
+                <label className={labelClass}>{t("fullNameLabel")}</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Email</label>
+                <label className={labelClass}>{t("emailLabel")}</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
               </div>
             </div>
             <div>
-              <label className={labelClass}>Bio</label>
+              <label className={labelClass}>{t("bioLabel")}</label>
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className={`${inputClass} resize-none`} />
-              <p className="mt-1 text-xs text-[var(--color-on-dark-muted)]">Brief description. Max 160 characters.</p>
+              <p className="mt-1 text-xs text-[var(--color-on-dark-muted)]">{t("bioDescription")}</p>
             </div>
             {generalSaved && (
               <p className="mt-3 text-sm text-emerald-500 flex items-center gap-1.5">
-                <Check className="h-4 w-4" /> Profile updated
+                <Check className="h-4 w-4" /> {t("profileUpdated")}
               </p>
             )}
           </>
@@ -309,8 +309,8 @@ export default function SettingsPage() {
       case "appearance":
         return (
           <>
-            <SectionHeading title="Appearance" description="Choose how Komet looks to you." />
-            <p className="text-sm font-medium text-[var(--color-on-dark)] mb-3">Theme</p>
+            <SectionHeading title={t("appearanceHeading")} description={t("appearanceDescription")} />
+            <p className="text-sm font-medium text-[var(--color-on-dark)] mb-3">{t("themeLabel")}</p>
             <div className="grid grid-cols-3 gap-3 mb-6">
               {THEMES.map((item) => {
                 const isActive = theme === item.id;
@@ -326,7 +326,7 @@ export default function SettingsPage() {
                   >
                     <div className="flex items-center gap-2">
                       <item.icon className="h-4 w-4 text-[var(--color-on-dark-soft)]" />
-                      <span className="text-sm font-medium text-[var(--color-on-dark)]">{item.label}</span>
+                      <span className="text-sm font-medium text-[var(--color-on-dark)]">{t(item.labelKey)}</span>
                       {isActive && (
                         <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)]">
                           <Check className="h-3 w-3 text-white" />
@@ -344,7 +344,7 @@ export default function SettingsPage() {
       case "notifications":
         return (
           <>
-            <SectionHeading title="Notification Preferences" description="Choose what notifications you want to receive." />
+            <SectionHeading title={t("notificationsHeading")} description={t("notificationsDescription")} />
             <div className="space-y-0.5">
               {NOTIF_ITEMS.map((item) => (
                 <label
@@ -352,8 +352,8 @@ export default function SettingsPage() {
                   className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-[var(--color-surface-dark)] transition-colors"
                 >
                   <div>
-                    <p className="text-sm font-medium text-[var(--color-on-dark)]">{item.label}</p>
-                    <p className="text-xs text-[var(--color-on-dark-muted)]">{item.desc}</p>
+                    <p className="text-sm font-medium text-[var(--color-on-dark)]">{t(item.labelKey)}</p>
+                    <p className="text-xs text-[var(--color-on-dark-muted)]">{t(item.descKey)}</p>
                   </div>
                   <button
                     onClick={(e) => {
@@ -380,9 +380,9 @@ export default function SettingsPage() {
       case "language":
         return (
           <>
-            <SectionHeading title="Language &amp; Region" description="Set your preferred language." />
+            <SectionHeading title={t("languageHeading")} description={t("languageDescription")} />
             <div className="max-w-sm">
-              <label className={labelClass}>Interface Language</label>
+              <label className={labelClass}>{t("interfaceLanguageLabel")}</label>
               <div className="relative">
                 <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
                 <select
@@ -394,8 +394,8 @@ export default function SettingsPage() {
                   }}
                   className={`${inputClass} pl-10 pr-10 appearance-none cursor-pointer`}
                 >
-                  <option value="en">English</option>
-                  <option value="id">Bahasa Indonesia</option>
+                  <option value="en">{t("languageEn")}</option>
+                  <option value="id">{t("languageId")}</option>
                 </select>
                 <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)] pointer-events-none" />
               </div>
@@ -407,26 +407,26 @@ export default function SettingsPage() {
       case "security":
         return (
           <>
-            <SectionHeading title="Security" description="Manage your password and account security." />
+            <SectionHeading title={t("securityHeading")} description={t("securityDescription")} />
             <div className="mb-6 p-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]">
-              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">Change Password</p>
+              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">{t("changePasswordLabel")}</p>
               <div className="mb-4">
-                <label className={labelClass}>Current Password</label>
-                <input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} placeholder="Enter current password" className={`${inputClass} max-w-sm`} />
+                <label className={labelClass}>{t("currentPasswordLabel")}</label>
+                <input type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} placeholder={t("currentPasswordPlaceholder")} className={`${inputClass} max-w-sm`} />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-lg mb-4">
                 <div>
-                  <label className={labelClass}>New Password</label>
-                  <input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder="Enter new password" className={inputClass} />
+                  <label className={labelClass}>{t("newPasswordLabel")}</label>
+                  <input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder={t("newPasswordPlaceholder")} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Confirm Password</label>
-                  <input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="Confirm new password" className={inputClass} />
+                  <label className={labelClass}>{t("confirmPasswordLabel")}</label>
+                  <input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder={t("confirmPasswordPlaceholder")} className={inputClass} />
                 </div>
               </div>
               {passError && <p className="text-sm text-red-400 mb-2">{passError}</p>}
               {passSuccess && <p className="text-sm text-emerald-500 mb-2 flex items-center gap-1.5"><Check className="h-4 w-4" />{passSuccess}</p>}
-              <p className="text-xs text-[var(--color-on-dark-muted)]">Password must be at least 8 characters.</p>
+              <p className="text-xs text-[var(--color-on-dark-muted)]">{t("passwordRequirements")}</p>
             </div>
           </>
         );
@@ -435,7 +435,7 @@ export default function SettingsPage() {
       case "workspace":
         return (
           <>
-            <SectionHeading title="Workspace Settings" description="Manage your team workspace and members." />
+            <SectionHeading title={t("workspaceHeading")} description={t("workspaceDescription")} />
             {activeWorkspace && (
               <div className="mb-5 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-4">
                 <div className="flex items-center justify-between">
@@ -449,12 +449,12 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t("activeLabel")}
                   </span>
                 </div>
               </div>
             )}
-            <h4 className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">All Workspaces ({workspaces.length})</h4>
+            <h4 className="text-sm font-semibold text-[var(--color-on-dark)] mb-3">{t("allWorkspacesLabel", { count: workspaces.length })}</h4>
             <div className="space-y-2 mb-6">
               {workspaces.map((ws) => (
                 <div key={ws.id} className="flex items-center justify-between rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-3">
@@ -464,21 +464,21 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-[var(--color-on-dark)]">{ws.name}</p>
-                      <p className="text-xs text-[var(--color-on-dark-muted)]">{ws.role || "Owner"}</p>
+                      <p className="text-xs text-[var(--color-on-dark-muted)]">{ws.role || t("ownerRole")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {ws.id !== activeWorkspace?.id ? (
                       <>
                         <button onClick={() => setActiveWorkspace(ws)} className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                          Switch
+                          {t("switchButton")}
                         </button>
                         <button onClick={() => setDeleteConfirmId(ws.id)} className="rounded-lg p-1.5 text-[var(--color-on-dark-muted)] hover:text-red-400 hover:bg-red-400/10 transition-colors">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </>
                     ) : (
-                      <span className="text-xs font-medium text-[var(--color-primary-light)]">Active</span>
+                      <span className="text-xs font-medium text-[var(--color-primary-light)]">{t("activeLabel")}</span>
                     )}
                   </div>
                 </div>
@@ -492,15 +492,15 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">
-                      Delete &ldquo;{workspaces.find((w) => w.id === deleteConfirmId)?.name}&rdquo;?
+                      {t("workspaceDeleteTitle", { name: workspaces.find((w) => w.id === deleteConfirmId)?.name })}
                     </p>
-                    <p className="text-xs text-[var(--color-on-dark-soft)] mb-4">This action cannot be undone.</p>
+                    <p className="text-xs text-[var(--color-on-dark-soft)] mb-4">{t("workspaceDeleteDescription")}</p>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setDeleteConfirmId(null)} className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-1.5 text-xs font-medium text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-colors">
-                        Cancel
+                        {t("cancelButton")}
                       </button>
                       <button onClick={() => { deleteWorkspace(deleteConfirmId); setDeleteConfirmId(null); }} className="rounded-lg bg-red-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-600 transition-colors">
-                        Delete Permanently
+                        {t("deletePermanentlyButton")}
                       </button>
                     </div>
                   </div>
@@ -514,22 +514,22 @@ export default function SettingsPage() {
       case "billing":
         return (
           <>
-            <SectionHeading title="Billing &amp; Subscription" description="Manage your subscription and payment methods." />
+            <SectionHeading title={t("billingHeading")} description={t("billingDescription")} />
             <div className="rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-5 mb-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1">Current Plan</p>
-                  <p className="text-lg font-bold text-[var(--color-on-dark)]">Free Plan</p>
-                  <p className="mt-1 text-xs text-[var(--color-on-dark-soft)]">$0/month · 3 social accounts</p>
+                  <p className="text-xs uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-1">{t("currentPlanLabel")}</p>
+                  <p className="text-lg font-bold text-[var(--color-on-dark)]">{t("freePlanLabel")}</p>
+                  <p className="mt-1 text-xs text-[var(--color-on-dark-soft)]">{t("freePlanDetails")}</p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t("activeLabel")}
                 </span>
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
               <a href="/#pricing" className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)] transition-colors no-underline inline-flex items-center">
-                Upgrade Plan
+                {t("upgradePlanButton")}
               </a>
             </div>
           </>
@@ -539,14 +539,14 @@ export default function SettingsPage() {
       case "api-keys":
         return (
           <>
-            <SectionHeading title="API Keys" description="Manage keys for programmatic access to the Komet API." />
+            <SectionHeading title={t("apiKeysHeading")} description={t("apiKeysDescription")} />
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]/50 py-16 px-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mb-4">
                 <Key className="h-7 w-7 text-[var(--color-primary-light)]" />
               </div>
-              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">API keys coming soon</p>
+              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">{t("apiKeysComingSoon")}</p>
               <p className="text-xs text-[var(--color-on-dark-muted)] max-w-xs">
-                Generate API keys to integrate Komet with your custom workflows.
+                {t("apiKeysComingSoonDesc")}
               </p>
             </div>
           </>
@@ -556,14 +556,14 @@ export default function SettingsPage() {
       case "webhooks":
         return (
           <>
-            <SectionHeading title="Webhooks" description="Receive real-time events via HTTP callbacks." />
+            <SectionHeading title={t("webhooksHeading")} description={t("webhooksDescription")} />
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)]/50 py-16 px-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary)]/10 mb-4">
                 <Webhook className="h-7 w-7 text-[var(--color-primary-light)]" />
               </div>
-              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">Webhooks coming soon</p>
+              <p className="text-sm font-semibold text-[var(--color-on-dark)] mb-1">{t("webhooksComingSoon")}</p>
               <p className="text-xs text-[var(--color-on-dark-muted)] max-w-xs">
-                Create webhook endpoints to receive real-time post status and engagement events.
+                {t("webhooksComingSoonDesc")}
               </p>
             </div>
           </>
@@ -605,10 +605,10 @@ export default function SettingsPage() {
       {/* Desktop sidebar */}
       <div className="hidden md:block w-44 lg:w-52 shrink-0 self-start sticky top-20 md:top-8 lg:top-10">
         <nav className="space-y-0.5">
-          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">Settings</p>
+          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">{t("title")}</p>
           {SETTINGS_GROUPS.map((group, idx) => (
-            <div key={group.label} className={idx > 0 ? "border-t border-[var(--color-ink-muted)] mt-1" : ""}>
-              <p className="px-3 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">{group.label}</p>
+            <div key={group.labelKey} className={idx > 0 ? "border-t border-[var(--color-ink-muted)] mt-1" : ""}>
+              <p className="px-3 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)]">{t(group.labelKey)}</p>
               {group.items.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -646,7 +646,7 @@ export default function SettingsPage() {
                 className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--color-primary-hover)] active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {activeTab === "security" ? "Change Password" : t("saveChanges")}
+                {activeTab === "security" ? t("changePasswordButton") : t("saveChanges")}
               </button>
             </div>
           )}
