@@ -80,7 +80,8 @@ export default function TeamPage() {
 
   // Current user's role
   const currentMember = members.find((m) => m.userId === user?.id);
-  const isUserAdmin = currentMember?.role === "Admin";
+  // Owner always has admin role on their workspace
+  const isUserAdmin = activeWorkspace?.role === "admin" || currentMember?.role === "Admin";
 
   const workspaceId = activeWorkspace?.id;
 
