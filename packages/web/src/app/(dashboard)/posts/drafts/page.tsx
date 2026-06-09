@@ -8,7 +8,6 @@ import { Search, Edit3, Trash2, Eye, Calendar, Loader2, AlertTriangle } from "lu
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
 import { usePosts, useDeletePost } from "@/lib/posts/hooks";
-import type { PostItem } from "@/lib/posts/hooks";
 
 export default function DraftsPage() {
   const t = useTranslations("drafts");
