@@ -65,6 +65,22 @@ export const metadata: Metadata = {
       "Your content blasts to every platform in a flash. A 3-in-1 social media scheduling platform for creators, teams, and developers.",
     siteName: "Komet",
     type: "website",
+    url: "https://kontenmumelesat.com",
+    images: [
+      {
+        url: "https://kontenmumelesat.com/logo-komet-1024.png",
+        width: 1024,
+        height: 1024,
+        alt: "Komet Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Komet — Social Media Scheduling Platform",
+    description:
+      "Your content blasts to every platform in a flash. A 3-in-1 social media scheduling platform for creators, teams, and developers.",
+    images: ["https://kontenmumelesat.com/logo-komet-1024.png"],
   },
 };
 
