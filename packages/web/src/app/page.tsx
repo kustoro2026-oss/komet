@@ -24,7 +24,6 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Platform } from "@komet/shared";
 import { KometLogo } from "@/components/ui/komet-logo";
-import { ContentDistributionDashboard } from "@/components/content-distribution-dashboard";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -216,10 +215,64 @@ export default function LandingPage() {
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">{t("plusMore")}</span>
           </motion.div>
 
-          {/* Interactive Content Distribution Dashboard */}
+          {/* Auto-playing video preview — loops endlessly */}
           <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="relative mt-14 w-full max-w-2xl">
-            <div className="relative rounded-2xl border border-white/[0.10] bg-gradient-to-b from-white/[0.04] to-transparent p-4 sm:p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
-              <ContentDistributionDashboard />
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.10] shadow-2xl shadow-black/40">
+              {/* Fake video */}
+              <div className="relative aspect-video bg-gradient-to-br from-purple-900/60 via-[var(--color-surface-dark)] to-blue-900/60">
+                {/* Animated gradient overlay */}
+                <motion.div
+                  animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-gradient-to-tr from-[var(--color-primary)]/20 via-purple-500/10 to-transparent"
+                />
+
+                {/* Content mockup */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {/* Pulsing rings */}
+                  <motion.div
+                    animate={{ scale: [1, 1.4], opacity: [0.4, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeOut" }}
+                    className="absolute h-24 w-24 rounded-full border border-[var(--color-primary)]/30"
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 1.7], opacity: [0.3, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, delay: 0.6, ease: "easeOut" }}
+                    className="absolute h-24 w-24 rounded-full border border-purple-400/20"
+                  />
+
+                  {/* Sparkles icon */}
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                    className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/15"
+                  >
+                    <svg className="h-8 w-8 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                    </svg>
+                  </motion.div>
+                </div>
+
+                {/* Looping progress bar */}
+                <div className="absolute inset-x-4 bottom-4">
+                  <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]">
+                    <motion.div
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                      className="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"
+                    />
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between text-[10px] text-white/30">
+                    <span>▶ Playing</span>
+                    <span>∞ loop</span>
+                  </div>
+                </div>
+
+                {/* Top badge */}
+                <div className="absolute left-4 top-4 rounded-full bg-black/50 backdrop-blur-sm px-3 py-1 text-[10px] text-white/50 border border-white/[0.06]">
+                  ✦ AI Content Distribution
+                </div>
+              </div>
             </div>
             <div className="absolute -bottom-16 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[40px] sm:blur-[80px]" />
           </motion.div>
