@@ -161,7 +161,7 @@ export default function LandingPage() {
       </header>
 
       {/* ===== HERO ===== */}
-      <section className="relative min-h-screen overflow-hidden pt-16">
+      <section className="relative overflow-hidden pt-16 pb-20 sm:pb-28">
         {/* Background glow — reduced blur on mobile to prevent GPU artifacts */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-1/3 top-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-[var(--color-primary)]/10 blur-[60px] sm:blur-[150px]" />
@@ -169,7 +169,7 @@ export default function LandingPage() {
         </div>
         <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
 
-        <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl flex-col items-center px-6 pt-20 pb-16">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6 pt-20 pb-8">
           {/* Hero content */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-4xl text-center">
             {/* Live badge */}
@@ -228,7 +228,7 @@ export default function LandingPage() {
                 <source src="/videos/hero-demo.mp4" type="video/mp4" />
               </video>
             </div>
-            <div className="absolute -bottom-16 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[40px] sm:blur-[80px]" />
+            <div className="absolute -bottom-8 left-1/2 h-24 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/10 blur-[30px] sm:blur-[60px]" />
           </motion.div>
         </div>
       </section>
