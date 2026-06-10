@@ -217,49 +217,63 @@ export default function LandingPage() {
 
           {/* Auto-playing video preview — loops endlessly */}
           <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="relative mt-14 w-full max-w-2xl">
-            <div className="relative overflow-hidden rounded-2xl border border-white/[0.10] shadow-2xl shadow-black/40">
-              {/* Fake video */}
-              <div className="relative aspect-video bg-gradient-to-br from-purple-900/60 via-[var(--color-surface-dark)] to-blue-900/60">
-                {/* Animated gradient overlay */}
-                <motion.div
-                  animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.05, 1] }}
-                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="absolute inset-0 bg-gradient-to-tr from-[var(--color-primary)]/20 via-purple-500/10 to-transparent"
-                />
+            <div className="relative overflow-hidden rounded-2xl border border-white/[0.15] shadow-2xl shadow-black/50">
+              {/* Video frame */}
+              <div className="relative aspect-video bg-[#0f0f1a]">
+                {/* Top bar */}
+                <div className="absolute inset-x-0 top-0 flex items-center gap-3 border-b border-white/[0.08] bg-black/30 px-5 py-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <span className="text-[11px] text-white/40 ml-2">Komet — Dashboard</span>
+                </div>
 
-                {/* Content mockup */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  {/* Pulsing rings */}
-                  <motion.div
-                    animate={{ scale: [1, 1.4], opacity: [0.4, 0] }}
-                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeOut" }}
-                    className="absolute h-24 w-24 rounded-full border border-[var(--color-primary)]/30"
-                  />
-                  <motion.div
-                    animate={{ scale: [1, 1.7], opacity: [0.3, 0] }}
-                    transition={{ repeat: Infinity, duration: 2.5, delay: 0.6, ease: "easeOut" }}
-                    className="absolute h-24 w-24 rounded-full border border-purple-400/20"
-                  />
+                {/* Dashboard content */}
+                <div className="absolute inset-0 mt-10 flex items-center justify-center">
+                  {/* Grid of animated stat cards */}
+                  <div className="grid grid-cols-3 gap-3 px-6 w-full">
+                    {[
+                      { label: "Posts Today", value: "24", color: "from-blue-500 to-cyan-400" },
+                      { label: "Platforms", value: "15+", color: "from-purple-500 to-pink-400" },
+                      { label: "Engagement", value: "↑18%", color: "from-emerald-500 to-teal-400" },
+                    ].map((card, i) => (
+                      <motion.div
+                        key={card.label}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: [0.7, 1, 0.7], y: 0 }}
+                        transition={{ repeat: Infinity, duration: 3, delay: i * 0.5 }}
+                        className="rounded-xl border border-white/[0.10] bg-white/[0.04] p-3 text-center backdrop-blur-sm"
+                      >
+                        <p className="text-2xl font-bold text-white">{card.value}</p>
+                        <p className="mt-0.5 text-[10px] text-white/50">{card.label}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
 
-                  {/* Sparkles icon */}
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                    className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/15"
-                  >
-                    <svg className="h-8 w-8 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                    </svg>
-                  </motion.div>
+                {/* Animated platform icons row */}
+                <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-2">
+                  {["instagram", "tiktok", "youtube", "twitter", "linkedin", "facebook"].map((p, i) => (
+                    <motion.div
+                      key={p}
+                      animate={{ y: [0, -4, 0], opacity: [0.5, 1, 0.5] }}
+                      transition={{ repeat: Infinity, duration: 2, delay: i * 0.2 }}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/[0.10]"
+                    >
+                      <PlatformIcon platform={p as Platform} className="h-4 w-4" />
+                    </motion.div>
+                  ))}
                 </div>
 
                 {/* Looping progress bar */}
-                <div className="absolute inset-x-4 bottom-4">
+                <div className="absolute inset-x-5 bottom-3">
                   <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]">
                     <motion.div
                       animate={{ x: ["-100%", "100%"] }}
-                      transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                      className="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"
+                      transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                      className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"
                     />
                   </div>
                 </div>
