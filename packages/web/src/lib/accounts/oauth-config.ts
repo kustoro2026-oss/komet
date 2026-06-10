@@ -478,7 +478,7 @@ register({
   tokenAuth: "body",
   clientIdEnv: "SNAPCHAT_CLIENT_ID",
   clientSecretEnv: "SNAPCHAT_CLIENT_SECRET",
-  usePkce: false,
+  usePkce: true,
   redirectPath: "/api/oauth/callback",
   extraAuthorizeParams: { response_type: "code" },
   tokenContentType: "form",
