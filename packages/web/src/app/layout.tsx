@@ -40,6 +40,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
+    icon: "/favicon.ico",
     apple: "/favicon-new.png",
     other: [
       {
@@ -49,6 +50,12 @@ export const metadata: Metadata = {
       {
         rel: "icon",
         url: "/favicon-new.png",
+        sizes: "32x32",
+      },
+      {
+        rel: "icon",
+        url: "/favicon.ico",
+        sizes: "32x32",
       },
     ],
   },
