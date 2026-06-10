@@ -262,15 +262,6 @@ export default function LandingPage() {
                       className="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"
                     />
                   </div>
-                  <div className="mt-1.5 flex items-center justify-between text-[10px] text-white/30">
-                    <span>▶ Playing</span>
-                    <span>∞ loop</span>
-                  </div>
-                </div>
-
-                {/* Top badge */}
-                <div className="absolute left-4 top-4 rounded-full bg-black/50 backdrop-blur-sm px-3 py-1 text-[10px] text-white/50 border border-white/[0.06]">
-                  ✦ AI Content Distribution
                 </div>
               </div>
             </div>
