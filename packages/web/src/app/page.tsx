@@ -215,69 +215,18 @@ export default function LandingPage() {
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">{t("plusMore")}</span>
           </motion.div>
 
-          {/* Auto-playing video preview — loops endlessly */}
+          {/* Auto-playing video — loops endlessly */}
           <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="relative mt-14 w-full max-w-2xl">
             <div className="relative overflow-hidden rounded-2xl border border-white/[0.15] shadow-2xl shadow-black/50">
-              {/* Video frame */}
-              <div className="relative aspect-video bg-[#0f0f1a]">
-                {/* Top bar */}
-                <div className="absolute inset-x-0 top-0 flex items-center gap-3 border-b border-white/[0.08] bg-black/30 px-5 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
-                  </div>
-                  <span className="text-[11px] text-white/40 ml-2">Komet — Dashboard</span>
-                </div>
-
-                {/* Dashboard content */}
-                <div className="absolute inset-0 mt-10 flex items-center justify-center">
-                  {/* Grid of animated stat cards */}
-                  <div className="grid grid-cols-3 gap-3 px-6 w-full">
-                    {[
-                      { label: "Posts Today", value: "24", color: "from-blue-500 to-cyan-400" },
-                      { label: "Platforms", value: "15+", color: "from-purple-500 to-pink-400" },
-                      { label: "Engagement", value: "↑18%", color: "from-emerald-500 to-teal-400" },
-                    ].map((card, i) => (
-                      <motion.div
-                        key={card.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: [0.7, 1, 0.7], y: 0 }}
-                        transition={{ repeat: Infinity, duration: 3, delay: i * 0.5 }}
-                        className="rounded-xl border border-white/[0.10] bg-white/[0.04] p-3 text-center backdrop-blur-sm"
-                      >
-                        <p className="text-2xl font-bold text-white">{card.value}</p>
-                        <p className="mt-0.5 text-[10px] text-white/50">{card.label}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Animated platform icons row */}
-                <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-2">
-                  {["instagram", "tiktok", "youtube", "twitter", "linkedin", "facebook"].map((p, i) => (
-                    <motion.div
-                      key={p}
-                      animate={{ y: [0, -4, 0], opacity: [0.5, 1, 0.5] }}
-                      transition={{ repeat: Infinity, duration: 2, delay: i * 0.2 }}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/[0.10]"
-                    >
-                      <PlatformIcon platform={p as Platform} className="h-4 w-4" />
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Looping progress bar */}
-                <div className="absolute inset-x-5 bottom-3">
-                  <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]">
-                    <motion.div
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-                      className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full aspect-video object-cover"
+              >
+                <source src="/videos/hero-demo.mp4" type="video/mp4" />
+              </video>
             </div>
             <div className="absolute -bottom-16 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[40px] sm:blur-[80px]" />
           </motion.div>
