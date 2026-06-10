@@ -41,21 +41,24 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
-    apple: "/favicon-new.png",
+    apple: "/apple-touch-icon.png",
     other: [
       {
-        rel: "apple-touch-icon-precomposed",
-        url: "/favicon-new.png",
-      },
-      {
-        rel: "icon",
-        url: "/favicon-new.png",
-        sizes: "32x32",
+        rel: "apple-touch-icon",
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
       },
       {
         rel: "icon",
         url: "/favicon.ico",
-        sizes: "32x32",
+        sizes: "48x48",
+        type: "image/x-icon",
+      },
+      {
+        rel: "icon",
+        url: "/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
       },
     ],
   },
