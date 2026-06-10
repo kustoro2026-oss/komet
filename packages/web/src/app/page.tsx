@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import type { Platform } from "@komet/shared";
 import { KometLogo } from "@/components/ui/komet-logo";
+import { ContentDistributionDashboard } from "@/components/content-distribution-dashboard";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -215,13 +216,10 @@ export default function LandingPage() {
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">{t("plusMore")}</span>
           </motion.div>
 
-          {/* Dashboard mockup */}
-          <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="relative mt-14 w-full max-w-6xl">
-            <div className="relative rounded-xl border border-white/[0.12] bg-gradient-to-b from-white/[0.06] to-transparent p-1 shadow-2xl shadow-black/50">
-              <div className="overflow-hidden rounded-lg">
-                <Image src="/images/dashboard-preview.jpg" alt="Komet Dashboard" width={1200} height={675} className="w-full object-cover" priority />
-              </div>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[var(--color-surface-dark)] to-transparent" />
+          {/* Interactive Content Distribution Dashboard */}
+          <motion.div initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="relative mt-14 w-full max-w-2xl">
+            <div className="relative rounded-2xl border border-white/[0.10] bg-gradient-to-b from-white/[0.04] to-transparent p-4 sm:p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
+              <ContentDistributionDashboard />
             </div>
             <div className="absolute -bottom-16 left-1/2 h-32 w-3/4 -translate-x-1/2 rounded-full bg-[var(--color-primary)]/15 blur-[40px] sm:blur-[80px]" />
           </motion.div>
