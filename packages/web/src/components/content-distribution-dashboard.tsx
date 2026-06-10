@@ -1,31 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Play,
-  Pause,
-  ChevronDown,
-  Calendar,
-  Clock,
-  Instagram,
-  Twitter,
-  Youtube,
-  Linkedin,
-  MessageCircle,
-  Video,
-  Music,
-  Pin,
-  Globe,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { Play, Pause, Calendar, Clock, Globe, Sparkles } from "lucide-react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
+import type { Platform } from "@komet/shared";
 
 interface PlatformSchedule {
-  platform: string;
+  platform: Platform;
   label: string;
-  icon: React.ReactNode;
   time: string;
   bestTime: string;
   status: "scheduled" | "optimal" | "draft";
@@ -34,7 +17,7 @@ interface PlatformSchedule {
 
 interface PostPreview {
   id: string;
-  platform: string;
+  platform: Platform;
   content: string;
   time: string;
   thumbnail: string;
@@ -44,7 +27,6 @@ const PLATFORM_DATA: PlatformSchedule[] = [
   {
     platform: "instagram",
     label: "Instagram",
-    icon: <Instagram className="h-4 w-4" />,
     time: "09:00 AM",
     bestTime: "9-11 AM",
     status: "optimal",
@@ -53,7 +35,6 @@ const PLATFORM_DATA: PlatformSchedule[] = [
   {
     platform: "tiktok",
     label: "TikTok",
-    icon: <Music className="h-4 w-4" />,
     time: "12:00 PM",
     bestTime: "12-3 PM",
     status: "scheduled",
@@ -62,7 +43,6 @@ const PLATFORM_DATA: PlatformSchedule[] = [
   {
     platform: "youtube",
     label: "YouTube",
-    icon: <Youtube className="h-4 w-4" />,
     time: "03:00 PM",
     bestTime: "2-4 PM",
     status: "draft",
@@ -71,7 +51,6 @@ const PLATFORM_DATA: PlatformSchedule[] = [
   {
     platform: "twitter",
     label: "Twitter/X",
-    icon: <Twitter className="h-4 w-4" />,
     time: "06:00 PM",
     bestTime: "5-7 PM",
     status: "scheduled",
@@ -80,7 +59,6 @@ const PLATFORM_DATA: PlatformSchedule[] = [
   {
     platform: "linkedin",
     label: "LinkedIn",
-    icon: <Linkedin className="h-4 w-4" />,
     time: "08:00 AM",
     bestTime: "8-10 AM",
     status: "optimal",
@@ -89,7 +67,6 @@ const PLATFORM_DATA: PlatformSchedule[] = [
   {
     platform: "pinterest",
     label: "Pinterest",
-    icon: <Pin className="h-4 w-4" />,
     time: "10:00 PM",
     bestTime: "8-11 PM",
     status: "draft",
@@ -165,7 +142,7 @@ function ScheduleTimeline() {
                     : "border-white/[0.08] bg-white/[0.04] text-[var(--color-on-dark-muted)]"
               }`}
             >
-              <span className="text-xs">{post.icon}</span>
+              <PlatformIcon platform={post.platform} className="h-3.5 w-3.5" />
               <span>{post.time}</span>
               <span className="ml-0.5 text-[9px] opacity-60">{post.reach}</span>
             </div>
@@ -257,7 +234,7 @@ function PlatformGrid() {
               : "border-white/[0.06] bg-white/[0.03] hover:border-white/[0.12]"
           }`}
         >
-          <div className="text-base sm:text-lg">{platform.icon}</div>
+          <PlatformIcon platform={platform.platform} className="h-5 w-5 sm:h-6 sm:w-6" />
           <span className="text-[10px] sm:text-xs text-[var(--color-on-dark-soft)]">{platform.label}</span>
           <span
             className={`text-[9px] sm:text-[10px] ${

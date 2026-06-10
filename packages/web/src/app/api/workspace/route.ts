@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const ownedIds = new Set(owned.map((w) => w.id));
+    const ownedIds = new Set(owned.map((w: { id: string }) => w.id));
 
     const allWorkspaces = [
-      ...owned.map((w) => ({
+      ...owned.map((w: { id: string; name: string; slug: string; ownerId: string }) => ({
         id: w.id,
         name: w.name,
         slug: w.slug,
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
         role: "admin" as const,
       })),
       ...memberships
-        .filter((m) => !ownedIds.has(m.workspaceId))
-        .map((m) => ({
+        .filter((m: { workspaceId: string }) => !ownedIds.has(m.workspaceId))
+        .map((m: { workspaceId: string; role: string | null; workspace: { id: string; name: string; slug: string; ownerId: string } }) => ({
           id: m.workspace.id,
           name: m.workspace.name,
           slug: m.workspace.slug,
