@@ -45,6 +45,7 @@ export interface OAuthConfig {
     username: string;
     displayName: string;
     avatarUrl?: string;
+    followers?: number;
   }>;
 }
 
@@ -325,11 +326,11 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken, tokenResponse) => {
-    const res = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=display_name,username,avatar_url", {
+    const res = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=display_name,username,avatar_url,follower_count", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const data = (await res.json()) as {
-      data?: { user?: { display_name?: string; username?: string; avatar_url?: string } };
+      data?: { user?: { display_name?: string; username?: string; avatar_url?: string; follower_count?: number } };
     };
     const u = data.data?.user || {};
     return {
@@ -337,6 +338,7 @@ register({
       username: u.username || u.display_name?.toLowerCase().replace(/\s+/g, "_") || "unknown",
       displayName: u.display_name || u.username || "",
       avatarUrl: u.avatar_url,
+      followers: u.follower_count || 0,
     };
   },
 });

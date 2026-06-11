@@ -101,12 +101,16 @@ export async function POST(request: NextRequest) {
           );
 
           if (result.success) {
+            const isProcessing = result.status === "processing";
             await prisma.postPlatform.update({
               where: { id: platform.id },
               data: {
-                status: "published",
-                publishedUrl: `https://tiktok.com/@user/video/${result.postId}`,
+                status: isProcessing ? "publishing" : "published",
+                publishedUrl: result.status === "processing"
+                  ? `https://tiktok.com (processing: ${result.postId})`
+                  : `https://tiktok.com/@user/video/${result.postId}`,
                 publishedAt: new Date(),
+                errorMessage: isProcessing ? "Video is being processed by TikTok — will appear in 1-2 minutes" : null,
               },
             });
             results.push({ platform: "tiktok", success: true });

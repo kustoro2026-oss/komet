@@ -39,7 +39,7 @@ export async function publishToTikTok(
   accessToken: string,
   caption: string,
   videoUrl: string,
-): Promise<{ success: boolean; postId?: string; error?: string }> {
+): Promise<{ success: boolean; postId?: string; status?: string; error?: string }> {
   try {
     if (!accessToken) {
       return { success: false, error: "No access token" };
@@ -86,14 +86,18 @@ export async function publishToTikTok(
     const publishId = initData.data.publish_id;
     console.log(`[TikTok Publisher] Init OK, publish_id=${publishId}`);
 
-    // Step 2: Poll for completion (TikTok processes async with PULL_FROM_URL)
-    const publicPostId = await pollTikTokStatus(accessToken, publishId, 10);
+    // Step 2: Poll briefly for completion
+    // TikTok PULL_FROM_URL takes 10–60s; Vercel serverless limit is 10s
+    // Return processing status — user refreshes page in 1-2 min to see result
+    const publicPostId = await pollTikTokStatus(accessToken, publishId, 2);
 
     if (publicPostId) {
       return { success: true, postId: publicPostId };
     }
 
-    return { success: false, error: "TikTok processing timeout or failed" };
+    // Init succeeded but polling didn't complete — video is still processing on TikTok
+    console.log(`[TikTok Publisher] Init OK, processing in background: ${publishId}`);
+    return { success: true, postId: publishId, status: "processing" };
   } catch (err) {
     return {
       success: false,
@@ -111,8 +115,9 @@ async function pollTikTokStatus(
   maxAttempts: number = 12,
 ): Promise<string | null> {
   // TikTok typically takes 10-60 seconds to process PULL_FROM_URL
+  // We poll briefly within Vercel serverless timeout (10s limit)
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    await sleep(5000); // Wait 5 seconds between polls
+    await sleep(3000); // Wait 3 seconds between polls
 
     try {
       const response = await fetch(
