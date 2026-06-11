@@ -13,7 +13,6 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@komet/ai": "workspace:*",
-    "@komet/api": "workspace:*",
     "@komet/auth": "workspace:*",
     "@komet/cache": "workspace:*",
     "@komet/db": "workspace:*",
