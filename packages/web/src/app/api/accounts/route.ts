@@ -27,15 +27,17 @@ export async function GET(request: NextRequest) {
         displayName: true,
         avatarUrl: true,
         isActive: true,
+        accessToken: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
     });
 
     console.log("[Accounts API] Found", accounts.length, "accounts for user", user.id);
-    console.log("[Accounts API] Accounts:", JSON.stringify(accounts.map(a => ({ platform: a.platform, username: a.username, displayName: a.displayName }))));
+    console.log("[Accounts API] Accounts:", JSON.stringify(accounts.map((a) => ({ platform: a.platform, username: a.username, displayName: a.displayName }))));
 
-    const mappedAccounts = (accounts as Array<{
+    // Explicit type for mapped accounts
+    type AccountRow = {
       id: string;
       platform: string;
       username: string;
@@ -43,16 +45,42 @@ export async function GET(request: NextRequest) {
       avatarUrl: string | null;
       isActive: boolean;
       createdAt: Date;
-    }>).map((a) => ({
-      id: a.id,
-      platform: a.platform,
-      username: a.username,
-      displayName: a.displayName,
-      avatarUrl: a.avatarUrl,
-      isActive: a.isActive,
-      followers: 0, // Follower data not available from local DB
-      connectedAt: a.createdAt.toISOString(),
-    }));
+      accessToken: string | null;
+    };
+
+    const mappedAccounts = await Promise.all(
+      (accounts as AccountRow[]).map(async (a) => {
+        let followers = 0;
+
+        // Fetch real follower count from platform API if we have an access token
+        if (a.accessToken) {
+          try {
+            if (a.platform === "tiktok") {
+              const res = await fetch(
+                "https://open.tiktokapis.com/v2/user/info/?fields=display_name,username,avatar_url,follower_count",
+                { headers: { Authorization: `Bearer ${a.accessToken}` } }
+              );
+              const data = await res.json();
+              followers = data?.data?.user?.follower_count || 0;
+            }
+            // Add more platforms here as needed
+          } catch {
+            // Silently fall back to 0
+          }
+        }
+
+        return {
+          id: a.id,
+          platform: a.platform,
+          username: a.username,
+          displayName: a.displayName,
+          avatarUrl: a.avatarUrl,
+          isActive: a.isActive,
+          followers,
+          connectedAt: a.createdAt.toISOString(),
+        };
+      })
+    );
 
     return NextResponse.json(mappedAccounts);
   } catch (error) {
