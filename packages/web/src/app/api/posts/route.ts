@@ -222,93 +222,102 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If publishNow, trigger actual publishing to each platform
-    const publishResults: Array<{ platform: string; success: boolean; error?: string }> = [];
+    // Fire-and-forget publish to avoid browser timeout
     if (publishNow && post.platforms.length > 0) {
-      for (const pp of post.platforms) {
-        const text = pp.customContent || content;
-        try {
-          if (pp.platform === "tiktok") {
-            if (!pp.account.accessToken) {
-              publishResults.push({ platform: "tiktok", success: false, error: "No access token" });
-            } else {
-              const mediaArr = (Array.isArray(mediaItems) ? mediaItems : []) as Array<{ type: string; url: string }>;
-              const videoItem = mediaArr.find((m) => m.type === "video" || m.url?.match(/\.(mp4|mov|webm)$/i));
-              if (!videoItem) {
-                publishResults.push({ platform: "tiktok", success: false, error: "No video attached" });
+      const postId = post.id;
+      const postContent = content;
+      const postMediaItems = mediaItems || [];
+      // Clone platform data before we return the response
+      const platformTasks = post.platforms.map((pp: { id: string; platform: string; account: { accessToken: string | null }; customContent: string | null }) => ({
+        id: pp.id,
+        platform: pp.platform,
+        accessToken: pp.account.accessToken as string | null,
+        customContent: pp.customContent as string | null,
+      }));
+
+      void (async () => {
+        const publishResults: Array<{ platform: string; success: boolean; error?: string }> = [];
+        for (const task of platformTasks) {
+          const text = task.customContent || postContent;
+          try {
+            if (task.platform === "tiktok") {
+              if (!task.accessToken) {
+                publishResults.push({ platform: "tiktok", success: false, error: "No access token" });
               } else {
-                const result = await publishToTikTok(pp.account.accessToken, text, videoItem.url);
-                const isProcessing = result.status === "processing";
+                const mediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const videoItem = mediaArr.find((m: { type: string; url: string }) => m.type === "video" || m.url?.match(/\.(mp4|mov|webm)$/i));
+                if (!videoItem) {
+                  publishResults.push({ platform: "tiktok", success: false, error: "No video attached" });
+                } else {
+                  console.log("[TikTok Publisher] Publishing to TikTok... video:", videoItem.url.substring(0, 80));
+                  const result = await publishToTikTok(task.accessToken, text, videoItem.url);
+                  console.log("[TikTok Publisher] Result:", JSON.stringify(result));
+                  const isProcessing = result.status === "processing";
+                  await prisma.postPlatform.update({
+                    where: { id: task.id },
+                    data: {
+                      status: isProcessing ? "publishing" : result.success ? "published" : "failed",
+                      publishedUrl: result.success ? `https://tiktok.com/@user/video/${result.postId}` : null,
+                      publishedAt: result.success ? new Date() : null,
+                      errorMessage: isProcessing ? "Processing..." : result.error || null,
+                    },
+                  });
+                  publishResults.push({ platform: "tiktok", success: result.success, error: result.error });
+                }
+              }
+            } else if (task.platform === "twitter") {
+              if (!task.accessToken) {
+                publishResults.push({ platform: "twitter", success: false, error: "No access token" });
+              } else {
+                const result = await publishToTwitter(task.accessToken, text);
                 await prisma.postPlatform.update({
-                  where: { id: pp.id },
+                  where: { id: task.id },
                   data: {
-                    status: isProcessing ? "publishing" : result.success ? "published" : "failed",
-                    publishedUrl: result.success
-                      ? `https://tiktok.com/@user/video/${result.postId}`
-                      : null,
+                    status: result.success ? "published" : "failed",
+                    publishedUrl: result.success ? `https://twitter.com/i/web/status/${result.postId}` : null,
                     publishedAt: result.success ? new Date() : null,
-                    errorMessage: isProcessing ? "Processing..." : result.error || null,
+                    errorMessage: result.error || null,
                   },
                 });
-                publishResults.push({ platform: "tiktok", success: result.success, error: result.error });
+                publishResults.push({ platform: "twitter", success: result.success, error: result.error });
               }
-            }
-          } else if (pp.platform === "twitter") {
-            if (!pp.account.accessToken) {
-              publishResults.push({ platform: "twitter", success: false, error: "No access token" });
             } else {
-              const result = await publishToTwitter(pp.account.accessToken, text);
+              // Platform publisher not implemented yet — mark as published (placeholder)
               await prisma.postPlatform.update({
-                where: { id: pp.id },
-                data: {
-                  status: result.success ? "published" : "failed",
-                  publishedUrl: result.success ? `https://twitter.com/i/web/status/${result.postId}` : null,
-                  publishedAt: result.success ? new Date() : null,
-                  errorMessage: result.error || null,
-                },
+                where: { id: task.id },
+                data: { status: "published", publishedAt: new Date() },
               });
-              publishResults.push({ platform: "twitter", success: result.success, error: result.error });
+              publishResults.push({ platform: task.platform, success: true });
             }
-          } else {
-            // Platform publisher not implemented yet — mark as published (placeholder)
+          } catch (pubErr) {
+            const msg = pubErr instanceof Error ? pubErr.message : "Unknown error";
+            console.error("[Publish Background] Error for", task.platform, msg);
             await prisma.postPlatform.update({
-              where: { id: pp.id },
-              data: { status: "published", publishedAt: new Date() },
+              where: { id: task.id },
+              data: { status: "failed", errorMessage: msg },
             });
-            publishResults.push({ platform: pp.platform, success: true });
+            publishResults.push({ platform: task.platform, success: false, error: msg });
           }
-        } catch (pubErr) {
-          const msg = pubErr instanceof Error ? pubErr.message : "Unknown error";
-          await prisma.postPlatform.update({
-            where: { id: pp.id },
-            data: { status: "failed", errorMessage: msg },
-          });
-          publishResults.push({ platform: pp.platform, success: false, error: msg });
         }
-      }
 
-      // Determine final status
-      const allOk = publishResults.every((r) => r.success);
-      const anyOk = publishResults.some((r) => r.success);
-      const finalStatus = allOk ? "published" : anyOk ? "partial" : "failed";
-      await prisma.post.update({
-        where: { id: post.id },
-        data: { status: finalStatus },
-      });
+        // Determine final status
+        const allOk = publishResults.every((r) => r.success);
+        const anyOk = publishResults.some((r) => r.success);
+        const finalStatus = allOk ? "published" : anyOk ? "partial" : "failed";
+        await prisma.post.update({
+          where: { id: postId },
+          data: { status: finalStatus },
+        });
+      })().catch((bgErr) => console.error("[Publish Background] Fatal error:", bgErr));
     }
 
     return NextResponse.json({
       success: true,
       post: {
         id: post.id,
-        status: publishNow
-          ? post.platforms.length > 0
-            ? post.platforms[0]?.status
-            : post.status
-          : post.status,
+        status: post.status,
         createdAt: post.createdAt.toISOString(),
         platformCount: post.platforms.length,
-        publishResults: publishResults.length > 0 ? publishResults : undefined,
       },
     });
   } catch (error: unknown) {
