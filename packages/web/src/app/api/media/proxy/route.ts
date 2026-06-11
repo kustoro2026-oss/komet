@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Only allow proxying from known media domains
-    const allowed = ["media.zernio.com"];
+    const allowed: string[] = [];
     // Also allow Supabase Storage if configured
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (supabaseUrl) {

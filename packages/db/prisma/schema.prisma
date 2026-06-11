@@ -15,7 +15,6 @@ model User {
   name         String?
   avatarUrl    String?
   supabaseId   String   @unique
-  zernioApiKey String?
   lastSeenAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -88,7 +87,6 @@ model TeamInvitation {
 
 model Profile {
   id              String   @id @default(cuid())
-  zernioProfileId String?
   workspaceId     String
   workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   name            String
@@ -105,7 +103,6 @@ model Profile {
 
 model SocialAccount {
   id               String    @id @default(cuid())
-  zernioAccountId  String?
   profileId        String
   profile          Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   platform         String
@@ -132,7 +129,6 @@ model SocialAccount {
 
 model Post {
   id           String    @id @default(cuid())
-  zernioPostId String?
   profileId    String
   profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   title        String?
@@ -212,7 +208,6 @@ model Media {
   url             String
   thumbnailUrl    String?
   type            String   // image, video, gif, document
-  zernioMediaKey  String?
   createdAt       DateTime @default(now())
 }
 
