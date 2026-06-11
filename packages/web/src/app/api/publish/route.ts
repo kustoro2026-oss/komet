@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok } from "@komet/api/publishers";
+import { publishToTwitter, publishToTikTok } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
