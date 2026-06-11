@@ -101,24 +101,29 @@ async function publishToTikTok(
   videoUrl: string,
 ): Promise<{ success: boolean; postId?: string; error?: string; status?: string }> {
   try {
-    // Step 1: Init content publishing
+    // Step 1: Init content publishing (Direct Post API)
     console.log("[TikTok Publisher] Init publish...");
-    const initRes = await fetch("https://open.tiktokapis.com/v2/post/publish/info/create/", {
+    const initRes = await fetch("https://open.tiktokapis.com/v2/post/publish/video/init/", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json; charset=UTF-8",
       },
       body: JSON.stringify({
         post_info: {
           title: caption || "Posted via Komet",
-          video_url: videoUrl,
-          privacy_level: "PUBLIC",
+          privacy_level: "PUBLIC_TO_EVERYONE",
           disable_comment: false,
           disable_duet: false,
           disable_stitch: false,
+          brand_content_toggle: false,
+          brand_organic_toggle: false,
+          is_aigc: false,
         },
-        post_mode: "PULL_FROM_URL",
+        source_info: {
+          source: "PULL_FROM_URL",
+          video_url: videoUrl,
+        },
       }),
     });
 
