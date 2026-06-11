@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter } from "@komet/api/publishers";
+import { publishToTwitter, publishToTikTok } from "@komet/api/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +74,48 @@ export async function POST(request: NextRequest) {
               data: { status: "failed", errorMessage: result.error },
             });
             results.push({ platform: "twitter", success: false, error: result.error });
+          }
+        } else if (platform.platform === "tiktok") {
+          if (!platform.account.accessToken) {
+            results.push({ platform: "tiktok", success: false, error: "No access token" });
+            continue;
+          }
+
+          // TikTok requires video — use first video media item
+          const mediaItems = (post.mediaItems || []) as Array<{ type: string; url: string }>;
+          const videoItem = mediaItems.find((m) => m.type === "video" || m.url.match(/\.(mp4|mov|webm)$/i));
+
+          if (!videoItem) {
+            results.push({
+              platform: "tiktok",
+              success: false,
+              error: "No video attached — TikTok requires video content",
+            });
+            continue;
+          }
+
+          const result = await publishToTikTok(
+            platform.account.accessToken,
+            text,
+            videoItem.url,
+          );
+
+          if (result.success) {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: "published",
+                publishedUrl: `https://tiktok.com/@user/video/${result.postId}`,
+                publishedAt: new Date(),
+              },
+            });
+            results.push({ platform: "tiktok", success: true });
+          } else {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: { status: "failed", errorMessage: result.error },
+            });
+            results.push({ platform: "tiktok", success: false, error: result.error });
           }
         } else {
           // Platform not yet supported
