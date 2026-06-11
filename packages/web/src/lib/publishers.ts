@@ -95,7 +95,9 @@ async function checkTikTokStatus(
   return { status: "PROCESSING_UPLOAD", postId: publishId };
 }
 
-// ─── Discord (OAuth-based) ─────────────────────────────────────
+// ─── Discord (webhook) ─────────────────────────────────────
+// Uses webhook.incoming OAuth scope → Discord auto-creates webhook during auth.
+// The webhook URL is stored as accessToken in the DB.
 
 interface DiscordPublishResult {
   success: boolean;
@@ -104,31 +106,27 @@ interface DiscordPublishResult {
 }
 
 async function publishToDiscord(
-  accessToken: string,
-  channelId: string,
+  webhookUrl: string,
   content: string,
 ): Promise<DiscordPublishResult> {
   try {
-    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
+    const res = await fetch(webhookUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
     });
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");
-      console.error("[Discord Publisher] API error:", res.status, err);
-      return { success: false, error: `Discord API error: ${res.status}` };
+      console.error("[Discord Webhook] Error:", res.status, err);
+      return { success: false, error: `Discord webhook error: ${res.status}` };
     }
 
     const data = (await res.json()) as { id?: string };
-    console.log("[Discord Publisher] Message sent, id:", data.id);
+    console.log("[Discord Webhook] Message sent, id:", data.id);
     return { success: true, messageId: data.id };
   } catch (err: unknown) {
-    console.error("[Discord Publisher] Error:", (err as Error)?.message);
+    console.error("[Discord Webhook] Error:", (err as Error)?.message);
     return { success: false, error: (err as Error)?.message || "Network error" };
   }
 }

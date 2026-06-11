@@ -282,24 +282,18 @@ export async function POST(request: NextRequest) {
                 publishResults.push({ platform: "twitter", success: result.success, error: result.error });
               }
             } else if (task.platform === "discord") {
-              // Discord: extract channelId from accessToken (format: token::channelId) or fallback to env
-              const tokenParts = (task.accessToken || "").split("::");
-              const actualToken = tokenParts[0];
-              const accountChannelId = tokenParts[1] || "";
-              const discordChannelId = accountChannelId || process.env.DISCORD_CHANNEL_ID || "";
-              if (!actualToken) {
-                publishResults.push({ platform: "discord", success: false, error: "No access token. Please reconnect Discord." });
-              } else if (!discordChannelId) {
-                publishResults.push({ platform: "discord", success: false, error: "No channel configured. Select a channel via /accounts or set DISCORD_CHANNEL_ID." });
+              // Discord: accessToken now stores webhook URL (from webhook.incoming OAuth)
+              if (!task.accessToken) {
+                publishResults.push({ platform: "discord", success: false, error: "No webhook URL. Please reconnect Discord." });
               } else {
-                console.log("[Discord Publisher] Sending to Discord channel:", discordChannelId);
-                const result = await publishToDiscord(actualToken, discordChannelId, text);
+                console.log("[Discord Publisher] Sending via webhook...");
+                const result = await publishToDiscord(task.accessToken, text);
                 console.log("[Discord Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({
                   where: { id: task.id },
                   data: {
                     status: result.success ? "published" : "failed",
-                    publishedUrl: result.success ? `https://discord.com/channels/@me/${discordChannelId}/${result.messageId || ""}` : null,
+                    publishedUrl: result.success ? `https://discord.com/channels/@me` : null,
                     publishedAt: result.success ? new Date() : null,
                     errorMessage: result.error || null,
                   },

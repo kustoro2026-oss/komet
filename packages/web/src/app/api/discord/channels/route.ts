@@ -1,5 +1,6 @@
-// GET  /api/discord/channels?accountId=xxx — List Discord guilds & text channels
-// POST /api/discord/channels — Save channel ID for an account
+// GET /api/discord/channels?accountId=xxx — List Discord guilds & text channels (for reference only)
+// NOTE: With webhook.incoming OAuth flow, channel selection is handled by Discord during authorization.
+// This endpoint is informational and requires storing the raw access token separately.
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
@@ -42,17 +43,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "accountId is required" }, { status: 400 });
     }
 
-    // Get the Discord account with access token
+    // With webhook.incoming flow, accessToken stores the webhook URL.
+    // The guilds/channels API requires a bearer token.
+    // Reconnect with identify+guilds scope to use this endpoint.
     const account = await prisma.socialAccount.findFirst({
       where: { id: accountId, platform: "discord" },
     });
 
     if (!account?.accessToken) {
-      return NextResponse.json({ error: "Discord account not found or not connected" }, { status: 404 });
+      return NextResponse.json({ error: "Discord account not found" }, { status: 404 });
     }
 
-    // Use raw token (strip ::channelId suffix if present)
-    const rawToken = account.accessToken.split("::")[0];
+    // If accessToken looks like a webhook URL, try using refreshToken for API calls
+    const rawToken = account.accessToken.startsWith("https://discord.com/api/webhooks/")
+      ? account.refreshToken // fallback: use refreshToken for guild listing
+      : account.accessToken;
+
+    if (!rawToken || rawToken.startsWith("https://")) {
+      return NextResponse.json({
+        error: "Guild listing not available with webhook-only token. Reconnect Discord with identify+guilds scope to list channels.",
+      }, { status: 400 });
+    }
 
     // Fetch guilds
     const guildsRes = await fetch("https://discord.com/api/v10/users/@me/guilds", {
@@ -77,7 +88,7 @@ export async function GET(request: NextRequest) {
         if (channelsRes.ok) {
           const channels = (await channelsRes.json()) as DiscordChannel[];
           const textChannels = channels
-            .filter((c) => c.type === 0) // type 0 = GUILD_TEXT
+            .filter((c) => c.type === 0)
             .map((c) => ({ id: c.id, name: c.name }));
 
           if (textChannels.length > 0) {
@@ -97,46 +108,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ guilds: guildsWithChannels });
   } catch (err) {
     console.error("[Discord Channels] Error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
-
-// POST — Save channel ID to account
-// Body: { accountId: string, channelId: string }
-export async function POST(request: NextRequest) {
-  try {
-    const { user, error } = await getUserFromRequest(request);
-    if (error || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { accountId, channelId } = body as { accountId?: string; channelId?: string };
-
-    if (!accountId || !channelId) {
-      return NextResponse.json({ error: "accountId and channelId are required" }, { status: 400 });
-    }
-
-    const account = await prisma.socialAccount.findFirst({
-      where: { id: accountId, platform: "discord" },
-    });
-
-    if (!account?.accessToken) {
-      return NextResponse.json({ error: "Discord account not found" }, { status: 404 });
-    }
-
-    // Store channel ID: remove any existing ::channelId suffix, then append
-    const rawToken = account.accessToken.split("::")[0];
-    const newToken = `${rawToken}::${channelId}`;
-
-    await prisma.socialAccount.update({
-      where: { id: accountId },
-      data: { accessToken: newToken },
-    });
-
-    return NextResponse.json({ success: true, channelId });
-  } catch (err) {
-    console.error("[Discord Save Channel] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

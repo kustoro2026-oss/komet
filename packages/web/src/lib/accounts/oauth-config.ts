@@ -442,7 +442,7 @@ register({
   authorizeUrl: "https://discord.com/oauth2/authorize",
   tokenUrl: "https://discord.com/api/oauth2/token",
   profileUrl: "https://discord.com/api/users/@me",
-  scopes: ["identify", "guilds", "email", "messages.send"],
+  scopes: ["identify", "guilds", "email", "webhook.incoming"],
   tokenAuth: "body",
   clientIdEnv: "DISCORD_CLIENT_ID",
   clientSecretEnv: "DISCORD_CLIENT_SECRET",
@@ -450,14 +450,23 @@ register({
   redirectPath: "/api/oauth/callback",
   extraAuthorizeParams: { response_type: "code" },
   tokenContentType: "form",
-  transformToken: (raw) => ({
-    accessToken: raw.access_token as string,
-    refreshToken: raw.refresh_token as string | undefined,
-    expiresIn: raw.expires_in as number | undefined,
-  }),
-  fetchProfile: async (accessToken) => {
+  transformToken: (raw) => {
+    // webhook.incoming returns webhook object in token response
+    // Format: { url: "https://discord.com/api/webhooks/...", channel_id: "..." }
+    const webhook = raw.webhook as { url?: string; channel_id?: string } | undefined;
+    const token = raw.access_token as string;
+    // Store webhook URL as accessToken so publisher can use it directly
+    return {
+      accessToken: webhook?.url || token,
+      refreshToken: raw.refresh_token as string | undefined,
+      expiresIn: raw.expires_in as number | undefined,
+    };
+  },
+  fetchProfile: async (_webhookUrl, tokenResponse) => {
+    // accessToken stores webhook URL; use raw token from tokenResponse for API calls
+    const rawToken = (tokenResponse?.access_token as string) || _webhookUrl;
     const res = await fetch("https://discord.com/api/users/@me", {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { Authorization: `Bearer ${rawToken}` },
     });
     const data = (await res.json()) as {
       id?: string;
