@@ -5,6 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
+import { publishToTwitter, publishToTikTok } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         title: title || null,
         content,
-        status,
+        status: publishNow ? "publishing" : status,
         scheduledFor: (scheduledFor && !isNaN(new Date(scheduledFor).getTime())) ? new Date(scheduledFor) : null,
         timezone: timezone || "UTC",
         publishNow: publishNow ?? false,
@@ -215,17 +216,94 @@ export async function POST(request: NextRequest) {
         ...platformData,
       },
       include: {
-        platforms: true,
+        platforms: {
+          include: { account: true },
+        },
       },
     });
+
+    // If publishNow, trigger actual publishing to each platform
+    const publishResults: Array<{ platform: string; success: boolean; error?: string }> = [];
+    if (publishNow && post.platforms.length > 0) {
+      for (const pp of post.platforms) {
+        const text = pp.customContent || content;
+        try {
+          if (pp.platform === "tiktok") {
+            if (!pp.account.accessToken) {
+              publishResults.push({ platform: "tiktok", success: false, error: "No access token" });
+            } else {
+              const mediaArr = (Array.isArray(mediaItems) ? mediaItems : []) as Array<{ type: string; url: string }>;
+              const videoItem = mediaArr.find((m) => m.type === "video" || m.url?.match(/\.(mp4|mov|webm)$/i));
+              if (!videoItem) {
+                publishResults.push({ platform: "tiktok", success: false, error: "No video attached" });
+              } else {
+                const result = await publishToTikTok(pp.account.accessToken, text, videoItem.url);
+                const isProcessing = result.status === "processing";
+                await prisma.postPlatform.update({
+                  where: { id: pp.id },
+                  data: {
+                    status: isProcessing ? "publishing" : result.success ? "published" : "failed",
+                    publishedUrl: result.success
+                      ? `https://tiktok.com/@user/video/${result.postId}`
+                      : null,
+                    publishedAt: result.success ? new Date() : null,
+                    errorMessage: isProcessing ? "Processing..." : result.error || null,
+                  },
+                });
+                publishResults.push({ platform: "tiktok", success: result.success, error: result.error });
+              }
+            }
+          } else if (pp.platform === "twitter") {
+            if (!pp.account.accessToken) {
+              publishResults.push({ platform: "twitter", success: false, error: "No access token" });
+            } else {
+              const result = await publishToTwitter(pp.account.accessToken, text);
+              await prisma.postPlatform.update({
+                where: { id: pp.id },
+                data: {
+                  status: result.success ? "published" : "failed",
+                  publishedUrl: result.success ? `https://twitter.com/i/web/status/${result.postId}` : null,
+                  publishedAt: result.success ? new Date() : null,
+                  errorMessage: result.error || null,
+                },
+              });
+              publishResults.push({ platform: "twitter", success: result.success, error: result.error });
+            }
+          } else {
+            publishResults.push({ platform: pp.platform, success: false, error: "Publisher not implemented" });
+          }
+        } catch (pubErr) {
+          const msg = pubErr instanceof Error ? pubErr.message : "Unknown error";
+          await prisma.postPlatform.update({
+            where: { id: pp.id },
+            data: { status: "failed", errorMessage: msg },
+          });
+          publishResults.push({ platform: pp.platform, success: false, error: msg });
+        }
+      }
+
+      // Determine final status
+      const allOk = publishResults.every((r) => r.success);
+      const anyOk = publishResults.some((r) => r.success);
+      const finalStatus = allOk ? "published" : anyOk ? "partial" : "failed";
+      await prisma.post.update({
+        where: { id: post.id },
+        data: { status: finalStatus },
+      });
+    }
 
     return NextResponse.json({
       success: true,
       post: {
         id: post.id,
-        status: post.status,
+        status: publishNow
+          ? post.platforms.length > 0
+            ? post.platforms[0]?.status
+            : post.status
+          : post.status,
         createdAt: post.createdAt.toISOString(),
         platformCount: post.platforms.length,
+        publishResults: publishResults.length > 0 ? publishResults : undefined,
       },
     });
   } catch (error: unknown) {
