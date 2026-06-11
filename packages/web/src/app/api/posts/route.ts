@@ -282,19 +282,21 @@ export async function POST(request: NextRequest) {
                 publishResults.push({ platform: "twitter", success: result.success, error: result.error });
               }
             } else if (task.platform === "discord") {
-              // Discord uses webhook URL (stored in accessToken for Discord accounts)
-              const webhookUrl = process.env.DISCORD_WEBHOOK_URL || task.accessToken;
-              if (!webhookUrl) {
-                publishResults.push({ platform: "discord", success: false, error: "No webhook URL configured. Set DISCORD_WEBHOOK_URL or reconnect Discord with webhook URL." });
+              // Discord uses OAuth access token + channel ID
+              const discordChannelId = process.env.DISCORD_CHANNEL_ID || "";
+              if (!task.accessToken) {
+                publishResults.push({ platform: "discord", success: false, error: "No access token. Please reconnect Discord." });
+              } else if (!discordChannelId) {
+                publishResults.push({ platform: "discord", success: false, error: "No channel ID configured. Set DISCORD_CHANNEL_ID in Vercel env." });
               } else {
-                console.log("[Discord Publisher] Sending to Discord...");
-                const result = await publishToDiscord(webhookUrl, text);
+                console.log("[Discord Publisher] Sending to Discord channel:", discordChannelId);
+                const result = await publishToDiscord(task.accessToken, discordChannelId, text);
                 console.log("[Discord Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({
                   where: { id: task.id },
                   data: {
                     status: result.success ? "published" : "failed",
-                    publishedUrl: result.success ? `https://discord.com/channels/@me` : null,
+                    publishedUrl: result.success ? `https://discord.com/channels/@me/${discordChannelId}/${result.messageId || ""}` : null,
                     publishedAt: result.success ? new Date() : null,
                     errorMessage: result.error || null,
                   },

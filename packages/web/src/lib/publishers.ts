@@ -95,7 +95,7 @@ async function checkTikTokStatus(
   return { status: "PROCESSING_UPLOAD", postId: publishId };
 }
 
-// ─── Discord (Webhook) ──────────────────────────────────────────
+// ─── Discord (OAuth-based) ─────────────────────────────────────
 
 interface DiscordPublishResult {
   success: boolean;
@@ -104,38 +104,29 @@ interface DiscordPublishResult {
 }
 
 async function publishToDiscord(
-  webhookUrl: string,
+  accessToken: string,
+  channelId: string,
   content: string,
-  options?: { username?: string; avatarUrl?: string },
 ): Promise<DiscordPublishResult> {
   try {
-    const body: Record<string, unknown> = { content };
-    if (options?.username) body.username = options.username;
-    if (options?.avatarUrl) body.avatar_url = options.avatarUrl;
-
-    const res = await fetch(webhookUrl, {
+    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
     });
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");
-      console.error("[Discord Publisher] Webhook error:", res.status, err);
-      return { success: false, error: `Discord webhook error: ${res.status}` };
+      console.error("[Discord Publisher] API error:", res.status, err);
+      return { success: false, error: `Discord API error: ${res.status}` };
     }
 
-    // Webhook response: empty 204 or { id, content, ... }
-    let messageId: string | undefined;
-    if (res.status !== 204) {
-      try {
-        const data = (await res.json()) as { id?: string };
-        messageId = data.id;
-      } catch {}
-    }
-
-    console.log("[Discord Publisher] Message sent, id:", messageId);
-    return { success: true, messageId };
+    const data = (await res.json()) as { id?: string };
+    console.log("[Discord Publisher] Message sent, id:", data.id);
+    return { success: true, messageId: data.id };
   } catch (err: unknown) {
     console.error("[Discord Publisher] Error:", (err as Error)?.message);
     return { success: false, error: (err as Error)?.message || "Network error" };

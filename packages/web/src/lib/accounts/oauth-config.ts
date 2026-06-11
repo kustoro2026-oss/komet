@@ -442,7 +442,7 @@ register({
   authorizeUrl: "https://discord.com/oauth2/authorize",
   tokenUrl: "https://discord.com/api/oauth2/token",
   profileUrl: "https://discord.com/api/users/@me",
-  scopes: ["identify", "guilds", "email"],
+  scopes: ["identify", "guilds", "email", "messages.send"],
   tokenAuth: "body",
   clientIdEnv: "DISCORD_CLIENT_ID",
   clientSecretEnv: "DISCORD_CLIENT_SECRET",
