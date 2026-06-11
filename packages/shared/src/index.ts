@@ -189,6 +189,7 @@ export const CHARACTER_LIMITS: Partial<Record<Platform, number>> = {
   facebook: 63206,
   linkedin: 3000,
   youtube: 5000,
+  discord: 2000,
 };
 export const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 export const RATE_LIMIT_MAX_REQUESTS = 60;

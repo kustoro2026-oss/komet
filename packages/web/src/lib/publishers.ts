@@ -95,6 +95,53 @@ async function checkTikTokStatus(
   return { status: "PROCESSING_UPLOAD", postId: publishId };
 }
 
+// ─── Discord (Webhook) ──────────────────────────────────────────
+
+interface DiscordPublishResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}
+
+async function publishToDiscord(
+  webhookUrl: string,
+  content: string,
+  options?: { username?: string; avatarUrl?: string },
+): Promise<DiscordPublishResult> {
+  try {
+    const body: Record<string, unknown> = { content };
+    if (options?.username) body.username = options.username;
+    if (options?.avatarUrl) body.avatar_url = options.avatarUrl;
+
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => "");
+      console.error("[Discord Publisher] Webhook error:", res.status, err);
+      return { success: false, error: `Discord webhook error: ${res.status}` };
+    }
+
+    // Webhook response: empty 204 or { id, content, ... }
+    let messageId: string | undefined;
+    if (res.status !== 204) {
+      try {
+        const data = (await res.json()) as { id?: string };
+        messageId = data.id;
+      } catch {}
+    }
+
+    console.log("[Discord Publisher] Message sent, id:", messageId);
+    return { success: true, messageId };
+  } catch (err: unknown) {
+    console.error("[Discord Publisher] Error:", (err as Error)?.message);
+    return { success: false, error: (err as Error)?.message || "Network error" };
+  }
+}
+
 async function publishToTikTok(
   accessToken: string,
   caption: string,
@@ -172,4 +219,4 @@ async function publishToTikTok(
   }
 }
 
-export { publishToTwitter, publishToTikTok };
+export { publishToTwitter, publishToTikTok, publishToDiscord };

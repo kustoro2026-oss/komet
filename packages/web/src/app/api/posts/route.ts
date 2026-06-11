@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -280,6 +280,26 @@ export async function POST(request: NextRequest) {
                   },
                 });
                 publishResults.push({ platform: "twitter", success: result.success, error: result.error });
+              }
+            } else if (task.platform === "discord") {
+              // Discord uses webhook URL (stored in accessToken for Discord accounts)
+              const webhookUrl = process.env.DISCORD_WEBHOOK_URL || task.accessToken;
+              if (!webhookUrl) {
+                publishResults.push({ platform: "discord", success: false, error: "No webhook URL configured. Set DISCORD_WEBHOOK_URL or reconnect Discord with webhook URL." });
+              } else {
+                console.log("[Discord Publisher] Sending to Discord...");
+                const result = await publishToDiscord(webhookUrl, text);
+                console.log("[Discord Publisher] Result:", JSON.stringify(result));
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: {
+                    status: result.success ? "published" : "failed",
+                    publishedUrl: result.success ? `https://discord.com/channels/@me` : null,
+                    publishedAt: result.success ? new Date() : null,
+                    errorMessage: result.error || null,
+                  },
+                });
+                publishResults.push({ platform: "discord", success: result.success, error: result.error });
               }
             } else {
               // Platform publisher not implemented yet — mark as published (placeholder)
