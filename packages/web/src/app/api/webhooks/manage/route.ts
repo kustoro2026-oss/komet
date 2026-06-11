@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId");
-    const workspace = await resolveWorkspace(kometUser.id, workspaceId);
+    const workspace = await resolveWorkspace(user.id, workspaceId);
 
     if (!workspace) {
       return NextResponse.json({ webhooks: [] });
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId");
-    const workspace = await resolveWorkspace(kometUser.id, workspaceId);
+    const workspace = await resolveWorkspace(user.id, workspaceId);
 
     if (!workspace) {
       return NextResponse.json({ error: "No workspace found" }, { status: 404 });
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest) {
       include: { workspace: { select: { ownerId: true } } },
     });
 
-    if (!existing || existing.workspace.ownerId !== kometUser.id) {
+    if (!existing || existing.workspace.ownerId !== user.id) {
       return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
     }
 
@@ -227,7 +227,7 @@ export async function DELETE(request: NextRequest) {
       include: { workspace: { select: { ownerId: true } } },
     });
 
-    if (!existing || existing.workspace.ownerId !== kometUser.id) {
+    if (!existing || existing.workspace.ownerId !== user.id) {
       return NextResponse.json({ error: "Webhook not found" }, { status: 404 });
     }
 
