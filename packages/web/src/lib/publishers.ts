@@ -112,7 +112,7 @@ async function publishToTikTok(
       body: JSON.stringify({
         post_info: {
           title: caption || "Posted via Komet",
-          privacy_level: "PUBLIC_TO_EVERYONE",
+          privacy_level: "SELF_ONLY",
           disable_comment: false,
           disable_duet: false,
           disable_stitch: false,
