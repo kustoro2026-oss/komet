@@ -1,7 +1,7 @@
 // API Route: Unpublish Post
 // POST /api/posts/[postId]/unpublish — Unpublish a post from a platform
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,6 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
     const kometUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -36,7 +35,7 @@ export async function POST(
 
     // Verify ownership
     const post = await prisma.post.findFirst({
-      where: { id: postId, userId: kometUser.id, isDeleted: false },
+      where: { id: postId, userId: user.id, isDeleted: false },
     });
 
     if (!post) {

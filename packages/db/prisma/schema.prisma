@@ -161,6 +161,7 @@ model Post {
   @@index([profileId])
   @@index([status, scheduledFor])
   @@index([isDraft])
+  @@index([userId, isDeleted, status, createdAt])
 }
 
 model PostPlatform {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -10,22 +10,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const accounts = await prisma.socialAccount.findMany({
       where: {
         profile: {
           workspace: {
-            ownerId: kometUser.id,
+            ownerId: user.id,
           },
         },
       },
@@ -84,16 +75,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Account ID required" }, { status: 400 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // Verify ownership before deleting
     const account = await prisma.socialAccount.findFirst({
@@ -101,7 +83,7 @@ export async function DELETE(request: NextRequest) {
         id: accountId,
         profile: {
           workspace: {
-            ownerId: kometUser.id,
+            ownerId: user.id,
           },
         },
       },

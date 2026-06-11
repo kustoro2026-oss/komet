@@ -4,7 +4,7 @@
 // PUT  /api/posts — Update a post
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -39,16 +39,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -58,7 +49,7 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get("sort") || "newest";
 
     const where: Record<string, unknown> = {
-      userId: kometUser.id,
+      userId: user.id,
       isDeleted: false,
     };
     if (status && status !== "all") where.status = status;
@@ -104,16 +95,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get("id");
@@ -123,7 +105,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const post = await prisma.post.findFirst({
-      where: { id: postId, userId: kometUser.id, isDeleted: false },
+      where: { id: postId, userId: user.id, isDeleted: false },
     });
 
     if (!post) {
@@ -153,16 +135,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const body = await request.json();
     const {
@@ -228,7 +201,7 @@ export async function POST(request: NextRequest) {
     const post = await prisma.post.create({
       data: {
         profileId,
-        userId: kometUser.id,
+        userId: user.id,
         title: title || null,
         content,
         status,
@@ -272,16 +245,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const body = await request.json();
     const { id, content, title, status, scheduledFor, timezone, hashtags, tags, publishNow } = body;
@@ -292,7 +256,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify ownership
     const existing = await prisma.post.findFirst({
-      where: { id, userId: kometUser.id, isDeleted: false },
+      where: { id, userId: user.id, isDeleted: false },
     });
 
     if (!existing) {
@@ -310,7 +274,7 @@ export async function PUT(request: NextRequest) {
     if (publishNow !== undefined) updateData.publishNow = publishNow;
 
     await prisma.post.updateMany({
-      where: { id, userId: kometUser.id },
+      where: { id, userId: user.id },
       data: updateData,
     });
 

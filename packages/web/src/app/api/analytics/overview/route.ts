@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -10,24 +10,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
     // Find Komet user by supabaseId
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // Get social accounts for this user
     const socialAccounts = await prisma.socialAccount.findMany({
       where: {
         profile: {
           workspace: {
-            ownerId: kometUser.id,
+            ownerId: user.id,
           },
         },
       },
@@ -45,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Get posts for this user
     const posts = await prisma.post.findMany({
       where: {
-        userId: kometUser.id,
+        userId: user.id,
         isDeleted: false,
       },
       select: {

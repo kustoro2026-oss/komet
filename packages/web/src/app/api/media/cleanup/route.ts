@@ -1,7 +1,7 @@
 // API Route: Cleanup temporary media after post is published
 // POST: accepts { mediaIds: string[] } — deletes files from Supabase storage + DB records
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAdmin, getUserFromRequest } from "@/lib/supabase-admin";
+import { getSupabaseAdmin, getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
     const body = await request.json();
     const mediaIds: string[] = body.mediaIds || [];
 

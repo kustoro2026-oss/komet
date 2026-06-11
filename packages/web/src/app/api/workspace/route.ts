@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,27 +8,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // Workspaces where user is owner
     const owned = await prisma.workspace.findMany({
-      where: { ownerId: kometUser.id, isDeleted: false },
+      where: { ownerId: user.id, isDeleted: false },
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, slug: true, ownerId: true },
     });
 
     // Workspaces where user is a member (but not owner)
     const memberships = await prisma.workspaceMember.findMany({
-      where: { userId: kometUser.id },
+      where: { userId: user.id },
       select: {
         workspaceId: true,
         role: true,
@@ -73,16 +64,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body.name !== "string" || !body.name.trim()) {
@@ -101,10 +83,10 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         slug,
-        ownerId: kometUser.id,
+        ownerId: user.id,
         members: {
           create: {
-            userId: kometUser.id,
+            userId: user.id,
             role: "admin",
           },
         },

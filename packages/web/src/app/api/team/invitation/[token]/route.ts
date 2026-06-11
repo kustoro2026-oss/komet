@@ -2,7 +2,7 @@
 // GET  /api/team/invitation/[token] → validate invitation
 // POST /api/team/invitation/[token] → accept invitation
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 export const dynamic = "force-dynamic";
 
 export async function GET(
@@ -12,7 +12,6 @@ export async function GET(
   const { token } = params;
 
   try {
-    const { prisma } = await import("@komet/db");
     const invitation = await prisma.teamInvitation.findUnique({
       where: { token },
       select: {
@@ -81,7 +80,6 @@ export async function POST(
   }
 
   try {
-    const { prisma } = await import("@komet/db");
 
     const invitation = await prisma.teamInvitation.findUnique({
       where: { token },

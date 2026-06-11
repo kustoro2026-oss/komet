@@ -2,7 +2,7 @@
 // GET  /api/team?workspaceId=xxx → list members
 // POST /api/team → invite new member
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 import { emailService } from "@komet/email";
 import { randomUUID } from "crypto";
 
@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { prisma } = await import("@komet/db");
     // Verify user is owner or member of this workspace
     const [membership, isOwner] = await Promise.all([
       prisma.workspaceMember.findUnique({
@@ -88,7 +87,6 @@ export async function POST(request: NextRequest) {
   const userId = user.id;
 
   try {
-    const { prisma } = await import("@komet/db");
     const body = await request.json();
     const { workspaceId, email, role } = body as {
       workspaceId: string;

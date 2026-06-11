@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -10,21 +10,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const profiles = await prisma.profile.findMany({
       where: {
         workspace: {
-          ownerId: kometUser.id,
+          ownerId: user.id,
         },
       },
       select: {
@@ -59,20 +50,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Profile name is required" }, { status: 400 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // Get or create default workspace for this user
     let workspace = await prisma.workspace.findFirst({
-      where: { ownerId: kometUser.id },
+      where: { ownerId: user.id },
       orderBy: { createdAt: "asc" },
     });
 
@@ -80,8 +62,8 @@ export async function POST(request: NextRequest) {
       workspace = await prisma.workspace.create({
         data: {
           name: "My Workspace",
-          slug: `workspace-${kometUser.id.substring(0, 8)}`,
-          ownerId: kometUser.id,
+          slug: `workspace-${user.id.substring(0, 8)}`,
+          ownerId: user.id,
         },
       });
     }

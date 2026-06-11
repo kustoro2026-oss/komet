@@ -2,14 +2,13 @@
 // Routes: GET /api/webhooks/manage → list | POST → create | PUT → update | DELETE → delete
 // All operations scoped to the authenticated user's workspace
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
 // Helper: resolve workspace for the authenticated user
 async function resolveWorkspace(userId: string, workspaceId?: string | null) {
-  const { prisma } = await import("@komet/db");
 
   if (workspaceId) {
     // Verify user has access to this workspace
@@ -39,16 +38,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId");
@@ -94,16 +84,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const body = await request.json();
     const { name, url, events, secret, isActive, customHeaders } = body;
@@ -170,16 +151,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const body = await request.json();
     const { webhookId, name, url, events, secret, isActive, customHeaders } = body;
@@ -242,16 +214,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { prisma } = await import("@komet/db");
 
-    const kometUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { id: true },
-    });
-
-    if (!kometUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const { webhookId } = await request.json();
     if (!webhookId) {

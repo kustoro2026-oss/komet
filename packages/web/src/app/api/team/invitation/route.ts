@@ -1,7 +1,7 @@
 // API Route: Team Invitations List
 // GET /api/team/invitation?workspaceId=xxx → list pending invitations
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest } from "@/lib/supabase-admin";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { prisma } = await import("@komet/db");
     // Verify user is owner or member of this workspace
     const [membership, isOwner] = await Promise.all([
       prisma.workspaceMember.findUnique({
@@ -81,7 +80,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid role. Must be admin, editor, or viewer" }, { status: 400 });
     }
 
-    const { prisma } = await import("@komet/db");
 
     // Verify user is owner or admin of this workspace
     const isOwner = await prisma.workspace.findFirst({
@@ -205,7 +203,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "id parameter required" }, { status: 400 });
     }
 
-    const { prisma } = await import("@komet/db");
 
     // Verify user owns the workspace this invitation belongs to
     const invitation = await prisma.teamInvitation.findUnique({

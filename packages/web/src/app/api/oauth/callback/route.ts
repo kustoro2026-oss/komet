@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getOAuthConfig } from "@/lib/accounts/oauth-config";
 import { exchangeCodeForTokens } from "@/lib/accounts/oauth-clients";
+import { prisma } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -81,7 +82,6 @@ export async function GET(request: NextRequest) {
     const profile = await cfg.fetchProfile(tokenResult.accessToken, tokenResult.raw);
 
     // Save to database
-    const { prisma } = await import("@komet/db");
 
     // Verify the profile exists
     const profileExists = await prisma.profile.findUnique({

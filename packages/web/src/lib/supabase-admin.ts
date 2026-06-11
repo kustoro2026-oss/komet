@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@komet/auth";
 import { createServerClient } from "@supabase/ssr";
+import { prisma } from "@komet/db";
 import { NextRequest } from "next/server";
 
 /**
@@ -13,6 +14,10 @@ export function getSupabaseAdmin() {
 /**
  * Extracts the authenticated user from a NextRequest by reading session cookies.
  * Uses the anon key client (not service role) to respect the session.
+ *
+ * STATIC prisma import — no dynamic import overhead per request.
+ * Returns the Prisma user record — callers should use it directly
+ * instead of doing a redundant findUnique.
  */
 export async function getUserFromRequest(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -38,41 +43,38 @@ export async function getUserFromRequest(request: NextRequest) {
     return { user: null, error: "Unauthorized" };
   }
 
-  // Auto-sync user to Prisma database and get Prisma user ID
-  let prismaUserId = data.user.id; // fallback
-  try {
-    const { prisma } = await import("@komet/db");
-    const email = data.user.email || "";
-    const name =
-      data.user.user_metadata?.full_name ||
-      data.user.user_metadata?.name ||
-      email.split("@")[0];
+  // Auto-sync user to Prisma database
+  const email = data.user.email || "";
+  const name =
+    data.user.user_metadata?.full_name ||
+    data.user.user_metadata?.name ||
+    email.split("@")[0];
 
-    const dbUser = await prisma.user.upsert({
-      where: { supabaseId: data.user.id },
-      update: {
-        email,
-        name,
-        lastSeenAt: new Date(),
-      },
-      create: {
-        supabaseId: data.user.id,
-        email,
-        name,
-        lastSeenAt: new Date(),
-      },
-    });
-    prismaUserId = dbUser.id;
-  } catch (dbErr) {
-    console.error("Failed to sync user to database:", dbErr);
-  }
+  const dbUser = await prisma.user.upsert({
+    where: { supabaseId: data.user.id },
+    update: {
+      email,
+      name,
+      lastSeenAt: new Date(),
+    },
+    create: {
+      supabaseId: data.user.id,
+      email,
+      name,
+      lastSeenAt: new Date(),
+    },
+  });
 
+  // Return DB user directly — callers don't need to re-query
   return {
     user: {
-      id: prismaUserId,
-      email: data.user.email || "",
-      name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split("@")[0],
+      id: dbUser.id,
+      email,
+      name,
     },
     error: null,
   };
 }
+
+/** Re-export prisma for API routes so they don't need their own import */
+export { prisma };
