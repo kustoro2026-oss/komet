@@ -2,12 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2, RefreshCw, X, Loader2 } from "lucide-react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useTranslations } from "next-intl";
 import { useAccounts, useDeleteAccount } from "@/lib/accounts/hooks";
+
+const PLATFORM_BG_IMAGE: Record<string, string> = {
+  twitter: "/images/social-icons/twitter.jpg",
+  instagram: "/images/social-icons/instagram.jpg",
+  facebook: "/images/social-icons/facebook.jpg",
+  youtube: "/images/social-icons/youtube.jpg",
+  linkedin: "/images/social-icons/linkedin.jpg",
+  threads: "/images/social-icons/threads.jpg",
+  tiktok: "/images/social-icons/tiktok.jpg",
+  pinterest: "/images/social-icons/pinterest.jpg",
+  reddit: "/images/social-icons/reddit.jpg",
+  bluesky: "/images/social-icons/bluesky.jpg",
+  telegram: "/images/social-icons/telegram.jpg",
+  discord: "/images/social-icons/discord.jpg",
+  snapchat: "/images/social-icons/snapchat.jpg",
+  googlebusiness: "/images/social-icons/googlebusiness.jpg",
+  whatsapp: "/images/social-icons/whatsapp.jpg",
+};
 
 interface ConnectedAccount {
   id: string;
@@ -137,10 +156,17 @@ export default function AccountsPage() {
               <a
                 key={platform}
                 href="/accounts/connect"
-                className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-[var(--color-ink-muted)] p-4 text-center hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
+                className="group relative aspect-square overflow-hidden rounded-lg border border-dashed border-[var(--color-ink-muted)] hover:border-[var(--color-primary)] transition-all"
               >
-                <Plus className="h-5 w-5 text-[var(--color-on-dark-muted)]" />
-                <span className="text-caption font-medium text-[var(--color-on-dark-soft)]">
+                <Image
+                  src={PLATFORM_BG_IMAGE[platform]}
+                  alt={PLATFORM_LABELS[platform]}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
+                <span className="absolute inset-0 flex items-center justify-center text-caption font-semibold text-white drop-shadow-md">
                   {PLATFORM_LABELS[platform]}
                 </span>
               </a>
@@ -347,10 +373,17 @@ export default function AccountsPage() {
             <a
               key={platform}
               href="/accounts/connect"
-              className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-[var(--color-ink-muted)] p-4 text-center hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
+              className="group relative aspect-square overflow-hidden rounded-lg border border-dashed border-[var(--color-ink-muted)] hover:border-[var(--color-primary)] transition-all"
             >
-              <Plus className="h-5 w-5 text-[var(--color-on-dark-muted)]" />
-              <span className="text-caption font-medium text-[var(--color-on-dark-soft)]">
+              <Image
+                src={PLATFORM_BG_IMAGE[platform]}
+                alt={PLATFORM_LABELS[platform]}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
+              <span className="absolute inset-0 flex items-center justify-center text-caption font-semibold text-white drop-shadow-md">
                 {PLATFORM_LABELS[platform]}
               </span>
             </a>
