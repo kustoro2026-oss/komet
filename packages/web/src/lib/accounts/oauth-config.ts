@@ -329,16 +329,23 @@ register({
     const res = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=display_name,username,avatar_url,follower_count", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    const data = (await res.json()) as {
-      data?: { user?: { display_name?: string; username?: string; avatar_url?: string; follower_count?: number } };
+    const raw = await res.text();
+    const data = JSON.parse(raw) as {
+      data?: { user?: { display_name?: string; username?: string; avatar_url?: string; follower_count?: number | string } };
+      error?: { code: string; message?: string };
     };
+    if (data.error && data.error.code !== "ok") {
+      console.error("[TikTok Profile] API error:", JSON.stringify(data.error));
+    }
     const u = data.data?.user || {};
+    const followers = typeof u.follower_count === "string" ? parseInt(u.follower_count, 10) : (u.follower_count || 0);
+    console.log("[TikTok Profile] raw user data:", JSON.stringify({ display_name: u.display_name, avatar_url: u.avatar_url?.slice(0, 30), follower_count: u.follower_count, followers }));
     return {
       platformAccountId: (tokenResponse?.open_id as string) || "",
       username: u.username || u.display_name?.toLowerCase().replace(/\s+/g, "_") || "unknown",
       displayName: u.display_name || u.username || "",
       avatarUrl: u.avatar_url,
-      followers: u.follower_count || 0,
+      followers,
     };
   },
 });
