@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     });
 
     console.log("[Accounts API] Found", accounts.length, "accounts for user", user.id);
+    accounts.forEach(a => console.log("[Accounts API] account:", a.platform, "| followers:", a.followers));
 
     const mappedAccounts = accounts.map((a) => ({
       id: a.id,

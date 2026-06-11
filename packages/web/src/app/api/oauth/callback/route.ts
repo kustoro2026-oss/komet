@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
     console.log("[OAuth Callback] profileId from state:", oauthState.profileId);
 
     // Save to database
+    console.log("[OAuth Callback] 💾 SAVING — followers:", profile.followers, "| username:", profile.username, "| platformAccountId:", profile.platformAccountId);
 
     // Verify the profile exists
     const profileExists = await prisma.profile.findUnique({
