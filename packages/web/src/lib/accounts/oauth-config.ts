@@ -336,7 +336,10 @@ extraAuthorizeParams: { response_type: "code", prompt: "consent" },
     };
     if (data.error && data.error.code !== "ok") {
       console.error("[TikTok Profile] API error:", JSON.stringify(data.error));
+      // Throw so the account is NOT saved with garbage data
+      throw new Error(`TikTok profile fetch failed: ${data.error.code} — ${data.error.message || "Did you check ALL permissions? Try disconnecting and connecting again."}`);
     }
+    // Token response always has open_id even if profile fetch fails above
     const u = data.data?.user || {};
     const followers = typeof u.follower_count === "string" ? parseInt(u.follower_count, 10) : (u.follower_count || 0);
     console.log("[TikTok Profile] raw user data:", JSON.stringify({ display_name: u.display_name, avatar_url: u.avatar_url?.slice(0, 30), follower_count: u.follower_count, followers }));
