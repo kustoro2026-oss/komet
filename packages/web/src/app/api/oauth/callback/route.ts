@@ -81,6 +81,12 @@ export async function GET(request: NextRequest) {
 
     const profile = await cfg.fetchProfile(tokenResult.accessToken, tokenResult.raw);
 
+    console.log("[OAuth Callback] Token exchange OK for", oauthState.platform);
+    console.log("[OAuth Callback] Raw token response keys:", Object.keys(tokenResult.raw));
+    console.log("[OAuth Callback] open_id:", tokenResult.raw.open_id);
+    console.log("[OAuth Callback] Profile result:", JSON.stringify(profile));
+    console.log("[OAuth Callback] profileId from state:", oauthState.profileId);
+
     // Save to database
 
     // Verify the profile exists

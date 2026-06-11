@@ -32,6 +32,9 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
+    console.log("[Accounts API] Found", accounts.length, "accounts for user", user.id);
+    console.log("[Accounts API] Accounts:", JSON.stringify(accounts.map(a => ({ platform: a.platform, username: a.username, displayName: a.displayName }))));
+
     const mappedAccounts = (accounts as Array<{
       id: string;
       platform: string;
