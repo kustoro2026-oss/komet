@@ -324,7 +324,7 @@ register({
     refreshToken: raw.refresh_token as string | undefined,
     expiresIn: raw.expires_in as number | undefined,
   }),
-  fetchProfile: async (accessToken) => {
+  fetchProfile: async (accessToken, tokenResponse) => {
     const res = await fetch("https://open.tiktokapis.com/v2/user/info/?fields=display_name,username,avatar_url", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -333,7 +333,7 @@ register({
     };
     const u = data.data?.user || {};
     return {
-      platformAccountId: "",
+      platformAccountId: (tokenResponse?.open_id as string) || "",
       username: u.username || u.display_name?.toLowerCase().replace(/\s+/g, "_") || "unknown",
       displayName: u.display_name || u.username || "",
       avatarUrl: u.avatar_url,
