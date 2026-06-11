@@ -42,7 +42,7 @@ interface TikTokStatusResult {
 async function checkTikTokStatus(
   accessToken: string,
   publishId: string,
-  maxAttempts = 3,
+  maxAttempts = 12,
 ): Promise<TikTokStatusResult> {
   const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -58,19 +58,20 @@ async function checkTikTokStatus(
       });
 
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({})) as Record<string, unknown>;
+        const errBody = await res.text().catch(() => "");
         console.error(
           "[TikTok Publisher] Status check error:",
           res.status,
-          JSON.stringify(errBody),
+          errBody,
         );
         return { status: "FAILED" };
       }
 
-      const data = (await res.json()) as { data?: { status?: string; publish_id?: string } };
+      const data = (await res.json()) as { data?: { status?: string; publish_id?: string; fail_reason?: string } };
       const status = data.data?.status || "";
       console.log(
         `[TikTok Publisher] Status check ${attempt + 1}/${maxAttempts}: ${status}`,
+        JSON.stringify(data.data),
       );
 
       if (status === "PUBLISH_COMPLETE") {
@@ -78,14 +79,16 @@ async function checkTikTokStatus(
       }
 
       if (status === "FAILED") {
+        console.error("[TikTok Publisher] FAILED with reason:", data.data?.fail_reason);
         return { status: "FAILED" };
       }
 
-      // Still processing — wait then retry
-      await delay(3000);
+      // Still processing — wait with increasing delay (3s, 5s, 5s, 5s...)
+      const waitMs = attempt === 0 ? 3000 : 5000;
+      await delay(waitMs);
     } catch (err: unknown) {
-        console.error("[TikTok Publisher] Status check network error:", (err as Error)?.message);
-      await delay(3000);
+      console.error("[TikTok Publisher] Status check network error:", (err as Error)?.message);
+      await delay(5000);
     }
   }
 
@@ -120,12 +123,14 @@ async function publishToTikTok(
     });
 
     if (!initRes.ok) {
-      const errBody = await initRes.json().catch(() => ({}));
-      console.error("[TikTok Publisher] Init error:", initRes.status, JSON.stringify(errBody));
-      return {
-        success: false,
-        error: ((errBody as Record<string, unknown>)?.error as Record<string, string>)?.message || `TikTok init error: ${initRes.status}`,
-      };
+      const errText = await initRes.text().catch(() => "");
+      console.error("[TikTok Publisher] Init error:", initRes.status, errText);
+      let errMsg = `TikTok init error: ${initRes.status}`;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson?.error?.message || errJson?.error || errMsg;
+      } catch {}
+      return { success: false, error: errMsg };
     }
 
     const initData = (await initRes.json()) as { data?: { publish_id?: string } };

@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         } else if (platform.platform === "tiktok") {
           if (!platform.account.accessToken) {
             results.push({ platform: "tiktok", success: false, error: "No access token" });
+            console.error("[Publish] TikTok: No access token for account", platform.account.id);
             continue;
           }
 
@@ -91,14 +92,19 @@ export async function POST(request: NextRequest) {
               success: false,
               error: "No video attached — TikTok requires video content",
             });
+            console.error("[Publish] TikTok: No video in post. mediaItems:", JSON.stringify(mediaItems?.map(m => ({ type: m.type, url: m.url?.substring(0, 80) }))));
             continue;
           }
+
+          console.log("[Publish] TikTok: Publishing... token:", platform.account.accessToken?.substring(0, 10) + "...", "video:", videoItem.url?.substring(0, 80));
 
           const result = await publishToTikTok(
             platform.account.accessToken,
             text,
             videoItem.url,
           );
+
+          console.log("[Publish] TikTok: Result", JSON.stringify(result));
 
           if (result.success) {
             const isProcessing = result.status === "processing";
