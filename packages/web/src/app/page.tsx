@@ -504,16 +504,17 @@ export default function LandingPage() {
       {/* ===== FOOTER ===== */}
       <footer className="border-t border-white/[0.06] bg-[var(--color-surface-dark)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14 sm:py-16">
-          {/* Top grid */}
-          <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4 lg:grid-cols-5">
-            {/* Brand column */}
-            <div className="col-span-2 lg:col-span-2">
-              <Link href="/" className="flex items-center gap-2.5">
-                <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/20" />
-                <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
-              </Link>
-              <p className="mt-4 max-w-xs text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{t("footerTagline")}</p>
-            </div>
+          {/* Brand row */}
+          <div className="mb-10">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <KometLogo size="sm" className="h-8 w-8 rounded-lg shadow-md shadow-[var(--color-primary)]/20" />
+              <span className="text-lg font-bold text-[var(--color-on-dark)]">Komet</span>
+            </Link>
+            <p className="mt-3 max-w-md text-sm text-[var(--color-on-dark-soft)] leading-relaxed">{t("footerTagline")}</p>
+          </div>
+
+          {/* 4 equal columns: PRODUCT | RESOURCES | COMPANY | LEGAL */}
+          <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4">
             {/* Product */}
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerProduct")}</h3>
@@ -524,6 +525,7 @@ export default function LandingPage() {
                 <li><Link href="/changelog" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerChangelog")}</Link></li>
               </ul>
             </div>
+
             {/* Resources */}
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerResources")}</h3>
@@ -534,7 +536,8 @@ export default function LandingPage() {
                 <li><Link href="/help" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerHelpCenter")}</Link></li>
               </ul>
             </div>
-            {/* Company + Legal (stacked for 5-col layout) */}
+
+            {/* Company */}
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerCompany")}</h3>
               <ul className="space-y-2.5">
@@ -543,7 +546,11 @@ export default function LandingPage() {
                 <li><Link href="/contact" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerContact")}</Link></li>
                 <li><Link href="/status" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerStatus")}</Link></li>
               </ul>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mt-6 mb-4">{t("footerLegal")}</h3>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-dark-muted)] mb-4">{t("footerLegal")}</h3>
               <ul className="space-y-2.5">
                 <li><Link href="/privacy" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerPrivacy")}</Link></li>
                 <li><Link href="/terms" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerTerms")}</Link></li>
