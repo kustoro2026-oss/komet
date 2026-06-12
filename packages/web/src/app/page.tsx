@@ -162,12 +162,21 @@ export default function LandingPage() {
 
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden pt-16 pb-20 sm:pb-28">
+        {/* Background image */}
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}
+          />
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-[var(--color-surface-dark)]/70" />
+        </div>
         {/* Background glow — reduced blur on mobile to prevent GPU artifacts */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
           <div className="absolute left-1/3 top-0 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-[var(--color-primary)]/10 blur-[60px] sm:blur-[150px]" />
           <div className="absolute right-1/4 top-1/3 h-[500px] w-[500px] rounded-full bg-purple-600/10 blur-[50px] sm:blur-[120px]" />
         </div>
-        <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
 
         <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6 pt-20 pb-8">
           {/* Hero content */}
