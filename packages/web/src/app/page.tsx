@@ -160,8 +160,8 @@ export default function LandingPage() {
         )}
       </header>
 
-      {/* ===== HERO ===== */}
-      <section className="relative overflow-hidden pt-16 pb-20 sm:pb-28">
+      {/* ===== HERO (text only — with background image) ===== */}
+      <section className="relative overflow-hidden pt-16 pb-12 sm:pb-16">
         {/* Background image */}
         <div className="pointer-events-none absolute inset-0 z-0">
           <div
@@ -178,7 +178,7 @@ export default function LandingPage() {
         </div>
         <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
 
-        <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6 pt-20 pb-8">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6 pt-20">
           {/* Hero content */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-4xl text-center">
             {/* Live badge */}
@@ -212,9 +212,14 @@ export default function LandingPage() {
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroCancelAnytime")}</span>
             </motion.p>
           </motion.div>
+        </div>
+      </section>
 
+      {/* ===== DEMO (platform toggle + video — no background image) ===== */}
+      <section className="relative overflow-hidden pb-20 sm:pb-28">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6">
           {/* Platform toggle (inspired by Buffer) */}
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="mt-10 flex flex-wrap items-center justify-center gap-2.5">
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="flex flex-wrap items-center justify-center gap-2.5">
             {allPlatforms.slice(0, 8).map((p) => (
               <span key={p.id} className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1.5 text-xs text-[var(--color-on-dark-soft)]">
                 <PlatformIcon platform={p.id} className="h-3.5 w-3.5" />
