@@ -169,7 +169,7 @@ export default function LandingPage() {
             style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}
           />
           {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-[var(--color-surface-dark)]/70" />
+          <div className="absolute inset-0 bg-[var(--color-surface-dark)]/85" />
         </div>
         {/* Background glow — reduced blur on mobile to prevent GPU artifacts */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
@@ -190,23 +190,23 @@ export default function LandingPage() {
               <span className="text-xs font-medium text-emerald-400/80">{t("heroBadge")}</span>
             </div>
 
-            <h1 className="font-display text-balance text-4xl font-bold leading-[1.1] text-[var(--color-on-dark)] sm:text-5xl md:text-7xl">
+            <h1 className="font-display text-balance text-4xl font-bold leading-[1.1] text-white sm:text-5xl md:text-7xl [text-shadow:0_2px_16px_rgba(0,0,0,0.5)]">
               {t("heroTitle")}{" "}
               <span className="bg-gradient-to-r from-[var(--color-primary)] via-purple-400 to-pink-400 bg-clip-text text-transparent">
                 {t("heroEmphasis")}
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl px-2 text-base sm:text-lg text-[var(--color-on-dark-soft)] leading-relaxed">{t("heroSubtitle")}</p>
+            <p className="mx-auto mt-6 max-w-2xl px-2 text-base sm:text-lg text-white/80 leading-relaxed [text-shadow:0_1px_8px_rgba(0,0,0,0.4)]">{t("heroSubtitle")}</p>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link href="/register" className="group inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white hover:bg-[var(--color-primary-hover)] transition-all shadow-xl shadow-[var(--color-primary)]/25 hover:shadow-[var(--color-primary)]/35">
                 {t("startFree")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-[var(--color-on-dark-soft)] hover:bg-white/[0.04] hover:text-[var(--color-on-dark)] transition-all">{t("signIn")}</Link>
+              <Link href="/login" className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-5 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white/80 hover:bg-white/[0.06] hover:text-white transition-all">{t("signIn")}</Link>
             </motion.div>
 
-           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[var(--color-on-dark-muted)]">
+           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.4 }} className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-medium text-white/70 [text-shadow:0_1px_6px_rgba(0,0,0,0.3)]">
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroNoCreditCard")}</span>
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroFreeForever")}</span>
               <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-emerald-500" /> {t("heroCancelAnytime")}</span>
@@ -216,7 +216,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== DEMO (platform toggle + video — no background image) ===== */}
-      <section className="relative overflow-hidden pb-20 sm:pb-28">
+      <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28">
         <div className="relative mx-auto flex max-w-7xl flex-col items-center px-6">
           {/* Platform toggle (inspired by Buffer) */}
           <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="flex flex-wrap items-center justify-center gap-2.5">
