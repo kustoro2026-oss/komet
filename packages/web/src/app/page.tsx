@@ -169,7 +169,7 @@ export default function LandingPage() {
             style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}
           />
           {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-black/85" />
+          <div className="absolute inset-0 bg-black/70" />
         </div>
         {/* Background glow — reduced blur on mobile to prevent GPU artifacts */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
