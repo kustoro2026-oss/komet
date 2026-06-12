@@ -156,17 +156,16 @@ export default function AccountsPage() {
               <a
                 key={platform}
                 href="/accounts/connect"
-                className="group relative aspect-square overflow-hidden rounded-lg border border-dashed border-[var(--color-ink-muted)] hover:border-[var(--color-primary)] transition-all"
+                className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--color-ink-muted)] p-4 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
               >
                 <Image
                   src={PLATFORM_BG_IMAGE[platform]}
                   alt={PLATFORM_LABELS[platform]}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain"
                 />
-                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
-                <span className="absolute inset-0 flex items-center justify-center text-caption font-semibold text-white drop-shadow-md">
+                <span className="text-caption font-medium text-[var(--color-on-dark-soft)]">
                   {PLATFORM_LABELS[platform]}
                 </span>
               </a>
@@ -373,17 +372,16 @@ export default function AccountsPage() {
             <a
               key={platform}
               href="/accounts/connect"
-              className="group relative aspect-square overflow-hidden rounded-lg border border-dashed border-[var(--color-ink-muted)] hover:border-[var(--color-primary)] transition-all"
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--color-ink-muted)] p-4 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all"
             >
               <Image
                 src={PLATFORM_BG_IMAGE[platform]}
                 alt={PLATFORM_LABELS[platform]}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain"
               />
-              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
-              <span className="absolute inset-0 flex items-center justify-center text-caption font-semibold text-white drop-shadow-md">
+              <span className="text-caption font-medium text-[var(--color-on-dark-soft)]">
                 {PLATFORM_LABELS[platform]}
               </span>
             </a>
