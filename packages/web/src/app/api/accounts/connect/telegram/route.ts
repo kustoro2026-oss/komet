@@ -117,7 +117,6 @@ export async function POST(request: NextRequest) {
           { apiHash: TELEGRAM_API_HASH, apiId: TELEGRAM_API_ID },
           {
             phoneNumber: session.phoneNumber,
-            phoneCodeHash: session.phoneCodeHash,
             phoneCode: () => Promise.resolve(phoneCode),
           }
         );
