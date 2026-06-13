@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
 
 export const dynamic = "force-dynamic";
 
-interface TelegramChat {
+const TELEGRAM_API_ID = parseInt(process.env.TELEGRAM_API_ID || "0", 10);
+const TELEGRAM_API_HASH = process.env.TELEGRAM_API_HASH || "";
+
+interface ChatInfo {
   id: string;
   name: string;
   type: "private" | "group" | "supergroup" | "channel";
@@ -11,106 +17,96 @@ interface TelegramChat {
 
 export async function GET(request: NextRequest) {
   try {
+    const { user, error } = await getUserFromRequest(request);
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const botToken = searchParams.get("botToken");
+    const accountId = searchParams.get("accountId");
 
-    if (!botToken) {
-      return NextResponse.json({ error: "Bot token is required" }, { status: 400 });
+    if (!accountId) {
+      return NextResponse.json({ error: "accountId is required" }, { status: 400 });
     }
 
-    // Validate bot token first
-    const meRes = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
-    if (!meRes.ok) {
-      const err = await meRes.json().catch(() => ({})) as Record<string, unknown>;
-      const desc = (err?.description || "Invalid bot token") as string;
-      return NextResponse.json({ error: desc }, { status: 400 });
+    if (!TELEGRAM_API_ID || !TELEGRAM_API_HASH) {
+      return NextResponse.json({ error: "Telegram API credentials not configured" }, { status: 500 });
     }
 
-    // Step 1: Get recent updates to discover chats the bot can see
-    const updatesRes = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?limit=100`);
-    if (!updatesRes.ok) {
-      return NextResponse.json({ error: "Failed to fetch updates" }, { status: 500 });
+    // Get the account with its session
+    const account = await prisma.socialAccount.findFirst({
+      where: { id: accountId, platform: "telegram", userId: user.id },
+    });
+
+    if (!account || !account.accessToken) {
+      return NextResponse.json({ error: "Account not found or no session available" }, { status: 404 });
     }
 
-    const updatesData = (await updatesRes.json()) as {
-      ok: boolean;
-      result?: Array<{
-        message?: {
-          chat: {
-            id: number;
-            type: string;
-            title?: string;
-            username?: string;
-            first_name?: string;
-            last_name?: string;
-          };
-        };
-        my_chat_member?: {
-          chat: {
-            id: number;
-            type: string;
-            title?: string;
-            username?: string;
-          };
-        };
-        channel_post?: {
-          chat: {
-            id: number;
-            type: string;
-            title?: string;
-            username?: string;
-          };
-        };
-      }>;
-    };
+    // Deserialize session and create client
+    const stringSession = new StringSession(account.accessToken);
+    const client = new TelegramClient(stringSession, TELEGRAM_API_ID, TELEGRAM_API_HASH, {
+      connectionRetries: 2,
+    });
 
-    if (!updatesData.ok || !updatesData.result) {
-      return NextResponse.json({ chats: [] });
-    }
+    try {
+      await client.connect();
 
-    // Step 2: Extract unique chats from updates
-    const chatMap = new Map<string, TelegramChat>();
+      // Get dialogs (chats)
+      const dialogs = await client.getDialogs({ limit: 200 });
 
-    for (const update of updatesData.result) {
-      let chat: { id: number; type: string; title?: string; username?: string; first_name?: string; last_name?: string } | null = null;
+      const chats: ChatInfo[] = [];
 
-      if (update.message?.chat) {
-        chat = update.message.chat;
-      } else if (update.my_chat_member?.chat) {
-        chat = update.my_chat_member.chat;
-      } else if (update.channel_post?.chat) {
-        chat = update.channel_post.chat;
-      }
+      for (const dialog of dialogs) {
+        const entity = dialog.entity;
+        if (!entity) continue;
 
-      if (chat) {
-        const chatId = String(chat.id);
-        if (!chatMap.has(chatId)) {
-          // Build a human-readable name
-          let name: string;
-          if (chat.type === "private") {
-            const parts = [chat.first_name, chat.last_name].filter(Boolean);
-            name = parts.join(" ") || chat.username || `Chat ${chatId}`;
-          } else {
-            name = chat.title || chat.username || `Chat ${chatId}`;
-          }
+        let id: string;
+        let name: string;
+        let type: ChatInfo["type"];
+        let username: string | undefined;
 
-          chatMap.set(chatId, {
-            id: chatId,
-            name,
-            type: chat.type as TelegramChat["type"],
-            username: chat.username,
-          });
+        // Extract info based on entity type
+        if (entity.className === "User") {
+          const user = entity as { id: { toString(): string }; firstName?: string; lastName?: string; username?: string };
+          id = user.id.toString();
+          const parts = [user.firstName, user.lastName].filter(Boolean);
+          name = parts.join(" ") || user.username || "Private Chat";
+          type = "private";
+          username = user.username;
+        } else if (entity.className === "Chat") {
+          const chat = entity as { id: { toString(): string }; title?: string };
+          id = chat.id.toString();
+          name = chat.title || "Group";
+          type = "group";
+        } else if (entity.className === "Channel") {
+          const channel = entity as { id: { toString(): string }; title?: string; username?: string; megagroup?: boolean };
+          id = channel.id.toString();
+          name = channel.title || "Channel";
+          type = channel.megagroup ? "supergroup" : "channel";
+          username = channel.username;
+        } else {
+          continue;
         }
+
+        chats.push({ id, name, type, username });
       }
+
+      // Add "Saved Messages" as first option
+      const me = await client.getMe();
+      chats.unshift({
+        id: "me",
+        name: "Saved Messages",
+        type: "private",
+      });
+
+      return NextResponse.json({ chats });
+    } finally {
+      await client.disconnect().catch(() => {});
     }
-
-    const chats = Array.from(chatMap.values());
-
-    return NextResponse.json({ chats });
   } catch (err) {
     console.error("[Telegram Chats] Error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Internal server error" },
+      { error: err instanceof Error ? err.message : "Failed to fetch chats" },
       { status: 500 }
     );
   }

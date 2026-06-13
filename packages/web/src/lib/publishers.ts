@@ -1,6 +1,9 @@
 // Inline publisher functions for social media platforms.
 // Moved to @komet/web after removing the @komet/api package.
 
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
+
 // ─── Twitter ───────────────────────────────────────────────────────
 
 interface TwitterPublishResult {
@@ -208,9 +211,12 @@ async function publishToTikTok(
   }
 }
 
-// ─── Telegram (Bot API) ────────────────────────────────────────────
-// Uses user's own bot token (from BotFather), no OAuth needed.
-// Posts text messages to the bot's default chat or a specified chat.
+// ─── Telegram (Userbot via MTProto) ─────────────────────────────
+// Uses gramjs with session string from phone login.
+// Posts text messages to the selected chat.
+
+const TG_API_ID = parseInt(process.env.TELEGRAM_API_ID || "0", 10);
+const TG_API_HASH = process.env.TELEGRAM_API_HASH || "";
 
 interface TelegramPublishResult {
   success: boolean;
@@ -219,36 +225,43 @@ interface TelegramPublishResult {
 }
 
 async function publishToTelegram(
-  botToken: string,
+  sessionString: string,
   text: string,
   chatId?: string,
 ): Promise<TelegramPublishResult> {
+  if (!TG_API_ID || !TG_API_HASH) {
+    return { success: false, error: "Telegram API credentials not configured" };
+  }
+
   try {
-    const body: Record<string, unknown> = {
-      text,
-      parse_mode: "HTML",
-    };
-
-    if (chatId) {
-      body.chat_id = chatId;
-    }
-
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+    const stringSession = new StringSession(sessionString);
+    const client = new TelegramClient(stringSession, TG_API_ID, TG_API_HASH, {
+      connectionRetries: 2,
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({})) as Record<string, unknown>;
-      const desc = (err?.description || `Telegram API error: ${res.status}`) as string;
-      return { success: false, error: desc };
-    }
+    await client.connect();
 
-    const data = (await res.json()) as { result?: { message_id?: number } };
-    return { success: true, messageId: data.result?.message_id };
+    try {
+      let peer: string | number = "me";
+      if (chatId && chatId !== "me") {
+        // Parse numeric chat ID (can be negative for groups/channels)
+        peer = parseInt(chatId, 10);
+        if (isNaN(peer)) {
+          peer = chatId;
+        }
+      }
+
+      const result = await client.sendMessage(peer, { message: text });
+      const messageId = (result as unknown as { id?: number })?.id;
+
+      return { success: true, messageId };
+    } finally {
+      await client.disconnect().catch(() => {});
+    }
   } catch (err: unknown) {
-    return { success: false, error: (err as Error)?.message || "Network error" };
+    const msg = err instanceof Error ? err.message : "Network error";
+    console.error("[Telegram Publisher]", msg);
+    return { success: false, error: msg };
   }
 }
 

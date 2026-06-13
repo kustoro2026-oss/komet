@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useProfiles, useAccounts } from "@/lib/accounts/hooks";
-import { startOAuth, connectBluesky, connectTelegram } from "@/lib/accounts/connect";
+import { startOAuth, connectBluesky } from "@/lib/accounts/connect";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -60,12 +60,15 @@ export default function ConnectAccountPage() {
   const [blueskyIdentifier, setBlueskyIdentifier] = useState("");
   const [blueskyAppPassword, setBlueskyAppPassword] = useState("");
 
-  // Telegram-specific form
-  const [telegramBotToken, setTelegramBotToken] = useState("");
-  const [telegramChatId, setTelegramChatId] = useState("");
+  // Telegram-specific form (multi-step: phone -> code -> 2FA -> chats)
+  const [telegramStep, setTelegramStep] = useState<"phone" | "code" | "2fa" | "chats">("phone");
+  const [telegramPhone, setTelegramPhone] = useState("");
+  const [telegramCode, setTelegramCode] = useState("");
+  const [telegramPassword, setTelegramPassword] = useState("");
+  const [telegramSessionId, setTelegramSessionId] = useState("");
   const [telegramChats, setTelegramChats] = useState<Array<{ id: string; name: string; type: string; username?: string }>>([]);
-  const [isDiscovering, setIsDiscovering] = useState(false);
-  const [discoverError, setDiscoverError] = useState("");
+  const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramAccountId, setTelegramAccountId] = useState("");
 
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const { data: accountsData } = useAccounts();
@@ -95,33 +98,117 @@ export default function ConnectAccountPage() {
     }
   }, [profiles, profilesLoading]);
 
-  const discoverChats = async () => {
-    if (!telegramBotToken) return;
-    setIsDiscovering(true);
-    setDiscoverError("");
-    setTelegramChats([]);
-    setTelegramChatId("");
+  const sendTelegramCode = async () => {
+    if (!telegramPhone || !profileId) return;
+    setConnecting(true);
+    setError("");
 
     try {
-      const res = await fetch(`/api/accounts/connect/telegram/chats?botToken=${encodeURIComponent(telegramBotToken)}`);
+      const res = await fetch("/api/accounts/connect/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ step: "sendCode", phoneNumber: telegramPhone, profileId }),
+      });
       const data = await res.json();
 
       if (!res.ok) {
-        setDiscoverError(data.error || "Failed to discover chats");
+        setError(data.error || "Failed to send code");
+        return;
+      }
+
+      if (data.sessionId) {
+        setTelegramSessionId(data.sessionId);
+        setTelegramStep("code");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send code");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const verifyTelegramCode = async () => {
+    if (!telegramCode || !telegramSessionId) return;
+    setConnecting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/accounts/connect/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ step: "verifyCode", sessionId: telegramSessionId, phoneCode: telegramCode, profileId }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Invalid code");
+        return;
+      }
+
+      if (data.needs2FA) {
+        setTelegramStep("2fa");
+      } else if (data.connected && data.id) {
+        setTelegramAccountId(data.id);
+        setTelegramStep("chats");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid code");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const verifyTelegramPassword = async () => {
+    if (!telegramPassword || !telegramSessionId) return;
+    setConnecting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/accounts/connect/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ step: "verifyPassword", sessionId: telegramSessionId, password: telegramPassword, profileId }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Invalid password");
+        return;
+      }
+
+      if (data.connected && data.id) {
+        setTelegramAccountId(data.id);
+        setTelegramStep("chats");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid password");
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const fetchTelegramChats = async () => {
+    if (!telegramAccountId) return;
+    setConnecting(true);
+    setError("");
+
+    try {
+      const res = await fetch(`/api/accounts/connect/telegram/chats?accountId=${encodeURIComponent(telegramAccountId)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to fetch chats");
         return;
       }
 
       if (data.chats && data.chats.length > 0) {
         setTelegramChats(data.chats);
-        // Auto-select the first chat
         setTelegramChatId(data.chats[0].id);
-      } else {
-        setDiscoverError(t("telegramNoChatsFound") || "No chats found. Open Telegram and send /start to your bot first, then try again.");
       }
     } catch (err) {
-      setDiscoverError(err instanceof Error ? err.message : "Failed to discover chats");
+      setError(err instanceof Error ? err.message : "Failed to fetch chats");
     } finally {
-      setIsDiscovering(false);
+      setConnecting(false);
     }
   };
 
@@ -139,12 +226,10 @@ export default function ConnectAccountPage() {
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
       } else if (selectedPlatform === "telegram") {
-        if (!telegramBotToken || !telegramChatId) {
-          setError(t("errorTelegramRequired") || "Bot token and Chat ID are required");
-          setConnecting(false);
-          return;
-        }
-        await connectTelegram(telegramBotToken, telegramChatId, profileId);
+        // Telegram uses multi-step login — handled inline in the UI
+        // The "Connect" button is only for non-telegram platforms
+        setConnecting(false);
+        return;
       } else {
         const result = await startOAuth(selectedPlatform, profileId);
         if (result.authUrl) {
@@ -224,7 +309,7 @@ export default function ConnectAccountPage() {
             <ChevronRight className="h-4 w-4" />
           </a>
           <button
-            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramBotToken(""); setTelegramChatId(""); setTelegramChats([]); setDiscoverError(""); }}
+            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramStep("phone"); setTelegramPhone(""); setTelegramCode(""); setTelegramPassword(""); setTelegramSessionId(""); setTelegramChats([]); setTelegramChatId(""); setTelegramAccountId(""); }}
             className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
             {t("connectAnother")}
@@ -252,10 +337,14 @@ export default function ConnectAccountPage() {
             setError("");
             setBlueskyIdentifier("");
             setBlueskyAppPassword("");
-            setTelegramBotToken("");
-            setTelegramChatId("");
+            setTelegramStep("phone");
+            setTelegramPhone("");
+            setTelegramCode("");
+            setTelegramPassword("");
+            setTelegramSessionId("");
             setTelegramChats([]);
-            setDiscoverError("");
+            setTelegramChatId("");
+            setTelegramAccountId("");
           }}
           className="group inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
         >
@@ -343,135 +432,197 @@ export default function ConnectAccountPage() {
               </>
             ) : isTelegram ? (
               <>
-                <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
-                      <MessageSquare className="h-4 w-4 text-[var(--color-primary-light)]" />
+                {/* Step 0: Phone number */}
+                {telegramStep === "phone" && (
+                  <>
+                    <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
+                          <MessageSquare className="h-4 w-4 text-[var(--color-primary-light)]" />
+                        </div>
+                        <div>
+                          <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                            {t("telegramLoginTitle") || "Log in with Telegram"}
+                          </p>
+                          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                            {t("telegramLoginDesc") || "Enter your phone number to receive a verification code on Telegram."}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                     <div>
-                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                        {t("telegramBotTokenTitle") || "Telegram Bot Token"}
-                      </p>
-                      <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                        {t("telegramBotTokenDesc") || "Create a bot on Telegram via @BotFather, then paste the bot token below."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-                    {t("telegramBotTokenLabel") || "Bot Token"}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      value={telegramBotToken}
-                      onChange={(e) => { setTelegramBotToken(e.target.value); setTelegramChats([]); setTelegramChatId(""); setDiscoverError(""); }}
-                      placeholder={t("telegramBotTokenPlaceholder") || "1234567890:ABCdefGHIjklmNOPqrstUVwxyz"}
-                      className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
-                    />
-                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
-                  </div>
-                  <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
-                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    {t("telegramBotTokenHint") || "Open Telegram, search for @BotFather, send /newbot to create one"}
-                  </p>
-                </div>
-
-                {/* Discover Chats */}
-                <div className="rounded-xl bg-[var(--color-success)]/[0.06] border border-[var(--color-success)]/10 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)]/10">
-                      <RefreshCw className="h-4 w-4 text-[var(--color-success)]" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
-                        {t("telegramDiscoverTitle") || "Auto-Discover Chat"}
-                      </p>
-                      <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                        {t("telegramDiscoverHint") || "Open Telegram and send /start to your bot, then click Discover."}
+                      <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                        {t("telegramPhoneLabel") || "Phone Number"}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="tel"
+                          value={telegramPhone}
+                          onChange={(e) => setTelegramPhone(e.target.value)}
+                          placeholder={t("telegramPhonePlaceholder") || "+6281234567890"}
+                          onKeyDown={(e) => { if (e.key === "Enter") sendTelegramCode(); }}
+                          className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                        />
+                        <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                      </div>
+                      <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
+                        <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                        {t("telegramPhoneHint") || "Use international format with country code (e.g. +62 for Indonesia)"}
                       </p>
                     </div>
-                  </div>
-
-                  <button
-                    onClick={discoverChats}
-                    disabled={!telegramBotToken || isDiscovering}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-4 py-2.5 text-button-sm font-medium text-[var(--color-success)] hover:bg-[var(--color-success)]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDiscovering ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {t("telegramDiscovering") || "Discovering chats..."}
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-4 w-4" />
-                        {t("telegramDiscoverBtn") || "Discover Chats"}
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Discover error */}
-                {discoverError && (
-                  <div className="rounded-lg bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 p-3">
-                    <div className="flex items-start gap-2">
-                      <Info className="h-4 w-4 shrink-0 mt-0.5 text-[var(--color-warning)]" />
-                      <p className="text-caption text-[var(--color-on-dark-soft)]">{discoverError}</p>
-                    </div>
-                  </div>
+                  </>
                 )}
 
-                {/* Chat dropdown or manual input */}
-                {telegramChats.length > 0 ? (
-                  <div>
-                    <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-                      {t("telegramSelectChatLabel") || "Select Chat"}
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={telegramChatId}
-                        onChange={(e) => setTelegramChatId(e.target.value)}
-                        className="w-full appearance-none rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-10 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                {/* Step 1: Verification code */}
+                {telegramStep === "code" && (
+                  <>
+                    <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
+                          <Shield className="h-4 w-4 text-[var(--color-primary-light)]" />
+                        </div>
+                        <div>
+                          <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                            {t("telegramCodeTitle") || "Verification Code"}
+                          </p>
+                          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                            {t("telegramCodeSentTo") || "A code was sent to {phone}", { phone: telegramPhone }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                        {t("telegramCodeLabel") || "Code"}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={8}
+                          value={telegramCode}
+                          onChange={(e) => setTelegramCode(e.target.value)}
+                          placeholder="12345"
+                          onKeyDown={(e) => { if (e.key === "Enter") verifyTelegramCode(); }}
+                          className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                        />
+                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                      </div>
+                      <button
+                        onClick={() => { setTelegramStep("phone"); setTelegramCode(""); }}
+                        className="mt-2 text-caption text-[var(--color-primary-light)] hover:underline"
                       >
-                        {telegramChats.map((chat) => (
-                          <option key={chat.id} value={chat.id}>
-                            {chat.name} {chat.username ? `(@${chat.username})` : ""} — {chat.type}
-                          </option>
-                        ))}
-                      </select>
-                      <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                        {t("telegramBackToPhone") || "Back to phone number"}
+                      </button>
                     </div>
-                    <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-success)]">
-                      <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      {t("telegramChatSelected", { count: telegramChats.length }) || `Found ${telegramChats.length} chat(s). Post will be sent to the selected chat.`}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-                      {t("telegramChatIdLabel") || "Chat ID"}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={telegramChatId}
-                        onChange={(e) => setTelegramChatId(e.target.value)}
-                        placeholder={t("telegramChatIdPlaceholder") || "-1001234567890"}
-                        className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
-                      />
-                      <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                  </>
+                )}
+
+                {/* Step 2: 2FA Password */}
+                {telegramStep === "2fa" && (
+                  <>
+                    <div className="rounded-xl bg-[var(--color-warning)]/[0.06] border border-[var(--color-warning)]/10 p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning)]/10">
+                          <Shield className="h-4 w-4 text-[var(--color-warning)]" />
+                        </div>
+                        <div>
+                          <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                            {t("telegram2faTitle") || "Two-Factor Authentication"}
+                          </p>
+                          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                            {t("telegram2faDesc") || "Your account has 2FA enabled. Enter your password to continue."}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
-                      <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      {t("telegramChatIdHintFallback") || "Or paste a Chat ID manually if you know it (e.g. -1001234567890)"}
-                    </p>
-                  </div>
+                    <div>
+                      <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-warning)]" />
+                        {t("telegram2faLabel") || "Password"}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          value={telegramPassword}
+                          onChange={(e) => setTelegramPassword(e.target.value)}
+                          placeholder="Enter your 2FA password"
+                          onKeyDown={(e) => { if (e.key === "Enter") verifyTelegramPassword(); }}
+                          className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-warning)]/50 focus:border-[var(--color-warning)] transition-all"
+                        />
+                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Step 3: Chat selection */}
+                {telegramStep === "chats" && (
+                  <>
+                    <div className="rounded-xl bg-[var(--color-success)]/[0.06] border border-[var(--color-success)]/10 p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)]/10">
+                          <Check className="h-4 w-4 text-[var(--color-success)]" />
+                        </div>
+                        <div>
+                          <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                            {t("telegramLoggedIn") || "Logged In"}
+                          </p>
+                          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                            {t("telegramSelectChat") || "Select where your posts will be sent."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {telegramChats.length > 0 ? (
+                      <div>
+                        <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
+                          {t("telegramSelectChatLabel") || "Select Chat"}
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={telegramChatId}
+                            onChange={(e) => setTelegramChatId(e.target.value)}
+                            className="w-full appearance-none rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-10 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                          >
+                            {telegramChats.map((chat) => (
+                              <option key={chat.id} value={chat.id}>
+                                {chat.name} {chat.username ? `(@${chat.username})` : ""} — {chat.type}
+                              </option>
+                            ))}
+                          </select>
+                          <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                        </div>
+                        <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-success)]">
+                          <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          {t("telegramChatSelected", { count: telegramChats.length }) || `Found ${telegramChats.length} chat(s). Post will be sent to the selected chat.`}
+                        </p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={fetchTelegramChats}
+                        disabled={connecting}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-4 py-2.5 text-button-sm font-medium text-[var(--color-success)] hover:bg-[var(--color-success)]/20 transition-all disabled:opacity-50"
+                      >
+                        {connecting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            {t("telegramFetchingChats") || "Fetching chats..."}
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4" />
+                            {t("telegramFetchChats") || "Fetch My Chats"}
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </>
                 )}
               </>
             ) : (
@@ -527,14 +678,82 @@ export default function ConnectAccountPage() {
               )}
             </AnimatePresence>
 
+            {/* Step action buttons */}
+            {isTelegram ? (
+              <>
+                {telegramStep === "phone" && (
+                  <button
+                    onClick={sendTelegramCode}
+                    disabled={connecting || !profileId || !telegramPhone}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                    style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.1)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
+                  >
+                    {connecting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />{t("telegramSendingCode") || "Sending code..."}</>
+                    ) : (
+                      <><MessageSquare className="h-4 w-4" />{t("telegramSendCode") || "Send Code"}</>
+                    )}
+                  </button>
+                )}
+                {telegramStep === "code" && (
+                  <button
+                    onClick={verifyTelegramCode}
+                    disabled={connecting || !telegramCode}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                    style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.1)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
+                  >
+                    {connecting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />{t("telegramVerifying") || "Verifying..."}</>
+                    ) : (
+                      <><Check className="h-4 w-4" />{t("telegramVerify") || "Verify Code"}</>
+                    )}
+                  </button>
+                )}
+                {telegramStep === "2fa" && (
+                  <button
+                    onClick={verifyTelegramPassword}
+                    disabled={connecting || !telegramPassword}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                    style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.1)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
+                  >
+                    {connecting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />{t("telegramVerifying") || "Verifying..."}</>
+                    ) : (
+                      <><Shield className="h-4 w-4" />{t("telegramVerifyPassword") || "Verify Password"}</>
+                    )}
+                  </button>
+                )}
+                {telegramStep === "chats" && (
+                  <button
+                    onClick={() => setConnected(true)}
+                    disabled={connecting || !telegramChatId}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                    style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] }}
+                    onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.1)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
+                  >
+                    <>
+                      <PlatformIcon platform={selectedPlatform} className="h-4 w-4" />
+                      {t("connectPlatform", { platform: PLATFORM_LABELS[selectedPlatform] })}
+                    </>
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
             {/* Submit button */}
             <button
               onClick={handleConnect}
               disabled={
                 connecting ||
                 !profileId ||
-                (isBluesky && (!blueskyIdentifier || !blueskyAppPassword)) ||
-                (isTelegram && (!telegramBotToken || !telegramChatId))
+                (isBluesky && (!blueskyIdentifier || !blueskyAppPassword))
               }
               className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 text-white"
               style={{
@@ -560,6 +779,8 @@ export default function ConnectAccountPage() {
                 </>
               )}
             </button>
+              </>
+            )}
           </div>
         </div>
       </motion.div>

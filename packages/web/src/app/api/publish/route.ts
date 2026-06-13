@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
           }
         } else if (platform.platform === "telegram") {
           if (!platform.account.accessToken) {
-            results.push({ platform: "telegram", success: false, error: "No bot token" });
+            results.push({ platform: "telegram", success: false, error: "No session available" });
             continue;
           }
 
