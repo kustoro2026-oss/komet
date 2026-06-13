@@ -108,40 +108,15 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const signInResult = await session.client.invokeSignIn(
-          session.client,
+        // Sign in with the verification code
+        await session.client.signInUser(
+          { apiHash: TELEGRAM_API_HASH, apiId: TELEGRAM_API_ID },
           {
             phoneNumber: session.phoneNumber,
             phoneCodeHash: session.phoneCodeHash,
             phoneCode,
-          },
-          undefined
-        );
-
-        // Check if 2FA is required
-        if (!signInResult) {
-          // Try explicit sign in
-          try {
-            await session.client.signInWithPassword(
-              { apiHash: TELEGRAM_API_HASH, apiId: TELEGRAM_API_ID },
-              {
-                phoneNumber: session.phoneNumber,
-                phoneCodeHash: session.phoneCodeHash,
-                phoneCode,
-              }
-            );
-          } catch (innerErr) {
-            const innerMsg = innerErr instanceof Error ? innerErr.message : "";
-            if (innerMsg.includes("2FA") || innerMsg.includes("PASSWORD_HASH_INVALID") || innerMsg.includes("SRP")) {
-              return NextResponse.json({
-                success: true,
-                needs2FA: true,
-                sessionId,
-              });
-            }
-            throw innerErr;
           }
-        }
+        );
 
         // No 2FA — save the session
         const sessionString = session.client.session.save() as unknown as string;
