@@ -242,6 +242,10 @@ async function publishToTelegram(
     await client.connect();
 
     try {
+      // Populate entity database by fetching dialogs first.
+      // This is required so gramjs can resolve peers by ID.
+      await client.getDialogs({ limit: 10 });
+
       let peer: string | number = "me";
       if (chatId && chatId !== "me") {
         // Parse numeric chat ID (can be negative for groups/channels)
@@ -251,7 +255,9 @@ async function publishToTelegram(
         }
       }
 
-      const result = await client.sendMessage(peer, { message: text });
+      // Resolve peer to a proper InputPeer entity
+      const resolvedPeer = await client.getInputEntity(peer);
+      const result = await client.sendMessage(resolvedPeer, { message: text });
       const messageId = (result as unknown as { id?: number })?.id;
 
       return { success: true, messageId };
