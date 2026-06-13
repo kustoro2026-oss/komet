@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
           sessionId,
           timeout: (sendResult as Record<string, unknown>).timeout ?? 60,
           // type: app/sms/call - hints for UI
-          codeType: sendResult.type?.className || "sms",
+          codeType: ((sendResult as Record<string, unknown>).type as { className?: string } | undefined)?.className || "sms",
         });
       } catch (err) {
         await client.disconnect().catch(() => {});
