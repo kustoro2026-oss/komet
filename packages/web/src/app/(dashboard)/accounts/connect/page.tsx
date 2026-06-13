@@ -487,7 +487,7 @@ export default function ConnectAccountPage() {
                             {t("telegramCodeTitle") || "Verification Code"}
                           </p>
                           <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
-                            {t("telegramCodeSentTo") || "A code was sent to {phone}", { phone: telegramPhone }}
+                            {t("telegramCodeSentTo", { phone: telegramPhone }) || `A code was sent to ${telegramPhone}`}
                           </p>
                         </div>
                       </div>
