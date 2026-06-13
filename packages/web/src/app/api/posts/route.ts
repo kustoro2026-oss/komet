@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToDiscord } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -228,10 +228,11 @@ export async function POST(request: NextRequest) {
       const postContent = content;
       const postMediaItems = mediaItems || [];
       // Clone platform data before we return the response
-      const platformTasks = post.platforms.map((pp: { id: string; platform: string; account: { accessToken: string | null }; customContent: string | null }) => ({
+      const platformTasks = post.platforms.map((pp: { id: string; platform: string; account: { accessToken: string | null; platformAccountId: string | null }; customContent: string | null }) => ({
         id: pp.id,
         platform: pp.platform,
         accessToken: pp.account.accessToken as string | null,
+        platformAccountId: pp.account.platformAccountId as string | null,
         customContent: pp.customContent as string | null,
       }));
 
@@ -299,6 +300,29 @@ export async function POST(request: NextRequest) {
                   },
                 });
                 publishResults.push({ platform: "discord", success: result.success, error: result.error });
+              }
+            } else if (task.platform === "telegram") {
+              // Telegram: accessToken is session string, platformAccountId is chat ID
+              if (!task.accessToken) {
+                publishResults.push({ platform: "telegram", success: false, error: "No session available. Please reconnect Telegram." });
+              } else {
+                console.log("[Telegram Publisher] Sending message...");
+                const result = await publishToTelegram(
+                  task.accessToken,
+                  text,
+                  task.platformAccountId || undefined,
+                );
+                console.log("[Telegram Publisher] Result:", JSON.stringify(result));
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: {
+                    status: result.success ? "published" : "failed",
+                    publishedUrl: null,
+                    publishedAt: result.success ? new Date() : null,
+                    errorMessage: result.error || null,
+                  },
+                });
+                publishResults.push({ platform: "telegram", success: result.success, error: result.error });
               }
             } else {
               // Platform publisher not implemented yet — mark as published (placeholder)
