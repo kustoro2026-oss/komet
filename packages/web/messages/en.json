@@ -1047,7 +1047,11 @@
     "telegramBotTokenDesc": "Create a bot on Telegram via @BotFather, then paste the bot token below.",
     "telegramBotTokenLabel": "Bot Token",
     "telegramBotTokenPlaceholder": "1234567890:ABCdefGHIjklmNOPqrstUVwxyz",
-    "telegramBotTokenHint": "Open Telegram, search for @BotFather, send /newbot to create one"
+    "telegramBotTokenHint": "Open Telegram, search for @BotFather, send /newbot to create one",
+    "errorTelegramRequired": "Bot token and Chat ID are required",
+    "telegramChatIdLabel": "Chat ID",
+    "telegramChatIdPlaceholder": "-1001234567890",
+    "telegramChatIdHint": "Add your bot as admin to the channel, then get the Chat ID via @getidsbot"
   },
   "accountDetail": {
     "backToAccounts": "Back to Accounts",

@@ -12,10 +12,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => null);
     const botToken = body?.botToken as string | undefined;
+    const chatId = body?.chatId as string | undefined;
     const profileId = body?.profileId as string | undefined;
 
     if (!botToken) {
       return NextResponse.json({ error: "Bot token is required" }, { status: 400 });
+    }
+
+    if (!chatId) {
+      return NextResponse.json({ error: "Chat ID is required" }, { status: 400 });
     }
 
     if (!profileId) {
@@ -39,12 +44,14 @@ export async function POST(request: NextRequest) {
     const botUsername = botInfo.username ? `@${botInfo.username}` : `Telegram Bot (${botInfo.first_name || botInfo.id})`;
     const botName = botInfo.first_name || botUsername;
 
-    // Step 2: Save as a SocialAccount with bot token as accessToken
+    // Step 2: Save as a SocialAccount
+    // - accessToken stores the bot token (for sending messages)
+    // - platformAccountId stores the chat ID (destination for messages)
     const account = await prisma.socialAccount.create({
       data: {
         profileId,
         platform: "telegram",
-        platformAccountId: String(botInfo.id),
+        platformAccountId: chatId,
         username: botUsername,
         displayName: botName,
         accessToken: botToken,

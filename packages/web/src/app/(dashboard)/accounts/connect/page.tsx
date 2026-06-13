@@ -62,6 +62,7 @@ export default function ConnectAccountPage() {
 
   // Telegram-specific form
   const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [telegramChatId, setTelegramChatId] = useState("");
 
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const { data: accountsData } = useAccounts();
@@ -105,12 +106,12 @@ export default function ConnectAccountPage() {
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
       } else if (selectedPlatform === "telegram") {
-        if (!telegramBotToken) {
-          setError(t("errorTelegramTokenRequired") || "Bot token is required");
+        if (!telegramBotToken || !telegramChatId) {
+          setError(t("errorTelegramRequired") || "Bot token and Chat ID are required");
           setConnecting(false);
           return;
         }
-        await connectTelegram(telegramBotToken, profileId);
+        await connectTelegram(telegramBotToken, telegramChatId, profileId);
       } else {
         const result = await startOAuth(selectedPlatform, profileId);
         if (result.authUrl) {
@@ -190,7 +191,7 @@ export default function ConnectAccountPage() {
             <ChevronRight className="h-4 w-4" />
           </a>
           <button
-            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramBotToken(""); }}
+            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramBotToken(""); setTelegramChatId(""); }}
             className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
             {t("connectAnother")}
@@ -219,6 +220,7 @@ export default function ConnectAccountPage() {
             setBlueskyIdentifier("");
             setBlueskyAppPassword("");
             setTelegramBotToken("");
+            setTelegramChatId("");
           }}
           className="group inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
         >
@@ -341,6 +343,26 @@ export default function ConnectAccountPage() {
                     {t("telegramBotTokenHint") || "Open Telegram, search for @BotFather, send /newbot to create one"}
                   </p>
                 </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                    {t("telegramChatIdLabel") || "Chat ID"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={telegramChatId}
+                      onChange={(e) => setTelegramChatId(e.target.value)}
+                      placeholder={t("telegramChatIdPlaceholder") || "-1001234567890"}
+                      className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                    />
+                    <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                  </div>
+                  <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
+                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    {t("telegramChatIdHint") || "Add your bot as admin to the channel, then get the Chat ID via @getidsbot"}
+                  </p>
+                </div>
               </>
             ) : (
               <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
@@ -402,7 +424,7 @@ export default function ConnectAccountPage() {
                 connecting ||
                 !profileId ||
                 (isBluesky && (!blueskyIdentifier || !blueskyAppPassword)) ||
-                (isTelegram && !telegramBotToken)
+                (isTelegram && (!telegramBotToken || !telegramChatId))
               }
               className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 text-white"
               style={{

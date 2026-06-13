@@ -44,15 +44,16 @@ export async function connectBluesky(
   return res.json();
 }
 
-/** Connect Telegram with bot token */
+/** Connect Telegram with bot token and chat ID */
 export async function connectTelegram(
   botToken: string,
+  chatId: string,
   profileId: string
 ): Promise<{ id: string; platform: string; username: string; displayName: string }> {
   const res = await fetch("/api/accounts/connect/telegram", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ botToken, profileId }),
+    body: JSON.stringify({ botToken, chatId, profileId }),
   });
 
   if (!res.ok) {

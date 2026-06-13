@@ -1047,7 +1047,11 @@
     "telegramBotTokenDesc": "Buat bot di Telegram melalui @BotFather, lalu tempel token bot di bawah.",
     "telegramBotTokenLabel": "Token Bot",
     "telegramBotTokenPlaceholder": "1234567890:ABCdefGHIjklmNOPqrstUVwxyz",
-    "telegramBotTokenHint": "Buka Telegram, cari @BotFather, kirim /newbot untuk membuat bot"
+    "telegramBotTokenHint": "Buka Telegram, cari @BotFather, kirim /newbot untuk membuat bot",
+    "errorTelegramRequired": "Token bot dan Chat ID wajib diisi",
+    "telegramChatIdLabel": "Chat ID",
+    "telegramChatIdPlaceholder": "-1001234567890",
+    "telegramChatIdHint": "Tambah bot Anda sebagai admin ke channel, lalu dapatkan Chat ID via @getidsbot"
   },
   "accountDetail": {
     "backToAccounts": "Kembali ke Akun",
