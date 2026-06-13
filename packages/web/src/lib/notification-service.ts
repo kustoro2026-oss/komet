@@ -73,39 +73,6 @@ export const EVENT_CATEGORY_GROUPS = [
   { key: "system",  label: "System" },
 ];
 
-function formatMessage(event: string, payload: unknown): string {
-  const p = payload as Record<string, unknown> | undefined;
-  try {
-    switch (event) {
-      case "post.published": {
-        const content = p?.post && typeof p.post === "object" ? (p.post as Record<string,unknown>).content : p?.content;
-        return typeof content === "string" ? `"${content.slice(0, 80)}${content.length > 80 ? "…" : ""}"` : "Post published successfully";
-      }
-      case "post.failed": return p?.reason ? `Reason: ${p.reason}` : "Post failed to publish";
-      case "post.partial": return "Published on some platforms, failed on others";
-      case "post.scheduled": return p?.scheduledFor ? `Scheduled for ${p.scheduledFor}` : "Post queued for publishing";
-      case "comment.received": {
-        const text = p?.comment && typeof p.comment === "object" ? (p.comment as Record<string,unknown>).text : p?.text;
-        return typeof text === "string" ? `"${text.slice(0, 80)}${text.length > 80 ? "…" : ""}"` : "New comment received";
-      }
-      case "account.connected": return p?.platform ? `Connected to ${p.platform}` : "Social account connected";
-      case "account.disconnected": return p?.platform ? `Disconnected from ${p.platform}` : "Social account disconnected";
-      case "message.received": {
-        const msg = p?.message && typeof p.message === "object" ? (p.message as Record<string,unknown>).text : p?.text;
-        return typeof msg === "string" ? `"${msg.slice(0, 80)}${msg.length > 80 ? "…" : ""}"` : "New message received";
-      }
-      case "message.sent": return "Message sent successfully";
-      case "post.external.created": return "Native post detected on platform";
-      case "webhook.test": return "Test webhook event — endpoint is working";
-      case "review.new": return "New review posted on your account";
-      case "review.updated": return "A review was edited or replied to";
-      default: return `${event.replace(/\./g, " ")} event received`;
-    }
-  } catch {
-    return `${event.replace(/\./g, " ")} event received`;
-  }
-}
-
 function formatTime(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
@@ -129,21 +96,22 @@ export function useNotificationService() {
   const [webhooksLoading, setWebhooksLoading] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
-  /* ─── Fetch stored webhook events ─── */
+  /* ─── Fetch stored notifications from DB ─── */
   const fetchEvents = useCallback(async () => {
     try {
-      const res = await fetch("/api/webhooks/events");
+      const res = await fetch("/api/notifications");
       if (!res.ok) return;
       const data = await res.json();
-      const items: NotificationItem[] = (data.events || []).map(
-        (e: { id: string; event: string; payload: unknown; receivedAt: string; isRead: boolean }) => ({
-          id: e.id,
-          type: e.event,
-          title: (EVENT_CATEGORIES[e.event] || { label: e.event }).label,
-          message: formatMessage(e.event, e.payload),
-          payload: e.payload,
-          isRead: e.isRead,
-          receivedAt: formatTime(e.receivedAt),
+      const items: NotificationItem[] = (data.notifications || []).map(
+        (n: { id: string; type: string; title: string; message: string; payload?: unknown; link?: string; isRead: boolean; createdAt: string }) => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          message: n.message,
+          payload: n.payload,
+          link: n.link,
+          isRead: n.isRead,
+          receivedAt: formatTime(n.createdAt),
         })
       );
       setNotifications(items);
@@ -180,7 +148,7 @@ export function useNotificationService() {
   const markAsRead = useCallback(async (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     try {
-      await fetch("/api/webhooks/events", {
+      await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
@@ -191,7 +159,7 @@ export function useNotificationService() {
   const markAllAsRead = useCallback(async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     try {
-      await fetch("/api/webhooks/events", {
+      await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ markAll: true }),
@@ -202,7 +170,7 @@ export function useNotificationService() {
   const removeNotification = useCallback(async (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
-      await fetch("/api/webhooks/events", {
+      await fetch("/api/notifications", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
@@ -213,7 +181,7 @@ export function useNotificationService() {
   const clearAll = useCallback(async () => {
     setNotifications([]);
     try {
-      await fetch("/api/webhooks/events", {
+      await fetch("/api/notifications", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clearAll: true }),

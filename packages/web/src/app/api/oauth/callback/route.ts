@@ -144,6 +144,29 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Create notification for account connection (fire-and-forget)
+    void (async () => {
+      try {
+        const profileRecord = await prisma.profile.findUnique({
+          where: { id: oauthState.profileId },
+          include: { workspace: { select: { ownerId: true } } },
+        });
+        if (profileRecord?.workspace?.ownerId) {
+          await prisma.notification.create({
+            data: {
+              userId: profileRecord.workspace.ownerId,
+              type: "account.connected",
+              title: "Account connected",
+              message: `${oauthState.platform.charAt(0).toUpperCase() + oauthState.platform.slice(1)} account connected successfully`,
+              data: { platform: oauthState.platform, username: profile.username },
+            },
+          });
+        }
+      } catch (notifErr) {
+        console.error("[OAuth Callback] Failed to create notification:", notifErr);
+      }
+    })();
+
     // Redirect to accounts page with success
     return NextResponse.redirect(new URL("/accounts?connected=true", request.url));
   } catch (err) {

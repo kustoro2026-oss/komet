@@ -351,6 +351,34 @@ export async function POST(request: NextRequest) {
           where: { id: postId },
           data: { status: finalStatus },
         });
+
+        // Create notification for the user
+        const notifType = allOk ? "post.published" : anyOk ? "post.partial" : "post.failed";
+        const notifTitle = allOk
+          ? "Post published successfully"
+          : anyOk
+          ? "Post published on some platforms"
+          : "Post failed to publish";
+        const publishedCount = publishResults.filter((r) => r.success).length;
+        const notifMessage = allOk
+          ? `Published to ${publishedCount} platform(s)`
+          : anyOk
+          ? `Published to ${publishedCount} of ${publishResults.length} platform(s). Check details for more info.`
+          : "All platforms failed. Check each platform for error details.";
+        try {
+          await prisma.notification.create({
+            data: {
+              userId: user.id,
+              type: notifType,
+              title: notifTitle,
+              message: notifMessage,
+              data: { postId, publishResults },
+              link: `/posts/${postId}`,
+            },
+          });
+        } catch (notifErr) {
+          console.error("[Publish Background] Failed to create notification:", notifErr);
+        }
       })().catch((bgErr) => console.error("[Publish Background] Fatal error:", bgErr));
     }
 

@@ -147,6 +147,23 @@ export async function POST(request: NextRequest) {
         // Clean up auth session
         authSessions.delete(sessionId);
 
+        // Create notification for account connection (fire-and-forget)
+        void (async () => {
+          try {
+            await prisma.notification.create({
+              data: {
+                userId: user.id,
+                type: "account.connected",
+                title: "Account connected",
+                message: `Telegram account connected successfully`,
+                data: { platform: "telegram", username: account.username },
+              },
+            });
+          } catch (notifErr) {
+            console.error("[Telegram] Failed to create notification:", notifErr);
+          }
+        })();
+
         return NextResponse.json({
           success: true,
           connected: true,
@@ -224,6 +241,23 @@ export async function POST(request: NextRequest) {
 
         // Clean up
         authSessions.delete(sessionId);
+
+        // Create notification for account connection (fire-and-forget)
+        void (async () => {
+          try {
+            await prisma.notification.create({
+              data: {
+                userId: user.id,
+                type: "account.connected",
+                title: "Account connected",
+                message: `Telegram account connected successfully`,
+                data: { platform: "telegram", username: account.username },
+              },
+            });
+          } catch (notifErr) {
+            console.error("[Telegram] Failed to create notification:", notifErr);
+          }
+        })();
 
         return NextResponse.json({
           success: true,
