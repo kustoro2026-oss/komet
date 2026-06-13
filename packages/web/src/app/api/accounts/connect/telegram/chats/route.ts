@@ -35,7 +35,15 @@ export async function GET(request: NextRequest) {
 
     // Get the account with its session
     const account = await prisma.socialAccount.findFirst({
-      where: { id: accountId, platform: "telegram", userId: user.id },
+      where: {
+        id: accountId,
+        platform: "telegram",
+        profile: {
+          workspace: {
+            ownerId: user.id,
+          },
+        },
+      },
     });
 
     if (!account || !account.accessToken) {
