@@ -333,7 +333,7 @@ export default function ConnectAccountPage() {
     const isManualConnect = isBluesky || isTelegram;
     return (
       <motion.div
-        className="mx-auto max-w-lg"
+        className="mx-auto max-w-lg w-full px-4 sm:px-0"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
@@ -361,7 +361,7 @@ export default function ConnectAccountPage() {
 
         <div className="mt-4 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] overflow-hidden">
           {/* Platform header */}
-          <div className="relative p-6 pb-0">
+          <div className="relative px-4 sm:px-6 pt-4 sm:pt-6 pb-0">
             <div className="flex items-center gap-4">
               <motion.div
                 className="flex h-14 w-14 items-center justify-center rounded-xl"
@@ -393,7 +393,7 @@ export default function ConnectAccountPage() {
             />
           </div>
 
-          <div className="p-6 space-y-5">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
             {isBluesky ? (
               <>
                 <div className="space-y-4">
@@ -442,7 +442,7 @@ export default function ConnectAccountPage() {
                 {/* Step 0: Phone number */}
                 {telegramStep === "phone" && (
                   <>
-                    <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+                    <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-4 sm:p-5">
                       <div className="flex items-start gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
                           <MessageSquare className="h-4 w-4 text-[var(--color-primary-light)]" />
@@ -484,7 +484,7 @@ export default function ConnectAccountPage() {
                 {/* Step 1: Verification code */}
                 {telegramStep === "code" && (
                   <>
-                    <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+                    <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-4 sm:p-5">
                       <div className="flex items-start gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
                           <Shield className="h-4 w-4 text-[var(--color-primary-light)]" />
@@ -530,7 +530,7 @@ export default function ConnectAccountPage() {
                 {/* Step 2: 2FA Password */}
                 {telegramStep === "2fa" && (
                   <>
-                    <div className="rounded-xl bg-[var(--color-warning)]/[0.06] border border-[var(--color-warning)]/10 p-5">
+                    <div className="rounded-xl bg-[var(--color-warning)]/[0.06] border border-[var(--color-warning)]/10 p-4 sm:p-5">
                       <div className="flex items-start gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-warning)]/10">
                           <Shield className="h-4 w-4 text-[var(--color-warning)]" />
@@ -568,7 +568,7 @@ export default function ConnectAccountPage() {
                 {/* Step 3: Chat selection */}
                 {telegramStep === "chats" && (
                   <>
-                    <div className="rounded-xl bg-[var(--color-success)]/[0.06] border border-[var(--color-success)]/10 p-5">
+                    <div className="rounded-xl bg-[var(--color-success)]/[0.06] border border-[var(--color-success)]/10 p-4 sm:p-5">
                       <div className="flex items-start gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)]/10">
                           <Check className="h-4 w-4 text-[var(--color-success)]" />
@@ -594,13 +594,17 @@ export default function ConnectAccountPage() {
                           <select
                             value={telegramChatId}
                             onChange={(e) => setTelegramChatId(e.target.value)}
-                            className="w-full appearance-none rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-10 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                            className="w-full appearance-none rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-10 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all max-w-full"
                           >
-                            {telegramChats.map((chat) => (
-                              <option key={chat.id} value={chat.id}>
-                                {chat.name} {chat.username ? `(@${chat.username})` : ""} — {chat.type}
-                              </option>
-                            ))}
+                            {telegramChats.map((chat) => {
+                              const label = `${chat.name} ${chat.username ? `(@${chat.username})` : ""}`;
+                              const truncated = label.length > 40 ? label.slice(0, 37) + "..." : label;
+                              return (
+                                <option key={chat.id} value={chat.id}>
+                                  {truncated} — {chat.type}
+                                </option>
+                              );
+                            })}
                           </select>
                           <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
                           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
@@ -633,7 +637,7 @@ export default function ConnectAccountPage() {
                 )}
               </>
             ) : (
-              <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+              <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-4 sm:p-5">
                 <div className="flex items-start gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
                     <Shield className="h-4 w-4 text-[var(--color-primary-light)]" />
