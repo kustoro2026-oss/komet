@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           sessionId,
-          timeout: sendResult.timeout,
+          timeout: (sendResult as Record<string, unknown>).timeout ?? 60,
           // type: app/sms/call - hints for UI
           codeType: sendResult.type?.className || "sms",
         });
