@@ -2,17 +2,24 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
-import { Search, MessageSquare, Send, Loader2, RefreshCw } from "lucide-react";
+import { Search, MessageSquare, MessageCircle, Send, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 import type { Platform } from "@komet/shared";
 
-interface Contact {
+// ---- unified contact interface ----
+interface UnifiedContact {
   id: string;
   name: string;
   platform: string;
   lastMessage: string;
   timestamp: string;
   unread: boolean;
-  type?: string;
+  kind: "message" | "comment";
+  type?: string; // "group" | "channel" for Telegram
+  // comment fields
+  content?: string;
+  permalink?: string;
+  commentCount?: number;
+  likeCount?: number;
 }
 
 interface Message {
@@ -22,6 +29,14 @@ interface Message {
   timestamp: string;
   isMine: boolean;
 }
+
+type TabKey = "all" | "messages" | "comments";
+
+const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+  { key: "all", label: "All", icon: <MessageSquare className="h-4 w-4" /> },
+  { key: "messages", label: "Messages", icon: <MessageSquare className="h-4 w-4" /> },
+  { key: "comments", label: "Comments", icon: <MessageCircle className="h-4 w-4" /> },
+];
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
@@ -39,38 +54,84 @@ function formatTime(iso: string): string {
 
 export default function MessagesPage() {
   const [search, setSearch] = useState("");
-  const [activeContact, setActiveContact] = useState<string | null>(null);
+  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [activeContactKind, setActiveContactKind] = useState<"message" | "comment" | null>(null);
   const [messageInput, setMessageInput] = useState("");
-  const [contacts, setContacts] = useState<Contact[]>([]);
+
+  // raw data
+  const [telegramContacts, setTelegramContacts] = useState<UnifiedContact[]>([]);
+  const [commentContacts, setCommentContacts] = useState<UnifiedContact[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  // tab
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
+
+  // loading / error
   const [contactsLoading, setContactsLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch Telegram conversations
-  const fetchConversations = useCallback(async () => {
+  // ---- fetch Telegram conversations ----
+  const fetchTelegram = useCallback(async () => {
     setContactsLoading(true);
-    setError("");
     try {
       const res = await fetch("/api/inbox/telegram");
-      if (!res.ok) throw new Error("Failed to fetch conversations");
+      if (!res.ok) throw new Error("Failed to fetch Telegram conversations");
       const data = await res.json();
-      const conversations: Contact[] = (data.conversations || []).map(
-        (c: Contact) => ({
-          ...c,
-          platform: "telegram" as Platform,
+      const convs: UnifiedContact[] = (data.conversations || []).map(
+        (c: { id: string; name: string; lastMessage: string; timestamp: string; unread: boolean; type?: string }) => ({
+          id: c.id,
+          name: c.name,
+          platform: "telegram",
+          lastMessage: c.lastMessage || "",
+          timestamp: c.timestamp || new Date().toISOString(),
+          unread: c.unread || false,
+          kind: "message" as const,
+          type: c.type,
         }),
       );
-      setContacts(conversations);
+      setTelegramContacts(convs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load conversations");
+      setError(err instanceof Error ? err.message : "Failed to load Telegram");
     } finally {
       setContactsLoading(false);
     }
   }, []);
 
-  // Fetch messages for active contact
+  // ---- fetch comments/posts ----
+  const fetchComments = useCallback(async () => {
+    setCommentsLoading(true);
+    try {
+      const res = await fetch("/api/inbox/comments");
+      if (!res.ok) throw new Error("Failed to fetch comments");
+      const data = await res.json();
+      const posts: UnifiedContact[] = (data.posts || data.data || []).map(
+        (p: { id: string; platform: string; content: string; createdTime: string; permalink?: string; commentCount?: number; likeCount?: number }) => ({
+          id: p.id,
+          name: p.content ? p.content.slice(0, 40).replace(/\n/g, " ") + (p.content.length > 40 ? "…" : "") : "Untitled Post",
+          platform: p.platform || "twitter",
+          lastMessage: "",
+          timestamp: p.createdTime || new Date().toISOString(),
+          unread: false,
+          kind: "comment" as const,
+          content: p.content,
+          permalink: p.permalink,
+          commentCount: p.commentCount || 0,
+          likeCount: p.likeCount || 0,
+        }),
+      );
+      setCommentContacts(posts);
+    } catch {
+      // Silently fail – comments may not be available
+      setCommentContacts([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, []);
+
+  // ---- fetch messages for active Telegram contact ----
   const fetchMessages = useCallback(async (chatId: string) => {
     setMessagesLoading(true);
     try {
@@ -85,45 +146,59 @@ export default function MessagesPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+  useEffect(() => { fetchTelegram(); fetchComments(); }, [fetchTelegram, fetchComments]);
 
   useEffect(() => {
-    if (activeContact) {
-      fetchMessages(activeContact);
+    if (activeContactId && activeContactKind === "message") {
+      fetchMessages(activeContactId);
+    } else {
+      setMessages([]);
     }
-  }, [activeContact, fetchMessages]);
+  }, [activeContactId, activeContactKind, fetchMessages]);
 
+  // ---- unified list per tab ----
+  const unifiedContacts: UnifiedContact[] = (() => {
+    switch (activeTab) {
+      case "messages":
+        return telegramContacts;
+      case "comments":
+        return commentContacts;
+      case "all":
+      default: {
+        // merge, sort by timestamp desc
+        const merged = [...telegramContacts, ...commentContacts];
+        merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        return merged;
+      }
+    }
+  })();
+
+  const filteredContacts = unifiedContacts.filter((c) =>
+    !search || c.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const activeContactData = unifiedContacts.find((c) => c.id === activeContactId);
+
+  // ---- send message ----
   const handleSend = async () => {
-    if (!messageInput.trim() || !activeContact || sending) return;
+    if (!messageInput.trim() || !activeContactId || sending || activeContactKind !== "message") return;
     setSending(true);
     try {
       const res = await fetch("/api/inbox/telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId: activeContact, message: messageInput.trim() }),
+        body: JSON.stringify({ chatId: activeContactId, message: messageInput.trim() }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to send");
       }
-      // Add optimistic message
       setMessages((prev) => [
         ...prev,
-        {
-          id: `temp-${Date.now()}`,
-          from: "me",
-          content: messageInput.trim(),
-          timestamp: new Date().toISOString(),
-          isMine: true,
-        },
+        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true },
       ]);
       setMessageInput("");
-      // Refresh after a brief delay
-      setTimeout(() => {
-        if (activeContact) fetchMessages(activeContact);
-      }, 1000);
+      setTimeout(() => { if (activeContactId) fetchMessages(activeContactId); }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send message");
     } finally {
@@ -131,31 +206,60 @@ export default function MessagesPage() {
     }
   };
 
-  const activeContactData = contacts.find((c) => c.id === activeContact);
+  const handleRefresh = () => {
+    setError("");
+    fetchTelegram();
+    fetchComments();
+  };
 
-  const filteredContacts = contacts.filter((c) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const handleSelect = (id: string, kind: "message" | "comment") => {
+    setActiveContactId(id);
+    setActiveContactKind(kind);
+    setError("");
+  };
 
+  // ---- render ----
   return (
     <div className="space-y-6">
+      {/* header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">Messages</h1>
-          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">Telegram direct messages</p>
+          <h1 className="font-display text-heading-xl font-bold text-[var(--color-on-dark)]">Inbox</h1>
+          <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">Messages & comments across platforms</p>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchConversations}
-            disabled={contactsLoading}
-            className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
+            onClick={handleRefresh}
+            disabled={contactsLoading && commentsLoading}
+            className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${contactsLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${contactsLoading || commentsLoading ? "animate-spin" : ""}`} />
           </button>
-          <a href="/inbox" className="rounded-lg border border-[var(--color-ink-muted)] px-4 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]">
-            Back to Inbox
-          </a>
         </div>
+      </div>
+
+      {/* tabs */}
+      <div className="flex items-center gap-1 rounded-xl bg-[var(--color-surface-dark)] p-1 w-fit">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setActiveTab(tab.key);
+              setActiveContactId(null);
+              setActiveContactKind(null);
+              setMessages([]);
+              setSearch("");
+            }}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-button-sm font-medium transition-all ${
+              activeTab === tab.key
+                ? "bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm"
+                : "text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)]"
+            }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {error && (
@@ -165,7 +269,7 @@ export default function MessagesPage() {
       )}
 
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* Contacts Sidebar */}
+        {/* contacts sidebar */}
         <div className="w-full lg:w-80 shrink-0">
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
@@ -173,12 +277,16 @@ export default function MessagesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search conversations..."
+              placeholder={`Search ${activeTab === "comments" ? "posts" : activeTab === "messages" ? "messages" : "conversations"}...`}
               className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             />
           </div>
 
-          {contactsLoading ? (
+          {contactsLoading && activeTab !== "comments" ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
+            </div>
+          ) : commentsLoading && activeTab !== "messages" ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
             </div>
@@ -186,32 +294,40 @@ export default function MessagesPage() {
             <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-6 text-center">
               <MessageSquare className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)]" />
               <p className="mt-2 text-body-sm text-[var(--color-on-dark-muted)]">
-                {contacts.length === 0 ? "No conversations yet. Connect Telegram to get started." : "No matching conversations"}
+                {unifiedContacts.length === 0
+                  ? activeTab === "comments"
+                    ? "No comment threads yet"
+                    : activeTab === "messages"
+                      ? "No messages yet. Connect Telegram to get started."
+                      : "No conversations yet. Connect platforms to get started."
+                  : "No matching items"}
               </p>
             </div>
           ) : (
             <div className="space-y-1 max-h-[500px] overflow-y-auto">
               {filteredContacts.map((contact) => (
                 <button
-                  key={contact.id}
-                  onClick={() => setActiveContact(contact.id)}
+                  key={`${contact.kind}-${contact.id}`}
+                  onClick={() => handleSelect(contact.id, contact.kind)}
                   className={`w-full rounded-lg p-3 text-left transition-colors ${
-                    activeContact === contact.id
+                    activeContactId === contact.id && activeContactKind === contact.kind
                       ? "bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30"
                       : "hover:bg-[var(--color-surface-dark-raised)] border border-transparent"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-body-sm font-medium text-[var(--color-on-dark)]">{contact.name}</p>
-                    <div className="flex items-center gap-2">
+                    <p className="text-body-sm font-medium text-[var(--color-on-dark)] truncate max-w-[160px]">{contact.name}</p>
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className="text-micro text-[var(--color-on-dark-muted)]">{formatTime(contact.timestamp)}</span>
                       {contact.unread && <span className="h-2 w-2 rounded-full bg-[var(--color-primary)]" />}
                     </div>
                   </div>
-                  <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] truncate">{contact.lastMessage}</p>
-                  <span className="flex items-center gap-1 text-micro text-[var(--color-primary-light)]">
+                  {contact.lastMessage ? (
+                    <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] truncate">{contact.lastMessage}</p>
+                  ) : null}
+                  <span className="flex items-center gap-1 mt-1 text-micro text-[var(--color-primary-light)]">
                     <PlatformIcon platform={contact.platform as Platform} className="h-3 w-3" />
-                    {contact.type === "group" ? "Group" : contact.type === "channel" ? "Channel" : "Telegram"}
+                    {contact.kind === "comment" ? "Post" : contact.type === "group" ? "Group" : contact.type === "channel" ? "Channel" : "Chat"}
                   </span>
                 </button>
               ))}
@@ -219,80 +335,137 @@ export default function MessagesPage() {
           )}
         </div>
 
-        {/* Chat Area */}
+        {/* detail area */}
         <div className="flex-1 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] flex flex-col min-h-[400px]">
-          {activeContact && activeContactData ? (
-            <>
-              {/* Chat Header */}
-              <div className="border-b border-[var(--color-ink-muted)] px-5 py-4 flex items-center gap-3">
-                <PlatformIcon platform="telegram" className="h-5 w-5" />
-                <div>
-                  <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
-                    {activeContactData.name}
-                  </h3>
-                  {activeContactData.type && (
-                    <p className="text-caption text-[var(--color-on-dark-muted)] capitalize">{activeContactData.type}</p>
+          {activeContactId && activeContactData ? (
+            activeContactKind === "message" ? (
+              /* ---- message chat ---- */
+              <>
+                <div className="border-b border-[var(--color-ink-muted)] px-5 py-4 flex items-center gap-3">
+                  <PlatformIcon platform={activeContactData.platform as Platform} className="h-5 w-5" />
+                  <div>
+                    <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">
+                      {activeContactData.name}
+                    </h3>
+                    {activeContactData.type && (
+                      <p className="text-caption text-[var(--color-on-dark-muted)] capitalize">{activeContactData.type}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* messages list */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-[300px] max-h-[400px]">
+                  {messagesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex items-center justify-center py-12">
+                      <p className="text-body-sm text-[var(--color-on-dark-muted)]">No messages yet</p>
+                    </div>
+                  ) : (
+                    messages.map((msg) => (
+                      <div key={msg.id} className={`flex ${msg.isMine ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[70%] rounded-xl px-4 py-2.5 ${
+                            msg.isMine
+                              ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
+                              : "bg-[var(--color-surface-dark)] text-[var(--color-on-dark)]"
+                          }`}
+                        >
+                          <p className="text-body-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          <p className={`mt-1 text-micro ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>
+                            {formatTime(msg.timestamp)}
+                          </p>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
-              </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-[300px] max-h-[400px]">
-                {messagesLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
+                {/* input */}
+                <div className="border-t border-[var(--color-ink-muted)] p-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      placeholder="Type a message..."
+                      className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    />
+                    <button
+                      disabled={!messageInput.trim() || sending}
+                      className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+                      onClick={handleSend}
+                    >
+                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      Send
+                    </button>
                   </div>
-                ) : messages.length === 0 ? (
-                  <div className="flex items-center justify-center py-12">
-                    <p className="text-body-sm text-[var(--color-on-dark-muted)]">No messages yet</p>
-                  </div>
-                ) : (
-                  messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.isMine ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={`max-w-[70%] rounded-xl px-4 py-2.5 ${
-                          msg.isMine
-                            ? "bg-[var(--color-primary)] text-[var(--color-on-primary)]"
-                            : "bg-[var(--color-surface-dark)] text-[var(--color-on-dark)]"
-                        }`}
-                      >
-                        <p className="text-body-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                        <p className={`mt-1 text-micro ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>
-                          {formatTime(msg.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Input */}
-              <div className="border-t border-[var(--color-ink-muted)] p-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  />
-                  <button
-                    disabled={!messageInput.trim() || sending}
-                    className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
-                    onClick={handleSend}
-                  >
-                    {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Send
-                  </button>
                 </div>
-              </div>
-            </>
+              </>
+            ) : (
+              /* ---- comment detail ---- */
+              <>
+                <div className="border-b border-[var(--color-ink-muted)] px-5 py-4 flex items-center gap-3">
+                  <PlatformIcon platform={activeContactData.platform as Platform} className="h-5 w-5" />
+                  <div>
+                    <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)] capitalize">
+                      {activeContactData.platform} Post
+                    </h3>
+                    <p className="text-caption text-[var(--color-on-dark-muted)]">{formatTime(activeContactData.timestamp)}</p>
+                  </div>
+                  <div className="ml-auto">
+                    {activeContactData.permalink && (
+                      <a
+                        href={activeContactData.permalink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-caption text-[var(--color-on-dark-soft)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)]"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        View Post
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-[300px] max-h-[400px]">
+                  <div className="rounded-xl bg-[var(--color-surface-dark)] p-5">
+                    <p className="text-body-sm text-[var(--color-on-dark)] whitespace-pre-wrap break-words">
+                      {activeContactData.content || activeContactData.lastMessage || "No content"}
+                    </p>
+                    <div className="mt-3 flex items-center gap-4 text-caption text-[var(--color-on-dark-muted)]">
+                      <span>💬 {activeContactData.commentCount ?? 0} comments</span>
+                      <span>❤️ {activeContactData.likeCount ?? 0} likes</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center py-8 text-center">
+                    <div>
+                      <MessageCircle className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)]" />
+                      <p className="mt-2 text-body-sm text-[var(--color-on-dark-muted)]">
+                        Real-time comments will be available when platform integrations are connected.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <div className="text-center">
-                <MessageSquare className="mx-auto h-10 w-10 text-[var(--color-on-dark-muted)]" />
-                <p className="mt-2 text-body-sm text-[var(--color-on-dark-muted)]">Select a conversation to start messaging</p>
+                {activeTab === "comments" ? (
+                  <MessageCircle className="mx-auto h-10 w-10 text-[var(--color-on-dark-muted)]" />
+                ) : (
+                  <MessageSquare className="mx-auto h-10 w-10 text-[var(--color-on-dark-muted)]" />
+                )}
+                <p className="mt-2 text-body-sm text-[var(--color-on-dark-muted)]">
+                  {activeTab === "comments"
+                    ? "Select a post to view details"
+                    : "Select a conversation to start messaging"}
+                </p>
               </div>
             </div>
           )}
