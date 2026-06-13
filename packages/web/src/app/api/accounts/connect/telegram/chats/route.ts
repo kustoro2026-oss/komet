@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Add "Saved Messages" as first option
-      const me = await client.getMe();
+      await client.getMe();
       chats.unshift({
         id: "me",
         name: "Saved Messages",
