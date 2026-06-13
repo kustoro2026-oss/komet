@@ -208,4 +208,48 @@ async function publishToTikTok(
   }
 }
 
-export { publishToTwitter, publishToTikTok, publishToDiscord };
+// ─── Telegram (Bot API) ────────────────────────────────────────────
+// Uses user's own bot token (from BotFather), no OAuth needed.
+// Posts text messages to the bot's default chat or a specified chat.
+
+interface TelegramPublishResult {
+  success: boolean;
+  messageId?: number;
+  error?: string;
+}
+
+async function publishToTelegram(
+  botToken: string,
+  text: string,
+  chatId?: string,
+): Promise<TelegramPublishResult> {
+  try {
+    const body: Record<string, unknown> = {
+      text,
+      parse_mode: "HTML",
+    };
+
+    if (chatId) {
+      body.chat_id = chatId;
+    }
+
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+      const desc = (err?.description || `Telegram API error: ${res.status}`) as string;
+      return { success: false, error: desc };
+    }
+
+    const data = (await res.json()) as { result?: { message_id?: number } };
+    return { success: true, messageId: data.result?.message_id };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error)?.message || "Network error" };
+  }
+}
+
+export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram };

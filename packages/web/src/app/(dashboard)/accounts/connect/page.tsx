@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
 import { useProfiles, useAccounts } from "@/lib/accounts/hooks";
-import { startOAuth, connectBluesky } from "@/lib/accounts/connect";
+import { startOAuth, connectBluesky, connectTelegram } from "@/lib/accounts/connect";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -60,6 +60,9 @@ export default function ConnectAccountPage() {
   const [blueskyIdentifier, setBlueskyIdentifier] = useState("");
   const [blueskyAppPassword, setBlueskyAppPassword] = useState("");
 
+  // Telegram-specific form
+  const [telegramBotToken, setTelegramBotToken] = useState("");
+
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const { data: accountsData } = useAccounts();
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -101,6 +104,13 @@ export default function ConnectAccountPage() {
           return;
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
+      } else if (selectedPlatform === "telegram") {
+        if (!telegramBotToken) {
+          setError(t("errorTelegramTokenRequired") || "Bot token is required");
+          setConnecting(false);
+          return;
+        }
+        await connectTelegram(telegramBotToken, profileId);
       } else {
         const result = await startOAuth(selectedPlatform, profileId);
         if (result.authUrl) {
@@ -180,7 +190,7 @@ export default function ConnectAccountPage() {
             <ChevronRight className="h-4 w-4" />
           </a>
           <button
-            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); }}
+            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramBotToken(""); }}
             className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
             {t("connectAnother")}
@@ -193,6 +203,8 @@ export default function ConnectAccountPage() {
   // ========== PLATFORM DETAIL VIEW ==========
   if (selectedPlatform) {
     const isBluesky = selectedPlatform === "bluesky";
+    const isTelegram = selectedPlatform === "telegram";
+    const isManualConnect = isBluesky || isTelegram;
     return (
       <motion.div
         className="mx-auto max-w-lg"
@@ -206,6 +218,7 @@ export default function ConnectAccountPage() {
             setError("");
             setBlueskyIdentifier("");
             setBlueskyAppPassword("");
+            setTelegramBotToken("");
           }}
           className="group inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
         >
@@ -233,6 +246,8 @@ export default function ConnectAccountPage() {
                 <p className="mt-0.5 text-body-sm text-[var(--color-on-dark-soft)]">
                   {isBluesky
                     ? t("blueskyDescription")
+                    : isTelegram
+                    ? t("telegramDescription") || "Enter your Telegram Bot Token from @BotFather"
                     : t("oauthDescription", { platform: PLATFORM_LABELS[selectedPlatform] })}
                 </p>
               </div>
@@ -287,6 +302,44 @@ export default function ConnectAccountPage() {
                       {t("blueskyPasswordHint")}
                     </p>
                   </div>
+                </div>
+              </>
+            ) : isTelegram ? (
+              <>
+                <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10">
+                      <MessageSquare className="h-4 w-4 text-[var(--color-primary-light)]" />
+                    </div>
+                    <div>
+                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                        {t("telegramBotTokenTitle") || "Telegram Bot Token"}
+                      </p>
+                      <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                        {t("telegramBotTokenDesc") || "Create a bot on Telegram via @BotFather, then paste the bot token below."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                    {t("telegramBotTokenLabel") || "Bot Token"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={telegramBotToken}
+                      onChange={(e) => setTelegramBotToken(e.target.value)}
+                      placeholder={t("telegramBotTokenPlaceholder") || "1234567890:ABCdefGHIjklmNOPqrstUVwxyz"}
+                      className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                    />
+                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                  </div>
+                  <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
+                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    {t("telegramBotTokenHint") || "Open Telegram, search for @BotFather, send /newbot to create one"}
+                  </p>
                 </div>
               </>
             ) : (
@@ -348,7 +401,8 @@ export default function ConnectAccountPage() {
               disabled={
                 connecting ||
                 !profileId ||
-                (isBluesky && (!blueskyIdentifier || !blueskyAppPassword))
+                (isBluesky && (!blueskyIdentifier || !blueskyAppPassword)) ||
+                (isTelegram && !telegramBotToken)
               }
               className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 text-white"
               style={{
@@ -370,7 +424,7 @@ export default function ConnectAccountPage() {
                 <>
                   <PlatformIcon platform={selectedPlatform} className="h-4 w-4" />
                   {t("connectPlatform", { platform: PLATFORM_LABELS[selectedPlatform] })}
-                  {!isBluesky && <ExternalLink className="h-4 w-4" />}
+                  {!isManualConnect && <ExternalLink className="h-4 w-4" />}
                 </>
               )}
             </button>

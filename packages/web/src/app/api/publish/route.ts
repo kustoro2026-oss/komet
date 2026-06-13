@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToTelegram } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -126,6 +126,34 @@ export async function POST(request: NextRequest) {
               data: { status: "failed", errorMessage: result.error },
             });
             results.push({ platform: "tiktok", success: false, error: result.error });
+          }
+        } else if (platform.platform === "telegram") {
+          if (!platform.account.accessToken) {
+            results.push({ platform: "telegram", success: false, error: "No bot token" });
+            continue;
+          }
+
+          const result = await publishToTelegram(
+            platform.account.accessToken,
+            text,
+            platform.account.platformAccountId || undefined,
+          );
+
+          if (result.success) {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: "published",
+                publishedAt: new Date(),
+              },
+            });
+            results.push({ platform: "telegram", success: true });
+          } else {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: { status: "failed", errorMessage: result.error },
+            });
+            results.push({ platform: "telegram", success: false, error: result.error });
           }
         } else {
           // Platform not yet supported

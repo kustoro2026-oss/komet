@@ -43,3 +43,22 @@ export async function connectBluesky(
 
   return res.json();
 }
+
+/** Connect Telegram with bot token */
+export async function connectTelegram(
+  botToken: string,
+  profileId: string
+): Promise<{ id: string; platform: string; username: string; displayName: string }> {
+  const res = await fetch("/api/accounts/connect/telegram", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ botToken, profileId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || "Failed to connect Telegram");
+  }
+
+  return res.json();
+}
