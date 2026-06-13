@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent, Suspense } from "react";
+import { useState, type FormEvent, Suspense, useEffect } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { KometLogo } from "@/components/ui/komet-logo";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export default function LoginPage() {
   return (
@@ -27,6 +28,18 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const showSuccess = registered;
+  const { user, loading: authLoading } = useAuth();
+
+  // Redirect already-authenticated users
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(returnUrl);
+    }
+  }, [user, authLoading, router, returnUrl]);
+
+  if (authLoading || user) {
+    return null;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

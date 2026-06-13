@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
 import { KometLogo } from "@/components/ui/komet-logo";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export default function RegisterPage() {
   return (
@@ -27,6 +28,18 @@ function RegisterForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+
+  // Redirect already-authenticated users
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(returnUrl);
+    }
+  }, [user, authLoading, router, returnUrl]);
+
+  if (authLoading || user) {
+    return null;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

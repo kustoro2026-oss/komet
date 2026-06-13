@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import {
   Calendar,
@@ -21,9 +22,10 @@ import {
 } from "lucide-react";
 import { HeaderLanguageSwitcher } from "@/components/layout/header-language-switcher";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Platform } from "@komet/shared";
 import { KometLogo } from "@/components/ui/komet-logo";
+import { useAuth } from "@/components/providers/auth-provider";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -54,6 +56,20 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export default function LandingPage() {
   const t = useTranslations("landing");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  // Show nothing while checking auth or redirecting
+  if (loading || user) {
+    return null;
+  }
 
   const allPlatforms: { id: Platform; label: string }[] = [
     { id: "twitter", label: "Twitter / X" },
