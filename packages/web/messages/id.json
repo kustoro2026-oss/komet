@@ -1040,7 +1040,14 @@
     "connectAnother": "Hubungkan Lainnya",
     "errorBlueskyRequired": "Silakan masukkan identitas Bluesky dan kata sandi aplikasi Anda",
     "errorConnectFailed": "Gagal menghubungkan akun",
-    "errorProfileFailed": "Gagal membuat profil"
+    "errorProfileFailed": "Gagal membuat profil",
+    "errorTelegramTokenRequired": "Token bot wajib diisi",
+    "telegramDescription": "Masukkan Token Bot Telegram Anda dari @BotFather",
+    "telegramBotTokenTitle": "Token Bot Telegram",
+    "telegramBotTokenDesc": "Buat bot di Telegram melalui @BotFather, lalu tempel token bot di bawah.",
+    "telegramBotTokenLabel": "Token Bot",
+    "telegramBotTokenPlaceholder": "1234567890:ABCdefGHIjklmNOPqrstUVwxyz",
+    "telegramBotTokenHint": "Buka Telegram, cari @BotFather, kirim /newbot untuk membuat bot"
   },
   "accountDetail": {
     "backToAccounts": "Kembali ke Akun",

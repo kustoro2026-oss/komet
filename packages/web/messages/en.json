@@ -1040,7 +1040,14 @@
     "connectAnother": "Connect Another",
     "errorBlueskyRequired": "Please enter your Bluesky identifier and app password",
     "errorConnectFailed": "Failed to connect account",
-    "errorProfileFailed": "Failed to create profile"
+    "errorProfileFailed": "Failed to create profile",
+    "errorTelegramTokenRequired": "Bot token is required",
+    "telegramDescription": "Enter your Telegram Bot Token from @BotFather",
+    "telegramBotTokenTitle": "Telegram Bot Token",
+    "telegramBotTokenDesc": "Create a bot on Telegram via @BotFather, then paste the bot token below.",
+    "telegramBotTokenLabel": "Bot Token",
+    "telegramBotTokenPlaceholder": "1234567890:ABCdefGHIjklmNOPqrstUVwxyz",
+    "telegramBotTokenHint": "Open Telegram, search for @BotFather, send /newbot to create one"
   },
   "accountDetail": {
     "backToAccounts": "Back to Accounts",
