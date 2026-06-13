@@ -102,6 +102,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "sessionId and phoneCode are required" }, { status: 400 });
       }
 
+      if (!profileId) {
+        return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
+      }
+
       const session = authSessions.get(sessionId);
       if (!session) {
         return NextResponse.json({ error: "Session expired. Please restart the login." }, { status: 400 });
@@ -114,7 +118,7 @@ export async function POST(request: NextRequest) {
           {
             phoneNumber: session.phoneNumber,
             phoneCodeHash: session.phoneCodeHash,
-            phoneCode,
+            phoneCode: () => Promise.resolve(phoneCode),
           }
         );
 
@@ -175,6 +179,10 @@ export async function POST(request: NextRequest) {
 
       if (!sessionId || !password) {
         return NextResponse.json({ error: "sessionId and password are required" }, { status: 400 });
+      }
+
+      if (!profileId) {
+        return NextResponse.json({ error: "Profile ID is required" }, { status: 400 });
       }
 
       const session = authSessions.get(sessionId);
