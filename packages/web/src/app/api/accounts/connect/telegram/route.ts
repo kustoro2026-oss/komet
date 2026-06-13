@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
           {
             phoneNumber: session.phoneNumber,
             phoneCode: () => Promise.resolve(phoneCode),
+            onError: (err: Error) => { throw err; },
           }
         );
 
