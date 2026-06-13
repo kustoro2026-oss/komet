@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ArrowLeft, ExternalLink, Check, Loader2, Search, Shield, Globe, MessageSquare, Video, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, ExternalLink, Check, Loader2, Search, Shield, Globe, MessageSquare, Video, ChevronRight, X, RefreshCw, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
@@ -63,6 +63,9 @@ export default function ConnectAccountPage() {
   // Telegram-specific form
   const [telegramBotToken, setTelegramBotToken] = useState("");
   const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramChats, setTelegramChats] = useState<Array<{ id: string; name: string; type: string; username?: string }>>([]);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [discoverError, setDiscoverError] = useState("");
 
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const { data: accountsData } = useAccounts();
@@ -91,6 +94,36 @@ export default function ConnectAccountPage() {
       }
     }
   }, [profiles, profilesLoading]);
+
+  const discoverChats = async () => {
+    if (!telegramBotToken) return;
+    setIsDiscovering(true);
+    setDiscoverError("");
+    setTelegramChats([]);
+    setTelegramChatId("");
+
+    try {
+      const res = await fetch(`/api/accounts/connect/telegram/chats?botToken=${encodeURIComponent(telegramBotToken)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDiscoverError(data.error || "Failed to discover chats");
+        return;
+      }
+
+      if (data.chats && data.chats.length > 0) {
+        setTelegramChats(data.chats);
+        // Auto-select the first chat
+        setTelegramChatId(data.chats[0].id);
+      } else {
+        setDiscoverError(t("telegramNoChatsFound") || "No chats found. Open Telegram and send /start to your bot first, then try again.");
+      }
+    } catch (err) {
+      setDiscoverError(err instanceof Error ? err.message : "Failed to discover chats");
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
 
   const handleConnect = async () => {
     if (!selectedPlatform || !profileId) return;
@@ -191,7 +224,7 @@ export default function ConnectAccountPage() {
             <ChevronRight className="h-4 w-4" />
           </a>
           <button
-            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramBotToken(""); setTelegramChatId(""); }}
+            onClick={() => { setSelectedPlatform(null); setConnected(false); setBlueskyIdentifier(""); setBlueskyAppPassword(""); setTelegramBotToken(""); setTelegramChatId(""); setTelegramChats([]); setDiscoverError(""); }}
             className="rounded-lg border border-[var(--color-ink-muted)] px-6 py-2.5 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] transition-all active:scale-95"
           >
             {t("connectAnother")}
@@ -221,6 +254,8 @@ export default function ConnectAccountPage() {
             setBlueskyAppPassword("");
             setTelegramBotToken("");
             setTelegramChatId("");
+            setTelegramChats([]);
+            setDiscoverError("");
           }}
           className="group inline-flex items-center gap-2 text-body-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors"
         >
@@ -332,7 +367,7 @@ export default function ConnectAccountPage() {
                     <input
                       type="password"
                       value={telegramBotToken}
-                      onChange={(e) => setTelegramBotToken(e.target.value)}
+                      onChange={(e) => { setTelegramBotToken(e.target.value); setTelegramChats([]); setTelegramChatId(""); setDiscoverError(""); }}
                       placeholder={t("telegramBotTokenPlaceholder") || "1234567890:ABCdefGHIjklmNOPqrstUVwxyz"}
                       className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
                     />
@@ -343,26 +378,101 @@ export default function ConnectAccountPage() {
                     {t("telegramBotTokenHint") || "Open Telegram, search for @BotFather, send /newbot to create one"}
                   </p>
                 </div>
-                <div>
-                  <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
-                    {t("telegramChatIdLabel") || "Chat ID"}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={telegramChatId}
-                      onChange={(e) => setTelegramChatId(e.target.value)}
-                      placeholder={t("telegramChatIdPlaceholder") || "-1001234567890"}
-                      className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
-                    />
-                    <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+
+                {/* Discover Chats */}
+                <div className="rounded-xl bg-[var(--color-success)]/[0.06] border border-[var(--color-success)]/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-success)]/10">
+                      <RefreshCw className="h-4 w-4 text-[var(--color-success)]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-body-sm font-medium text-[var(--color-on-dark)]">
+                        {t("telegramDiscoverTitle") || "Auto-Discover Chat"}
+                      </p>
+                      <p className="mt-1 text-body-sm text-[var(--color-on-dark-soft)]">
+                        {t("telegramDiscoverHint") || "Open Telegram and send /start to your bot, then click Discover."}
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
-                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    {t("telegramChatIdHint") || "Add your bot as admin to the channel, then get the Chat ID via @getidsbot"}
-                  </p>
+
+                  <button
+                    onClick={discoverChats}
+                    disabled={!telegramBotToken || isDiscovering}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-4 py-2.5 text-button-sm font-medium text-[var(--color-success)] hover:bg-[var(--color-success)]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDiscovering ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t("telegramDiscovering") || "Discovering chats..."}
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4" />
+                        {t("telegramDiscoverBtn") || "Discover Chats"}
+                      </>
+                    )}
+                  </button>
                 </div>
+
+                {/* Discover error */}
+                {discoverError && (
+                  <div className="rounded-lg bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 p-3">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-4 w-4 shrink-0 mt-0.5 text-[var(--color-warning)]" />
+                      <p className="text-caption text-[var(--color-on-dark-soft)]">{discoverError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Chat dropdown or manual input */}
+                {telegramChats.length > 0 ? (
+                  <div>
+                    <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
+                      {t("telegramSelectChatLabel") || "Select Chat"}
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={telegramChatId}
+                        onChange={(e) => setTelegramChatId(e.target.value)}
+                        className="w-full appearance-none rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-10 py-2.5 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                      >
+                        {telegramChats.map((chat) => (
+                          <option key={chat.id} value={chat.id}>
+                            {chat.name} {chat.username ? `(@${chat.username})` : ""} — {chat.type}
+                          </option>
+                        ))}
+                      </select>
+                      <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                    </div>
+                    <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-success)]">
+                      <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      {t("telegramChatSelected", { count: telegramChats.length }) || `Found ${telegramChats.length} chat(s). Post will be sent to the selected chat.`}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="flex items-center gap-1.5 text-body-sm font-medium text-[var(--color-on-dark)] mb-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />
+                      {t("telegramChatIdLabel") || "Chat ID"}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={telegramChatId}
+                        onChange={(e) => setTelegramChatId(e.target.value)}
+                        placeholder={t("telegramChatIdPlaceholder") || "-1001234567890"}
+                        className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-10 pr-3 py-2.5 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/50 focus:border-[var(--color-primary)] transition-all"
+                      />
+                      <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-on-dark-muted)]" />
+                    </div>
+                    <p className="mt-2 flex items-start gap-1.5 text-caption text-[var(--color-on-dark-muted)]">
+                      <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      {t("telegramChatIdHintFallback") || "Or paste a Chat ID manually if you know it (e.g. -1001234567890)"}
+                    </p>
+                  </div>
+                )}
               </>
             ) : (
               <div className="rounded-xl bg-[var(--color-primary)]/[0.06] border border-[var(--color-primary)]/10 p-5">

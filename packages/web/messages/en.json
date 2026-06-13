@@ -1048,10 +1048,17 @@
     "telegramBotTokenLabel": "Bot Token",
     "telegramBotTokenPlaceholder": "1234567890:ABCdefGHIjklmNOPqrstUVwxyz",
     "telegramBotTokenHint": "Open Telegram, search for @BotFather, send /newbot to create one",
-    "errorTelegramRequired": "Bot token and Chat ID are required",
+    "errorTelegramRequired": "Bot token and chat selection are required",
+    "telegramDiscoverTitle": "Auto-Discover Chat",
+    "telegramDiscoverHint": "Open Telegram and send /start to your bot, then click Discover.",
+    "telegramDiscovering": "Discovering chats...",
+    "telegramDiscoverBtn": "Discover Chats",
+    "telegramNoChatsFound": "No chats found. Open Telegram and send /start to your bot first, then try again.",
+    "telegramSelectChatLabel": "Select Chat",
+    "telegramChatSelected": "Found {count} chat(s). Post will be sent to the selected chat.",
     "telegramChatIdLabel": "Chat ID",
     "telegramChatIdPlaceholder": "-1001234567890",
-    "telegramChatIdHint": "Add your bot as admin to the channel, then get the Chat ID via @getidsbot"
+    "telegramChatIdHintFallback": "Or paste a Chat ID manually if you know it (e.g. -1001234567890)"
   },
   "accountDetail": {
     "backToAccounts": "Back to Accounts",
