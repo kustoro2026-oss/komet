@@ -226,9 +226,16 @@ export default function ConnectAccountPage() {
         }
         await connectBluesky(blueskyIdentifier, blueskyAppPassword, profileId);
       } else if (selectedPlatform === "telegram") {
-        // Telegram uses multi-step login — handled inline in the UI
-        // The "Connect" button is only for non-telegram platforms
+        // Telegram: save selected chat ID before completing
+        if (telegramAccountId && telegramChatId) {
+          await fetch("/api/accounts/connect/telegram", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ step: "saveChat", accountId: telegramAccountId, chatId: telegramChatId }),
+          });
+        }
         setConnecting(false);
+        setConnected(true);
         return;
       } else {
         const result = await startOAuth(selectedPlatform, profileId);
@@ -731,7 +738,7 @@ export default function ConnectAccountPage() {
                 )}
                 {telegramStep === "chats" && (
                   <button
-                    onClick={() => setConnected(true)}
+                    onClick={handleConnect}
                     disabled={connecting || !telegramChatId}
                     className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-button-sm font-medium transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
                     style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform] }}

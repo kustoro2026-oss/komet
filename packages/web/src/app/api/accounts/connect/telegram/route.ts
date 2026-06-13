@@ -240,6 +240,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ── Step 4: Save selected chat ──────────────────────────────
+    if (step === "saveChat") {
+      const accountId = body?.accountId as string | undefined;
+      const chatId = body?.chatId as string | undefined;
+
+      if (!accountId || !chatId) {
+        return NextResponse.json({ error: "accountId and chatId are required" }, { status: 400 });
+      }
+
+      // Verify ownership
+      const account = await prisma.socialAccount.findFirst({
+        where: {
+          id: accountId,
+          platform: "telegram",
+          profile: {
+            workspace: {
+              ownerId: user.id,
+            },
+          },
+        },
+      });
+
+      if (!account) {
+        return NextResponse.json({ error: "Account not found" }, { status: 404 });
+      }
+
+      await prisma.socialAccount.update({
+        where: { id: accountId },
+        data: { platformAccountId: chatId },
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
     return NextResponse.json({ error: "Unknown step: " + step }, { status: 400 });
   } catch (err) {
     console.error("[Telegram Connect] Error:", err);
