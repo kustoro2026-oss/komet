@@ -113,6 +113,8 @@ export default function InboxPage() {
   const deleteMutation = useDeleteComment();
 
   // ---- fetch Telegram conversations ----
+  const contactsFingerprintRef = useRef("");
+
   const fetchTelegram = useCallback(async () => {
     setTelegramLoading(true);
     setMsgError("");
@@ -125,6 +127,24 @@ export default function InboxPage() {
       setMsgError(err instanceof Error ? err.message : "Failed to load Telegram");
     } finally {
       setTelegramLoading(false);
+    }
+  }, []);
+
+  // Silent poll for conversation list — no spinner, only updates if data changed
+  const pollConversations = useCallback(async () => {
+    try {
+      const res = await fetch("/api/inbox/telegram");
+      if (!res.ok) return;
+      const data = await res.json();
+      const conversations: TelegramContact[] = data.conversations || [];
+      // Only update if something actually changed
+      const fingerprint = JSON.stringify(conversations.map((c) => `${c.id}:${c.unread}:${c.lastMessage}`));
+      if (fingerprint !== contactsFingerprintRef.current) {
+        contactsFingerprintRef.current = fingerprint;
+        setTelegramContacts(conversations);
+      }
+    } catch {
+      // silently ignore
     }
   }, []);
 
@@ -196,13 +216,13 @@ export default function InboxPage() {
     return () => clearInterval(interval);
   }, [activeChatId, pollMessages]);
 
-  // Also refresh conversation list every 15 seconds
+  // Refresh conversation list every 30 seconds (silent — no spinner)
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchTelegram();
-    }, 15000);
+      pollConversations();
+    }, 30000);
     return () => clearInterval(interval);
-  }, [fetchTelegram]);
+  }, [pollConversations]);
 
   // ---- select a Telegram chat ----
   const selectChat = useCallback((chatId: string, name: string, type?: string) => {
