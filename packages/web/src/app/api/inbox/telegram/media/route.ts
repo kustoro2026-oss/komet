@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
-import { Api } from "telegram";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +98,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Failed to download media" }, { status: 500 });
       }
 
-      const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer as ArrayBuffer);
+      // gramjs downloadMedia returns a Buffer
+      const buf: Buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer));
 
       // Determine content type
       let contentType = "application/octet-stream";
@@ -114,7 +114,8 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return new NextResponse(buf, {
+      // Use Uint8Array which satisfies NextResponse BodyInit type
+      return new NextResponse(new Uint8Array(buf), {
         headers: {
           "Content-Type": contentType,
           "Cache-Control": "public, max-age=3600",

@@ -17,7 +17,6 @@ import {
   Loader2,
   ArrowLeft,
   CheckCheck,
-  Image,
   FileVideo,
   FileText,
   Link,
