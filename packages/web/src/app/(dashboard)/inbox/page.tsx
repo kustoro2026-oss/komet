@@ -96,7 +96,6 @@ export default function InboxPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState("");
-  const [sending, setSending] = useState(false);
   const [msgError, setMsgError] = useState("");
 
   // ---- fetch commented posts ----
@@ -238,30 +237,33 @@ export default function InboxPage() {
     fetch(`/api/inbox/telegram/${chatId}/read`, { method: "POST" }).catch(() => {});
   }, []);
 
-  // ---- send message ----
+  // ---- send message (optimistic) ----
   const handleSend = async () => {
-    if (!messageInput.trim() || !activeChatId || sending) return;
-    setSending(true);
+    const text = messageInput.trim();
+    if (!text || !activeChatId) return;
+
+    // Instant UI: add message + clear input immediately
+    const tempId = `temp-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      { id: tempId, from: "me", content: text, timestamp: new Date().toISOString(), isMine: true, isRead: false, hasMedia: false, mediaType: null, mediaData: null },
+    ]);
+    setMessageInput("");
+
+    // Fire API in background
     try {
       const res = await fetch("/api/inbox/telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId: activeChatId, message: messageInput.trim() }),
+        body: JSON.stringify({ chatId: activeChatId, message: text }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to send");
       }
-      setMessages((prev) => [
-        ...prev,
-        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true, isRead: false, hasMedia: false, mediaType: null, mediaData: null },
-      ]);
-      setMessageInput("");
-      setTimeout(() => { if (activeChatId) fetchMessages(activeChatId); }, 1000);
+      // Poll will replace temp message with real one
     } catch (err) {
       setMsgError(err instanceof Error ? err.message : "Failed to send message");
-    } finally {
-      setSending(false);
     }
   };
 
@@ -563,11 +565,11 @@ export default function InboxPage() {
                         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                       />
                       <button
-                        disabled={!messageInput.trim() || sending}
+                        disabled={!messageInput.trim()}
                         className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-3 py-2.5 sm:px-4 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 shrink-0"
                         onClick={handleSend}
                       >
-                        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        <Send className="h-4 w-4" />
                         <span className="hidden sm:inline">Send</span>
                       </button>
                     </div>
