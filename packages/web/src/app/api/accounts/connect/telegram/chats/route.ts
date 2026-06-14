@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { TelegramClient } from "telegram";
+import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 
 export const dynamic = "force-dynamic";
@@ -8,11 +8,18 @@ export const dynamic = "force-dynamic";
 const TELEGRAM_API_ID = parseInt(process.env.TELEGRAM_API_ID || "0", 10);
 const TELEGRAM_API_HASH = process.env.TELEGRAM_API_HASH || "";
 
+interface TopicInfo {
+  id: number;
+  title: string;
+}
+
 interface ChatInfo {
   id: string;
   name: string;
   type: "private" | "group" | "supergroup" | "channel";
   username?: string;
+  isForum?: boolean;
+  topics?: TopicInfo[];
 }
 
 export async function GET(request: NextRequest) {
@@ -63,6 +70,7 @@ export async function GET(request: NextRequest) {
       const dialogs = await client.getDialogs({ limit: 200 });
 
       const chats: ChatInfo[] = [];
+      const forumDialogs: { dialog: (typeof dialogs)[number]; chatId: string; inputChannel: unknown }[] = [];
 
       for (const dialog of dialogs) {
         const entity = dialog.entity;
@@ -87,16 +95,56 @@ export async function GET(request: NextRequest) {
           name = chat.title || "Group";
           type = "group";
         } else if (entity.className === "Channel") {
-          const channel = entity as { id: { toString(): string }; title?: string; username?: string; megagroup?: boolean };
+          const channel = entity as { id: { toString(): string }; title?: string; username?: string; megagroup?: boolean; forum?: boolean };
           id = channel.id.toString();
           name = channel.title || "Channel";
           type = channel.megagroup ? "supergroup" : "channel";
           username = channel.username;
+          const isForum = channel.forum === true;
+          chats.push({ id, name, type, username, isForum });
+          // Collect forum groups for topic fetching
+          if (isForum) {
+            forumDialogs.push({ dialog, chatId: id, inputChannel: dialog.inputEntity });
+          }
+          continue;
         } else {
           continue;
         }
 
         chats.push({ id, name, type, username });
+      }
+
+      // Fetch topics for forum groups in parallel
+      if (forumDialogs.length > 0) {
+        const topicResults = await Promise.allSettled(
+          forumDialogs.map(async (fd) => {
+            try {
+              const result = await client.invoke(
+                new Api.channels.GetForumTopics({
+                  channel: fd.inputChannel as Parameters<typeof client.invoke>[0],
+                  offsetDate: 0,
+                  offsetId: 0,
+                  offsetTopic: 0,
+                  limit: 50,
+                })
+              );
+              const topics = (result as { topics?: { id: number; title: string }[] }).topics || [];
+              return { chatId: fd.chatId, topics: topics.map((t) => ({ id: t.id, title: t.title })) };
+            } catch {
+              return { chatId: fd.chatId, topics: [] };
+            }
+          })
+        );
+
+        // Attach topics to the corresponding chat entries
+        for (const tr of topicResults) {
+          if (tr.status === "fulfilled") {
+            const chat = chats.find((c) => c.id === tr.value.chatId);
+            if (chat) {
+              chat.topics = tr.value.topics;
+            }
+          }
+        }
       }
 
       // Add "Saved Messages" as first option

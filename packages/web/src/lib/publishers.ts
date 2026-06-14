@@ -246,10 +246,17 @@ async function publishToTelegram(
       // This is required so gramjs can resolve peer IDs for sendMessage.
       const dialogs = await client.getDialogs({ limit: 100 });
 
+      // Parse chatId — may contain topic ID in format "chatId|topicId"
       let peer: string | number = "me";
+      let forumTopicId: number | undefined;
       if (chatId && chatId !== "me") {
-        const numericId = parseInt(chatId, 10);
-        peer = isNaN(numericId) ? chatId : numericId;
+        const pipeIdx = chatId.indexOf("|");
+        const actualChatId = pipeIdx >= 0 ? chatId.substring(0, pipeIdx) : chatId;
+        if (pipeIdx >= 0) {
+          forumTopicId = parseInt(chatId.substring(pipeIdx + 1), 10) || undefined;
+        }
+        const numericId = parseInt(actualChatId, 10);
+        peer = isNaN(numericId) ? actualChatId : numericId;
       }
 
       // Resolve peer to a proper InputPeer entity.
@@ -266,6 +273,14 @@ async function publishToTelegram(
           resolvedPeer = dialog.inputEntity;
           foundInDialogs = true;
           console.log("[Telegram Publisher] Found entity in dialogs:", entityId);
+          // Auto-detect forum group if no explicit topic specified
+          if (forumTopicId === undefined) {
+            const ent = entity as { forum?: boolean; className?: string };
+            if (ent?.className === "Channel" && ent?.forum === true) {
+              console.log("[Telegram Publisher] Forum group detected, auto-selecting General topic");
+              forumTopicId = 1;
+            }
+          }
           break;
         }
       }
@@ -276,7 +291,13 @@ async function publishToTelegram(
         resolvedPeer = await client.getEntity(peer);
       }
 
-      const result = await client.sendMessage(resolvedPeer, { message: text });
+      const sendOpts: { message: string; replyTo?: number } = { message: text };
+      if (forumTopicId) {
+        console.log("[Telegram Publisher] Sending to topic:", forumTopicId);
+        sendOpts.replyTo = forumTopicId;
+      }
+
+      const result = await client.sendMessage(resolvedPeer, sendOpts);
       const messageId = (result as unknown as { id?: number })?.id;
 
       return { success: true, messageId };

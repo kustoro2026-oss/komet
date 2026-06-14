@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink, Send, Check, ChevronDown } from "lucide-react";
+import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink, Send, Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -23,10 +23,11 @@ export default function AccountDetailPage() {
   const [activeView, setActiveView] = useState<"overview" | "posts">("overview");
 
   // Telegram destination state
-  const [tgChats, setTgChats] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [tgChats, setTgChats] = useState<{ id: string; name: string; type: string; isForum?: boolean; topics?: { id: number; title: string }[] }[]>([]);
   const [tgChatsLoading, setTgChatsLoading] = useState(false);
   const [showDestDropdown, setShowDestDropdown] = useState(false);
   const [destUpdating, setDestUpdating] = useState(false);
+  const [expandedForums, setExpandedForums] = useState<Set<string>>(new Set());
   const destDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click
@@ -78,10 +79,23 @@ export default function AccountDetailPage() {
   };
 
   // Determine current destination display name
+  const savedDest = (account as { platformAccountId?: string }).platformAccountId || "";
+  const destParts = savedDest ? savedDest.split("|") : [];
+  const savedChatId = destParts[0] || "";
+  const savedTopicId = destParts[1] ? parseInt(destParts[1], 10) : undefined;
+
   const currentDestName = account?.platform === "telegram"
-    ? tgChats.find((c) => c.id === (account as { platformAccountId?: string }).platformAccountId)?.name
-      || (account as { platformAccountId?: string }).platformAccountId
-      || "Saved Messages"
+    ? (() => {
+        if (!savedChatId) return "Saved Messages";
+        const chat = tgChats.find((c) => c.id === savedChatId);
+        if (!chat) return savedChatId;
+        if (savedTopicId && chat.topics) {
+          const topic = chat.topics.find((t) => t.id === savedTopicId);
+          if (topic) return `${chat.name} / ${topic.title}`;
+          return `${chat.name} / Topic #${savedTopicId}`;
+        }
+        return chat.name;
+      })()
     : null;
 
   if (isLoading) {
@@ -223,7 +237,8 @@ export default function AccountDetailPage() {
                     Loading chats…
                   </div>
                 ) : (
-                  <div className="relative" ref={destDropdownRef}>
+                  <>
+                    <div className="relative" ref={destDropdownRef}>
                     <button
                       onClick={() => setShowDestDropdown(!showDestDropdown)}
                       disabled={destUpdating}
@@ -254,45 +269,99 @@ export default function AccountDetailPage() {
                     )}
 
                     {showDestDropdown && (
-                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl max-h-64 overflow-y-auto">
+                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl max-h-80 overflow-y-auto">
                         {tgChats.length === 0 ? (
                           <div className="px-4 py-3 text-caption text-[var(--color-on-dark-muted)]">No chats available</div>
                         ) : (
                           tgChats.map((chat) => {
-                            const isSelected = (account as { platformAccountId?: string }).platformAccountId === chat.id
-                              || (!(account as { platformAccountId?: string }).platformAccountId && chat.id === "me");
+                            const isForum = chat.isForum === true;
+                            const isExpanded = expandedForums.has(chat.id);
+                            const isChatSelected = savedChatId === chat.id && !savedTopicId;
+
                             return (
-                              <button
-                                key={chat.id}
-                                onClick={() => handleDestinationChange(chat.id)}
-                                disabled={destUpdating}
-                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-body-sm transition-colors hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 ${
-                                  isSelected
-                                    ? "bg-[var(--color-primary)]/10 text-[var(--color-primary-light)]"
-                                    : "text-[var(--color-on-dark)]"
-                                }`}
-                              >
-                                <span className={`shrink-0 h-5 w-5 flex items-center justify-center rounded-full text-micro font-medium ${
-                                  chat.type === "group" || chat.type === "supergroup"
-                                    ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-                                    : chat.type === "channel"
-                                      ? "bg-[var(--color-warning)]/20 text-[var(--color-warning)]"
-                                      : "bg-[var(--color-primary)]/20 text-[var(--color-primary-light)]"
-                                }`}>
-                                  {chat.type === "private" ? "@" : chat.type === "channel" ? "#" : "G"}
-                                </span>
-                                <span className="flex-1 truncate">{chat.name}</span>
-                                <span className="text-micro text-[var(--color-on-dark-muted)] capitalize shrink-0">
-                                  {chat.type === "supergroup" ? "group" : chat.type}
-                                </span>
-                                {isSelected && <Check className="h-4 w-4 shrink-0" />}
-                              </button>
+                              <div key={chat.id}>
+                                {/* Chat row */}
+                                <button
+                                  onClick={() => {
+                                    if (isForum && chat.topics && chat.topics.length > 0) {
+                                      setExpandedForums((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(chat.id)) next.delete(chat.id);
+                                        else next.add(chat.id);
+                                        return next;
+                                      });
+                                    } else {
+                                      handleDestinationChange(chat.id);
+                                    }
+                                  }}
+                                  disabled={destUpdating}
+                                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-body-sm transition-colors hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 ${
+                                    isChatSelected
+                                      ? "bg-[var(--color-primary)]/10 text-[var(--color-primary-light)]"
+                                      : "text-[var(--color-on-dark)]"
+                                  }`}
+                                >
+                                  <span className={`shrink-0 h-5 w-5 flex items-center justify-center rounded-full text-micro font-medium ${
+                                    chat.type === "group" || chat.type === "supergroup"
+                                      ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
+                                      : chat.type === "channel"
+                                        ? "bg-[var(--color-warning)]/20 text-[var(--color-warning)]"
+                                        : "bg-[var(--color-primary)]/20 text-[var(--color-primary-light)]"
+                                  }`}>
+                                    {chat.type === "private" ? "@" : chat.type === "channel" ? "#" : "G"}
+                                  </span>
+                                  <span className="flex-1 truncate">{chat.name}</span>
+                                  {isForum && chat.topics && chat.topics.length > 0 && (
+                                    <span className="text-micro text-[var(--color-on-dark-muted)] bg-[var(--color-surface-dark)] px-2 py-0.5 rounded-full shrink-0">
+                                      {chat.topics.length} topics
+                                    </span>
+                                  )}
+                                  {isForum && chat.topics && chat.topics.length > 0 ? (
+                                    <ChevronRight className={`h-4 w-4 shrink-0 text-[var(--color-on-dark-muted)] transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                                  ) : (
+                                    isChatSelected && <Check className="h-4 w-4 shrink-0" />
+                                  )}
+                                </button>
+
+                                {/* Topic items (nested under forum group) */}
+                                {isForum && isExpanded && chat.topics && (
+                                  <div className="border-l-2 border-[var(--color-ink-muted)] ml-7">
+                                    {chat.topics.length === 0 ? (
+                                      <div className="px-4 py-2 text-caption text-[var(--color-on-dark-muted)]">No topics available</div>
+                                    ) : (
+                                      chat.topics.map((topic) => {
+                                        const topicDest = `${chat.id}|${topic.id}`;
+                                        const isTopicSelected = savedChatId === chat.id && savedTopicId === topic.id;
+                                        return (
+                                          <button
+                                            key={topic.id}
+                                            onClick={() => handleDestinationChange(topicDest)}
+                                            disabled={destUpdating}
+                                            className={`flex w-full items-center gap-3 pl-7 pr-4 py-2 text-left text-caption transition-colors hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 ${
+                                              isTopicSelected
+                                                ? "bg-[var(--color-primary)]/10 text-[var(--color-primary-light)]"
+                                                : "text-[var(--color-on-dark-soft)]"
+                                            }`}
+                                          >
+                                            <span className="shrink-0 h-4 w-4 flex items-center justify-center rounded text-micro font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                                              #
+                                            </span>
+                                            <span className="flex-1 truncate">{topic.title}</span>
+                                            {isTopicSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
+                                          </button>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })
                         )}
                       </div>
                     )}
                   </div>
+                  </>
                 )}
               </div>
             )}
