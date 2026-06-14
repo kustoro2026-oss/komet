@@ -17,6 +17,10 @@ import {
   Loader2,
   ArrowLeft,
   CheckCheck,
+  Image,
+  FileVideo,
+  FileText,
+  Link,
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -41,6 +45,8 @@ interface ChatMessage {
   timestamp: string;
   isMine: boolean;
   isRead: boolean;
+  hasMedia: boolean;
+  mediaType: string | null;
 }
 
 type TabKey = "all" | "messages" | "comments";
@@ -179,7 +185,7 @@ export default function InboxPage() {
       }
       setMessages((prev) => [
         ...prev,
-        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true, isRead: false },
+        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true, isRead: false, hasMedia: false, mediaType: null },
       ]);
       setMessageInput("");
       setTimeout(() => { if (activeChatId) fetchMessages(activeChatId); }, 1000);
@@ -418,6 +424,41 @@ export default function InboxPage() {
                             }`}
                           >
                             <p className="text-body-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                            {msg.hasMedia && msg.mediaType && (
+                              <div className="mt-2">
+                                {msg.mediaType === "photo" || msg.mediaType === "gif" ? (
+                                  <div className="rounded-lg overflow-hidden bg-black/20">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={`/api/inbox/telegram/media?chatId=${activeChatId}&messageId=${msg.id}`}
+                                      alt={msg.content || "Photo"}
+                                      className="max-w-full max-h-64 object-contain rounded-lg"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                ) : msg.mediaType === "video" ? (
+                                  <div className="flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2">
+                                    <FileVideo className={`h-5 w-5 ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`} />
+                                    <span className={`text-caption ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>Video</span>
+                                  </div>
+                                ) : msg.mediaType === "audio" ? (
+                                  <div className="flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2">
+                                    <FileText className={`h-5 w-5 ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`} />
+                                    <span className={`text-caption ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>Audio</span>
+                                  </div>
+                                ) : msg.mediaType === "document" ? (
+                                  <div className="flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2">
+                                    <FileText className={`h-5 w-5 ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`} />
+                                    <span className={`text-caption ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>Document</span>
+                                  </div>
+                                ) : msg.mediaType === "link" ? (
+                                  <div className="flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2">
+                                    <Link className={`h-5 w-5 ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`} />
+                                    <span className={`text-caption ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>Link preview</span>
+                                  </div>
+                                ) : null}
+                              </div>
+                            )}
                             <div className={`mt-1 flex items-center gap-1.5 ${msg.isMine ? "justify-end" : ""}`}>
                               <p className={`text-micro ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>
                                 {formatTimestamp(msg.timestamp)}

@@ -17,6 +17,8 @@ interface ChatMessage {
   timestamp: string;
   isMine: boolean;
   isRead: boolean;
+  hasMedia: boolean;
+  mediaType: string | null;
 }
 
 export async function GET(
@@ -119,12 +121,51 @@ export async function GET(
             fromId?: { toString(): string };
             sender?: { id?: { toString(): string } };
             out?: boolean;
+            media?: {
+              className?: string;
+              photo?: unknown;
+              document?: { mimeType?: string; className?: string };
+            };
           };
           const senderId = m.senderId?.toString?.() || m.fromId?.toString?.() || m.sender?.id?.toString?.() || "";
           const isMine = senderId === myId;
           // For outgoing messages, check if read by recipient (message ID <= readOutboxMaxId)
           // For incoming messages, they're always considered read since we're viewing them
           const isRead = isMine ? ((m.id ?? 0) <= readOutboxMaxId) : true;
+
+          // Detect media type
+          let hasMedia = false;
+          let mediaType: string | null = null;
+          if (m.media) {
+            const mediaClass = m.media.className || "";
+            hasMedia = true;
+            if (mediaClass === "MessageMediaPhoto" || m.media.photo) {
+              mediaType = "photo";
+            } else if (mediaClass === "MessageMediaDocument" || m.media.document) {
+              const doc = m.media.document;
+              if (doc) {
+                const mime = doc.mimeType || "";
+                if (mime.startsWith("video/")) {
+                  mediaType = "video";
+                } else if (mime.startsWith("audio/")) {
+                  mediaType = "audio";
+                } else if (mime === "image/gif") {
+                  mediaType = "gif";
+                } else if (mime.startsWith("image/")) {
+                  mediaType = "photo";
+                } else {
+                  mediaType = "document";
+                }
+              } else {
+                mediaType = "document";
+              }
+            } else if (mediaClass === "MessageMediaWebPage") {
+              mediaType = "link";
+            } else {
+              mediaType = "media";
+            }
+          }
+
           return {
             id: String(m.id || ""),
             from: senderId,
@@ -132,6 +173,8 @@ export async function GET(
             timestamp: m.date ? new Date(m.date * 1000).toISOString() : new Date().toISOString(),
             isMine,
             isRead,
+            hasMedia,
+            mediaType,
           };
         });
 
