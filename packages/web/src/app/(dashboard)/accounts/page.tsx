@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2, RefreshCw, X, Loader2 } from "lucide-react";
+import { Plus, ExternalLink, AlertTriangle, CheckCircle2, Search, Trash2, RefreshCw, X, Loader2, Settings } from "lucide-react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS, SUPPORTED_PLATFORMS } from "@komet/shared";
@@ -333,12 +333,22 @@ export default function AccountsPage() {
             <div className="mt-3 flex gap-2">
               {account.isActive ? (
                 <>
-                  <Link
-                    href="/posts/create"
-                    className="flex-1 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-center text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
-                  >
-                    {t("post")}
-                  </Link>
+                  {account.platform === "telegram" ? (
+                    <Link
+                      href={`/accounts/${account.id}`}
+                      className="flex-1 rounded-lg bg-[var(--color-accent)]/10 px-3 py-1.5 text-center text-button-sm text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 flex items-center justify-center gap-1.5"
+                    >
+                      <Settings className="h-3.5 w-3.5" />
+                      Configure
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/posts/create"
+                      className="flex-1 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-center text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
+                    >
+                      {t("post")}
+                    </Link>
+                  )}
                   <Link
                     href={`/analytics/${account.platform}`}
                     className="flex-1 rounded-lg border border-[var(--color-ink-muted)] px-3 py-1.5 text-center text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)]"
