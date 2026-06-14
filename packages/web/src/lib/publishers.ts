@@ -242,9 +242,8 @@ async function publishToTelegram(
     await client.connect();
 
     try {
-      // Fetch dialogs to populate entity database with access hashes.
-      // This is required so gramjs can resolve peer IDs for sendMessage.
-      const dialogs = await client.getDialogs({ limit: 100 });
+      // Fetch dialogs to populate entity cache for getEntity() below.
+      await client.getDialogs({ limit: 100 });
 
       // Parse chatId — may contain topic ID in format "chatId|topicId"
       let peer: string | number = "me";
@@ -259,27 +258,14 @@ async function publishToTelegram(
         peer = isNaN(numericId) ? actualChatId : numericId;
       }
 
-      // Resolve peer to a proper InputPeer entity.
-      // First try to find it in the fetched dialogs (has proper access hash).
+      // Resolve peer — use client.getEntity() which does proper resolution
+      // with access hashes, instead of relying on dialog.inputEntity.
       let resolvedPeer: Parameters<typeof client.sendMessage>[0] = "me";
-      let foundInDialogs = false;
 
-      for (const dialog of dialogs) {
-        const entity = dialog.entity;
-        if (!entity) continue;
-        // Entity IDs in gramjs use BigInteger class
-        const entityId = String((entity as unknown as { id?: { toString(): string } }).id ?? "");
-        if (peer === "me" || (entityId && String(peer) === entityId)) {
-          resolvedPeer = dialog.inputEntity;
-          foundInDialogs = true;
-          console.log("[Telegram Publisher] Found entity in dialogs:", entityId);
-          break;
-        }
-      }
-
-      // Fallback: resolve entity from server via getEntity
-      if (!foundInDialogs) {
-        console.log("[Telegram Publisher] Entity not in dialogs, resolving from server for:", peer);
+      if (peer === "me") {
+        resolvedPeer = "me";
+      } else {
+        console.log("[Telegram Publisher] Resolving entity from server for:", peer);
         resolvedPeer = await client.getEntity(peer);
       }
 
