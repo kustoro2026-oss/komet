@@ -273,14 +273,6 @@ async function publishToTelegram(
           resolvedPeer = dialog.inputEntity;
           foundInDialogs = true;
           console.log("[Telegram Publisher] Found entity in dialogs:", entityId);
-          // Auto-detect forum group if no explicit topic specified
-          if (forumTopicId === undefined) {
-            const ent = entity as { forum?: boolean; className?: string };
-            if (ent?.className === "Channel" && ent?.forum === true) {
-              console.log("[Telegram Publisher] Forum group detected, auto-selecting General topic");
-              forumTopicId = 1;
-            }
-          }
           break;
         }
       }
@@ -293,14 +285,26 @@ async function publishToTelegram(
 
       const sendOpts: { message: string; replyTo?: number } = { message: text };
       if (forumTopicId) {
-        console.log("[Telegram Publisher] Sending to topic:", forumTopicId);
+        console.log("[Telegram Publisher] Sending to explicit topic:", forumTopicId);
         sendOpts.replyTo = forumTopicId;
       }
 
-      const result = await client.sendMessage(resolvedPeer, sendOpts);
-      const messageId = (result as unknown as { id?: number })?.id;
-
-      return { success: true, messageId };
+      // Try to send. If PEER_ID_INVALID, the group may be a forum — retry with General topic.
+      try {
+        const result = await client.sendMessage(resolvedPeer, sendOpts);
+        const messageId = (result as unknown as { id?: number })?.id;
+        return { success: true, messageId };
+      } catch (sendErr: unknown) {
+        const sendMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
+        if (sendMsg.includes("PEER_ID_INVALID") && !sendOpts.replyTo) {
+          console.log("[Telegram Publisher] PEER_ID_INVALID — retrying with General topic (forum group)");
+          sendOpts.replyTo = 1;
+          const retryResult = await client.sendMessage(resolvedPeer, sendOpts);
+          const retryMessageId = (retryResult as unknown as { id?: number })?.id;
+          return { success: true, messageId: retryMessageId };
+        }
+        throw sendErr;
+      }
     } finally {
       await client.disconnect().catch(() => {});
     }
