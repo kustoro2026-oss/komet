@@ -63,7 +63,19 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
           return response;
         })
-        .catch(() => caches.match(request).then((c) => c || caches.match("/").then((cc) => cc)))
+        .catch(() =>
+          caches.match(request).then((cached) => {
+            if (cached) return cached;
+            // Fallback to root cache entry, then to a minimal offline page
+            return caches.match("/").then((root) => {
+              if (root) return root;
+              return new Response(
+                "<!DOCTYPE html><html><head><meta charset=utf-8><title>Offline</title></head><body><h1>You are offline</h1><p>Please check your connection.</p></body></html>",
+                { status: 200, headers: { "Content-Type": "text/html" } }
+              );
+            });
+          })
+        )
     );
     return;
   }
@@ -74,12 +86,20 @@ self.addEventListener("fetch", (event) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
         if (!response || response.status >= 400) {
-          return caches.match(request).then((c) => c || new Response(null, { status: 502 }));
+          return caches.match(request).then((c) => {
+            if (c) return c;
+            return new Response(null, { status: 502 });
+          });
         }
         const cloned = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
         return response;
-      }).catch(() => caches.match(request));
+      }).catch(() =>
+        caches.match(request).then((c) => {
+          if (c) return c;
+          return new Response(null, { status: 502 });
+        })
+      );
     })
   );
 });

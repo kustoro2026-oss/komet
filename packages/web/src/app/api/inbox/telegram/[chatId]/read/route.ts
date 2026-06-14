@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
-import { Api } from "telegram";
 
 export const dynamic = "force-dynamic";
 
@@ -73,18 +72,22 @@ export async function POST(
       }
 
       if (!found) {
-        resolvedPeer = await client.getEntity(isNaN(peer) ? chatId : peer);
+        try {
+          resolvedPeer = await client.getEntity(isNaN(peer) ? chatId : peer);
+        } catch {
+          // Can't resolve peer — silently succeed, frontend ignores result anyway
+          return NextResponse.json({ success: true });
+        }
       }
 
-      // Mark conversation as read
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      await client.invoke(
-        new Api.messages.ReadHistory({
-          peer: resolvedPeer as any,
-          maxId: 0,
-        }),
-      );
-      /* eslint-enable @typescript-eslint/no-explicit-any */
+      // Mark conversation as read using client.markAsRead (simpler than raw API)
+      try {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        await (client as any).markAsRead(resolvedPeer, { maxId: 0 });
+        /* eslint-enable @typescript-eslint/no-explicit-any */
+      } catch {
+        // Silent fail — mark-as-read is best-effort
+      }
 
       return NextResponse.json({ success: true });
     } finally {

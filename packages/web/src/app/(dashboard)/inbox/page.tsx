@@ -176,11 +176,22 @@ export default function InboxPage() {
       const incoming: ChatMessage[] = data.messages || [];
       setMessages((prev) => {
         if (prev.length === 0) return incoming;
-        // Merge: keep existing messages, append new ones
-        const existingIds = new Set(prev.map((m) => m.id));
+        // Merge: keep existing messages, append new ones.
+        // But first, remove optimistic temp messages whose content already
+        // appears as a confirmed isMine message in the server response.
+        const confirmedContents = new Set(
+          incoming.filter((m) => m.isMine).map((m) => m.content),
+        );
+        const cleaned = prev.filter(
+          (m) => !(m.id.startsWith("temp-") && confirmedContents.has(m.content)),
+        );
+        const existingIds = new Set(cleaned.map((m) => m.id));
         const newMsgs = incoming.filter((m) => !existingIds.has(m.id));
-        if (newMsgs.length === 0) return prev;
-        return [...prev, ...newMsgs];
+        if (newMsgs.length === 0) {
+          // If we removed temps but have no new messages, just return cleaned
+          return cleaned.length !== prev.length ? cleaned : prev;
+        }
+        return [...cleaned, ...newMsgs];
       });
     } catch {
       // silently ignore poll errors

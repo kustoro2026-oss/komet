@@ -130,8 +130,10 @@ export async function GET(
               document?: { mimeType?: string; className?: string };
             };
           };
+          // Use m.out as primary indicator — for outgoing messages, senderId/fromId
+          // may be null/undefined in GramJS, causing the senderId comparison to fail.
           const senderId = m.senderId?.toString?.() || m.fromId?.toString?.() || m.sender?.id?.toString?.() || "";
-          const isMine = senderId === myId;
+          const isMine = m.out === true || senderId === myId;
           const isRead = isMine ? ((m.id ?? 0) <= readOutboxMaxId) : true;
 
           // Detect media type
