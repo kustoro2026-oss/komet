@@ -16,6 +16,7 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   isMine: boolean;
+  isRead: boolean;
 }
 
 export async function GET(
@@ -94,6 +95,18 @@ export async function GET(
       const me = await client.getMe();
       const myId = String((me as unknown as { id?: { toString(): string } }).id ?? "");
 
+      // Get dialog to determine read status of outgoing messages
+      let readOutboxMaxId = 0;
+      for (const dialog of dialogs) {
+        const entity = dialog.entity;
+        if (!entity) continue;
+        const entityId = String((entity as unknown as { id?: { toString(): string } }).id ?? "");
+        if (entityId && chatId === entityId) {
+          readOutboxMaxId = (dialog as unknown as { readOutboxMaxId?: number }).readOutboxMaxId ?? 0;
+          break;
+        }
+      }
+
       const messages: ChatMessage[] = (Array.isArray(messagesResult) ? messagesResult : [])
         .filter((msg: unknown) => !!msg)
         .reverse()
@@ -105,14 +118,20 @@ export async function GET(
             senderId?: { toString(): string };
             fromId?: { toString(): string };
             sender?: { id?: { toString(): string } };
+            out?: boolean;
           };
           const senderId = m.senderId?.toString?.() || m.fromId?.toString?.() || m.sender?.id?.toString?.() || "";
+          const isMine = senderId === myId;
+          // For outgoing messages, check if read by recipient (message ID <= readOutboxMaxId)
+          // For incoming messages, they're always considered read since we're viewing them
+          const isRead = isMine ? ((m.id ?? 0) <= readOutboxMaxId) : true;
           return {
             id: String(m.id || ""),
             from: senderId,
             content: m.message || "",
             timestamp: m.date ? new Date(m.date * 1000).toISOString() : new Date().toISOString(),
-            isMine: senderId === myId,
+            isMine,
+            isRead,
           };
         });
 

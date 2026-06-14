@@ -16,6 +16,7 @@ import {
   Heart,
   Loader2,
   ArrowLeft,
+  CheckCheck,
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -39,6 +40,7 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   isMine: boolean;
+  isRead: boolean;
 }
 
 type TabKey = "all" | "messages" | "comments";
@@ -148,12 +150,18 @@ export default function InboxPage() {
   }, [activeChatId, fetchMessages]);
 
   // ---- select a Telegram chat ----
-  const selectChat = (chatId: string, name: string, type?: string) => {
+  const selectChat = useCallback((chatId: string, name: string, type?: string) => {
     setActiveChatId(chatId);
     setActiveChatName(name);
     setActiveChatType(type || "");
     setMsgError("");
-  };
+    // Mark as read and update unread state locally
+    setTelegramContacts((prev) =>
+      prev.map((c) => (c.id === chatId ? { ...c, unread: false } : c))
+    );
+    // Fire-and-forget: mark as read on Telegram
+    fetch(`/api/inbox/telegram/${chatId}/read`, { method: "POST" }).catch(() => {});
+  }, []);
 
   // ---- send message ----
   const handleSend = async () => {
@@ -171,7 +179,7 @@ export default function InboxPage() {
       }
       setMessages((prev) => [
         ...prev,
-        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true },
+        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true, isRead: false },
       ]);
       setMessageInput("");
       setTimeout(() => { if (activeChatId) fetchMessages(activeChatId); }, 1000);
@@ -410,9 +418,18 @@ export default function InboxPage() {
                             }`}
                           >
                             <p className="text-body-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                            <p className={`mt-1 text-micro ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>
-                              {formatTimestamp(msg.timestamp)}
-                            </p>
+                            <div className={`mt-1 flex items-center gap-1.5 ${msg.isMine ? "justify-end" : ""}`}>
+                              <p className={`text-micro ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>
+                                {formatTimestamp(msg.timestamp)}
+                              </p>
+                              {msg.isMine && (
+                                msg.isRead ? (
+                                  <CheckCheck className="h-3.5 w-3.5 text-[var(--color-accent)]" />
+                                ) : (
+                                  <CheckCheck className="h-3.5 w-3.5 text-[var(--color-on-primary)]/50" />
+                                )
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))
