@@ -53,11 +53,11 @@ export async function GET(request: NextRequest) {
     await client.connect();
 
     try {
-      // Resolve peer
+      // Resolve peer (same pattern as messages route)
       const peer = parseInt(chatId, 10);
       const dialogs = await client.getDialogs({ limit: 100 });
 
-      let resolvedPeer: unknown;
+      let resolvedPeer: unknown = "me";
       let found = false;
 
       for (const dialog of dialogs) {
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         if (!entity) continue;
         const entityId = String((entity as unknown as { id?: { toString(): string } }).id ?? "");
         if (entityId && chatId === entityId) {
-          resolvedPeer = await client.getInputEntity(entity);
+          resolvedPeer = dialog.inputEntity;
           found = true;
           break;
         }
@@ -84,15 +84,15 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Message not found" }, { status: 404 });
       }
 
-      const msg = messages[0] as unknown as { media?: unknown };
-      if (!msg.media) {
+      const msg = messages[0];
+      if (!(msg as { media?: unknown }).media) {
         return NextResponse.json({ error: "No media in message" }, { status: 404 });
       }
 
-      // Download media as buffer (use thumbnail size for photos when available)
-      const buffer = await client.downloadMedia(msg as Parameters<typeof client.downloadMedia>[0], {
-        // For photos, gramjs will use the smallest size automatically when we don't specify
-      });
+      // Download media as buffer
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const buffer = await client.downloadMedia(msg as any, {});
+      /* eslint-enable @typescript-eslint/no-explicit-any */
 
       if (!buffer || (Buffer.isBuffer(buffer) && buffer.length === 0)) {
         return NextResponse.json({ error: "Failed to download media" }, { status: 500 });
@@ -103,14 +103,14 @@ export async function GET(request: NextRequest) {
 
       // Determine content type
       let contentType = "application/octet-stream";
-      const mediaClass = (msg.media as { className?: string }).className || "";
-
-      if (mediaClass === "MessageMediaPhoto") {
-        contentType = "image/jpeg";
-      } else if (mediaClass === "MessageMediaDocument") {
-        const doc = (msg.media as { document?: { mimeType?: string } }).document;
-        if (doc?.mimeType) {
-          contentType = doc.mimeType;
+      const msgMedia = (msg as { media?: { className?: string; document?: { mimeType?: string } } }).media;
+      if (msgMedia) {
+        if (msgMedia.className === "MessageMediaPhoto") {
+          contentType = "image/jpeg";
+        } else if (msgMedia.className === "MessageMediaDocument") {
+          if (msgMedia.document?.mimeType) {
+            contentType = msgMedia.document.mimeType;
+          }
         }
       }
 

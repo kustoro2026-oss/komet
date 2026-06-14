@@ -54,11 +54,11 @@ export async function POST(
     await client.connect();
 
     try {
-      // Resolve peer entity
+      // Resolve peer (same pattern as messages route)
       const peer = parseInt(chatId, 10);
       const dialogs = await client.getDialogs({ limit: 100 });
 
-      let resolvedPeer: Parameters<typeof client.invoke>[0] extends { peer: infer P } ? P : unknown = undefined as never;
+      let resolvedPeer: unknown = "me";
       let found = false;
 
       for (const dialog of dialogs) {
@@ -66,19 +66,17 @@ export async function POST(
         if (!entity) continue;
         const entityId = String((entity as unknown as { id?: { toString(): string } }).id ?? "");
         if (entityId && chatId === entityId) {
-          // Use inputEntity directly from dialog (already an InputPeer)
-          resolvedPeer = dialog.inputEntity as typeof resolvedPeer;
+          resolvedPeer = dialog.inputEntity;
           found = true;
           break;
         }
       }
 
       if (!found) {
-        const entity = await client.getEntity(isNaN(peer) ? chatId : peer);
-        resolvedPeer = await client.getInputEntity(entity) as typeof resolvedPeer;
+        resolvedPeer = await client.getEntity(isNaN(peer) ? chatId : peer);
       }
 
-      // Mark conversation as read using Telegram API
+      // Mark conversation as read
       /* eslint-disable @typescript-eslint/no-explicit-any */
       await client.invoke(
         new Api.messages.ReadHistory({
