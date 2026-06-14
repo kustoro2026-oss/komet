@@ -15,6 +15,7 @@ import {
   EyeOff,
   Heart,
   Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
@@ -327,8 +328,8 @@ export default function InboxPage() {
           )}
 
           <div className="flex flex-col lg:flex-row gap-4">
-            {/* Conversation list */}
-            <div className="w-full lg:w-80 shrink-0">
+            {/* Conversation list - full width on mobile, sidebar on desktop */}
+            <div className={`w-full lg:w-80 shrink-0 ${activeChatId ? 'hidden lg:block' : ''}`}>
               {telegramLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
@@ -370,11 +371,19 @@ export default function InboxPage() {
               )}
             </div>
 
-            {/* Chat area */}
-            <div className="flex-1 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] flex flex-col min-h-[400px]">
+            {/* Chat area - hidden on mobile when no chat selected, full width on mobile when active */}
+            <div className={`flex-1 rounded-xl border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] flex flex-col min-h-[400px] ${!activeChatId ? 'hidden lg:flex' : ''}`}>
               {activeChatId ? (
                 <>
                   <div className="border-b border-[var(--color-ink-muted)] px-5 py-4 flex items-center gap-3">
+                    {/* Back button - mobile only */}
+                    <button
+                      onClick={() => { setActiveChatId(null); setActiveChatName(""); setActiveChatType(""); setMessages([]); }}
+                      className="lg:hidden rounded-lg p-1.5 -ml-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] transition-colors"
+                      aria-label="Back to conversations"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
                     <PlatformIcon platform="telegram" className="h-5 w-5" />
                     <div>
                       <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{activeChatName}</h3>
