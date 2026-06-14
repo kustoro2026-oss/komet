@@ -123,8 +123,8 @@ export async function GET(request: NextRequest) {
               const result = await client.invoke(
                 new Api.channels.GetForumTopics({
                   channel: new Api.InputChannel({
-                    channelId: channel.channelId?.value as unknown as bigint ?? BigInt(0),
-                    accessHash: channel.accessHash?.value as unknown as bigint ?? BigInt(0),
+                    channelId: (channel.channelId?.value as unknown as number | string) ?? 0,
+                    accessHash: (channel.accessHash?.value as unknown as number | string) ?? 0,
                   }),
                   offsetDate: 0,
                   offsetId: 0,
