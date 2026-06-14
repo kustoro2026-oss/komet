@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         followers: true,
         isActive: true,
         accessToken: true,
+        platformAccountId: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
       avatarUrl: a.avatarUrl,
       followers: a.followers,
       isActive: a.isActive,
+      platformAccountId: a.platformAccountId,
       connectedAt: a.createdAt.toISOString(),
     }));
 

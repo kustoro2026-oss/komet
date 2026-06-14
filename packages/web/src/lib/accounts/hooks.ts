@@ -16,6 +16,7 @@ interface Account {
   avatarUrl?: string;
   isActive: boolean;
   followers: number;
+  platformAccountId?: string | null;
   connectedAt: string;
 }
 
@@ -51,6 +52,34 @@ export function useDeleteAccount() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
         throw new Error(err.error || "Failed to delete account");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEYS.list });
+    },
+  });
+}
+
+// ===== Update Account =====
+export function useUpdateAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      accountId,
+      platformAccountId,
+    }: {
+      accountId: string;
+      platformAccountId: string;
+    }) => {
+      const res = await fetch(`/api/accounts/${accountId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platformAccountId }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || "Failed to update account");
       }
       return res.json();
     },

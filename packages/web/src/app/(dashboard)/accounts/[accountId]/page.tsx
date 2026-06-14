@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Activity, RefreshCw, Trash2, BarChart3, Loader2, AlertTriangle, ExternalLink, Send, Check, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Platform } from "@komet/shared";
 import { PLATFORM_LABELS } from "@komet/shared";
-import { useAccounts, useDeleteAccount } from "@/lib/accounts/hooks";
+import { useAccounts, useDeleteAccount, useUpdateAccount } from "@/lib/accounts/hooks";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 
 export default function AccountDetailPage() {
@@ -17,12 +17,72 @@ export default function AccountDetailPage() {
 
   const { data: accounts, isLoading } = useAccounts();
   const deleteAccountMutation = useDeleteAccount();
+  const updateAccountMutation = useUpdateAccount();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeView, setActiveView] = useState<"overview" | "posts">("overview");
 
+  // Telegram destination state
+  const [tgChats, setTgChats] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [tgChatsLoading, setTgChatsLoading] = useState(false);
+  const [showDestDropdown, setShowDestDropdown] = useState(false);
+  const [destUpdating, setDestUpdating] = useState(false);
+  const destDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showDestDropdown) return;
+    const handler = (e: MouseEvent) => {
+      if (destDropdownRef.current && !destDropdownRef.current.contains(e.target as Node)) {
+        setShowDestDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showDestDropdown]);
+  const [destUpdated, setDestUpdated] = useState(false);
+
   // Find the account from real API data
   const account = accounts?.find((a) => a.id === accountId);
+
+  // Fetch Telegram chats when viewing a Telegram account
+  useEffect(() => {
+    if (!account || account.platform !== "telegram" || !account.isActive) return;
+    let cancelled = false;
+    setTgChatsLoading(true);
+    fetch(`/api/accounts/connect/telegram/chats?accountId=${account.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setTgChats(data.chats || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setTgChatsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [account?.id, account?.platform, account?.isActive]);
+
+  const handleDestinationChange = async (chatId: string) => {
+    if (!account || destUpdating) return;
+    setDestUpdating(true);
+    try {
+      await updateAccountMutation.mutateAsync({ accountId: account.id, platformAccountId: chatId });
+      setDestUpdated(true);
+      setTimeout(() => setDestUpdated(false), 2000);
+    } catch {
+      // error handled by mutation state
+    } finally {
+      setDestUpdating(false);
+      setShowDestDropdown(false);
+    }
+  };
+
+  // Determine current destination display name
+  const currentDestName = account?.platform === "telegram"
+    ? tgChats.find((c) => c.id === (account as { platformAccountId?: string }).platformAccountId)?.name
+      || (account as { platformAccountId?: string }).platformAccountId
+      || "Saved Messages"
+    : null;
 
   if (isLoading) {
     return (
@@ -146,6 +206,96 @@ export default function AccountDetailPage() {
                 <p className="text-body-sm text-[var(--color-on-dark)]">{account.isActive ? t("active") : t("expired")}</p>
               </div>
             </div>
+
+            {/* Telegram Posting Destination */}
+            {account.platform === "telegram" && account.isActive && (
+              <div className="border-t border-[var(--color-ink-muted)] pt-4 mt-4">
+                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)] mb-1">
+                  Posting Destination
+                </h3>
+                <p className="text-caption text-[var(--color-on-dark-soft)] mb-3">
+                  Posts will be sent to the selected chat, group, or channel.
+                </p>
+
+                {tgChatsLoading ? (
+                  <div className="flex items-center gap-2 text-caption text-[var(--color-on-dark-muted)]">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading chats…
+                  </div>
+                ) : (
+                  <div className="relative" ref={destDropdownRef}>
+                    <button
+                      onClick={() => setShowDestDropdown(!showDestDropdown)}
+                      disabled={destUpdating}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-2.5 text-body-sm text-[var(--color-on-dark)] hover:border-[var(--color-primary)] disabled:opacity-50 transition-colors"
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <Send className="h-4 w-4 shrink-0 text-[var(--color-primary-light)]" />
+                        <span className="truncate">{currentDestName || "Saved Messages"}</span>
+                      </span>
+                      {destUpdating ? (
+                        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                      ) : (
+                        <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--color-on-dark-muted)] transition-transform ${showDestDropdown ? "rotate-180" : ""}`} />
+                      )}
+                    </button>
+
+                    {destUpdated && (
+                      <span className="mt-1.5 flex items-center gap-1 text-caption text-[var(--color-success)]">
+                        <Check className="h-3.5 w-3.5" />
+                        Destination updated
+                      </span>
+                    )}
+
+                    {updateAccountMutation.isError && (
+                      <span className="mt-1.5 text-caption text-[var(--color-error)]">
+                        {updateAccountMutation.error?.message || "Failed to update"}
+                      </span>
+                    )}
+
+                    {showDestDropdown && (
+                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl max-h-64 overflow-y-auto">
+                        {tgChats.length === 0 ? (
+                          <div className="px-4 py-3 text-caption text-[var(--color-on-dark-muted)]">No chats available</div>
+                        ) : (
+                          tgChats.map((chat) => {
+                            const isSelected = (account as { platformAccountId?: string }).platformAccountId === chat.id
+                              || (!(account as { platformAccountId?: string }).platformAccountId && chat.id === "me");
+                            return (
+                              <button
+                                key={chat.id}
+                                onClick={() => handleDestinationChange(chat.id)}
+                                disabled={destUpdating}
+                                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-body-sm transition-colors hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 ${
+                                  isSelected
+                                    ? "bg-[var(--color-primary)]/10 text-[var(--color-primary-light)]"
+                                    : "text-[var(--color-on-dark)]"
+                                }`}
+                              >
+                                <span className={`shrink-0 h-5 w-5 flex items-center justify-center rounded-full text-micro font-medium ${
+                                  chat.type === "group" || chat.type === "supergroup"
+                                    ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
+                                    : chat.type === "channel"
+                                      ? "bg-[var(--color-warning)]/20 text-[var(--color-warning)]"
+                                      : "bg-[var(--color-primary)]/20 text-[var(--color-primary-light)]"
+                                }`}>
+                                  {chat.type === "private" ? "@" : chat.type === "channel" ? "#" : "G"}
+                                </span>
+                                <span className="flex-1 truncate">{chat.name}</span>
+                                <span className="text-micro text-[var(--color-on-dark-muted)] capitalize shrink-0">
+                                  {chat.type === "supergroup" ? "group" : chat.type}
+                                </span>
+                                {isSelected && <Check className="h-4 w-4 shrink-0" />}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
