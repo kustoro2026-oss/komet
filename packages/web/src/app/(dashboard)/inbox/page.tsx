@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import {
   MessageCircle,
@@ -129,6 +129,9 @@ export default function InboxPage() {
   }, []);
 
   // ---- fetch messages for active chat ----
+  const pollingRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const fetchMessages = useCallback(async (chatId: string) => {
     setMessagesLoading(true);
     try {
@@ -143,6 +146,35 @@ export default function InboxPage() {
     }
   }, []);
 
+  // Silent poll — merges new messages without showing loading spinner
+  const pollMessages = useCallback(async (chatId: string) => {
+    if (pollingRef.current) return;
+    pollingRef.current = true;
+    try {
+      const res = await fetch(`/api/inbox/telegram/${chatId}/messages?limit=30`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const incoming: ChatMessage[] = data.messages || [];
+      setMessages((prev) => {
+        if (prev.length === 0) return incoming;
+        // Merge: keep existing messages, append new ones
+        const existingIds = new Set(prev.map((m) => m.id));
+        const newMsgs = incoming.filter((m) => !existingIds.has(m.id));
+        if (newMsgs.length === 0) return prev;
+        return [...prev, ...newMsgs];
+      });
+    } catch {
+      // silently ignore poll errors
+    } finally {
+      pollingRef.current = false;
+    }
+  }, []);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   useEffect(() => {
     fetchTelegram();
   }, [fetchTelegram]);
@@ -154,6 +186,23 @@ export default function InboxPage() {
       setMessages([]);
     }
   }, [activeChatId, fetchMessages]);
+
+  // Live polling every 5 seconds while a chat is open
+  useEffect(() => {
+    if (!activeChatId) return;
+    const interval = setInterval(() => {
+      pollMessages(activeChatId);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeChatId, pollMessages]);
+
+  // Also refresh conversation list every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchTelegram();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [fetchTelegram]);
 
   // ---- select a Telegram chat ----
   const selectChat = useCallback((chatId: string, name: string, type?: string) => {
@@ -481,6 +530,7 @@ export default function InboxPage() {
                         </div>
                       ))
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
                   <div className="border-t border-[var(--color-ink-muted)] p-4">
                     <div className="flex items-center gap-2">
