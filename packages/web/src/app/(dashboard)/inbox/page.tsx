@@ -329,7 +329,7 @@ export default function InboxPage() {
 
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Conversation list - full width on mobile, sidebar on desktop */}
-            <div className={`w-full lg:w-80 shrink-0 ${activeChatId ? 'hidden lg:block' : ''}`}>
+            <div className={`w-full lg:w-72 shrink-0 ${activeChatId ? 'hidden lg:block' : ''}`}>
               {telegramLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
@@ -430,11 +430,11 @@ export default function InboxPage() {
                       />
                       <button
                         disabled={!messageInput.trim() || sending}
-                        className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-3 py-2.5 sm:px-4 text-button-sm text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)] disabled:opacity-50 shrink-0"
                         onClick={handleSend}
                       >
                         {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        Send
+                        <span className="hidden sm:inline">Send</span>
                       </button>
                     </div>
                   </div>
