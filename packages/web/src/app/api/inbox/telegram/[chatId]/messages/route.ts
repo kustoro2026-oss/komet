@@ -19,6 +19,7 @@ interface ChatMessage {
   isRead: boolean;
   hasMedia: boolean;
   mediaType: string | null;
+  mediaData: string | null;
 }
 
 export async function GET(
@@ -109,9 +110,11 @@ export async function GET(
         }
       }
 
-      const messages: ChatMessage[] = (Array.isArray(messagesResult) ? messagesResult : [])
+      const rawMsgs = (Array.isArray(messagesResult) ? messagesResult : [])
         .filter((msg: unknown) => !!msg)
-        .reverse()
+        .reverse();
+
+      const messages: ChatMessage[] = rawMsgs
         .map((msg: unknown) => {
           const m = msg as {
             id?: number;
@@ -129,8 +132,6 @@ export async function GET(
           };
           const senderId = m.senderId?.toString?.() || m.fromId?.toString?.() || m.sender?.id?.toString?.() || "";
           const isMine = senderId === myId;
-          // For outgoing messages, check if read by recipient (message ID <= readOutboxMaxId)
-          // For incoming messages, they're always considered read since we're viewing them
           const isRead = isMine ? ((m.id ?? 0) <= readOutboxMaxId) : true;
 
           // Detect media type
@@ -175,10 +176,33 @@ export async function GET(
             isRead,
             hasMedia,
             mediaType,
+            mediaData: null,
           };
         });
 
-      return NextResponse.json({ messages });
+      // Download media for photo/gif messages in parallel (single connection)
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const enrichedMessages: ChatMessage[] = await Promise.all(
+        messages.map(async (msg, i) => {
+          let mediaData: string | null = null;
+          if (msg.hasMedia && (msg.mediaType === "photo" || msg.mediaType === "gif")) {
+            try {
+              const buffer = await client.downloadMedia(rawMsgs[i] as any, {});
+              if (buffer) {
+                const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer));
+                const ct = msg.mediaType === "gif" ? "image/gif" : "image/jpeg";
+                mediaData = `data:${ct};base64,${buf.toString("base64")}`;
+              }
+            } catch {
+              // silently fail — frontend will show placeholder
+            }
+          }
+          return { ...msg, mediaData };
+        }),
+      );
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+
+      return NextResponse.json({ messages: enrichedMessages });
     } finally {
       await client.disconnect().catch(() => {});
     }

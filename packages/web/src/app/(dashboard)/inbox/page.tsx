@@ -46,6 +46,7 @@ interface ChatMessage {
   isRead: boolean;
   hasMedia: boolean;
   mediaType: string | null;
+  mediaData: string | null;
 }
 
 type TabKey = "all" | "messages" | "comments";
@@ -184,7 +185,7 @@ export default function InboxPage() {
       }
       setMessages((prev) => [
         ...prev,
-        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true, isRead: false, hasMedia: false, mediaType: null },
+        { id: `temp-${Date.now()}`, from: "me", content: messageInput.trim(), timestamp: new Date().toISOString(), isMine: true, isRead: false, hasMedia: false, mediaType: null, mediaData: null },
       ]);
       setMessageInput("");
       setTimeout(() => { if (activeChatId) fetchMessages(activeChatId); }, 1000);
@@ -427,13 +428,19 @@ export default function InboxPage() {
                               <div className="mt-2">
                                 {msg.mediaType === "photo" || msg.mediaType === "gif" ? (
                                   <div className="rounded-lg overflow-hidden bg-black/20">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                      src={`/api/inbox/telegram/media?chatId=${activeChatId}&messageId=${msg.id}`}
-                                      alt={msg.content || "Photo"}
-                                      className="max-w-full max-h-64 object-contain rounded-lg"
-                                      loading="lazy"
-                                    />
+                                    {msg.mediaData ? (
+                                      /* eslint-disable-next-line @next/next/no-img-element */
+                                      <img
+                                        src={msg.mediaData}
+                                        alt={msg.content || "Photo"}
+                                        className="max-w-full max-h-64 object-contain rounded-lg"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center gap-2 px-3 py-2">
+                                        <FileText className={`h-5 w-5 ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`} />
+                                        <span className={`text-caption ${msg.isMine ? "text-[var(--color-on-primary)]/70" : "text-[var(--color-on-dark-muted)]"}`}>Photo</span>
+                                      </div>
+                                    )}
                                   </div>
                                 ) : msg.mediaType === "video" ? (
                                   <div className="flex items-center gap-2 rounded-lg bg-black/20 px-3 py-2">
