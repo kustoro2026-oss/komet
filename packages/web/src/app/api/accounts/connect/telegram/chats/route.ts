@@ -119,13 +119,10 @@ export async function GET(request: NextRequest) {
         const topicResults = await Promise.allSettled(
           forumDialogs.map(async (fd) => {
             try {
-              const channel = fd.inputChannel as { channelId?: { value?: unknown }; accessHash?: { value?: unknown } };
+              // inputEntity is InputPeerChannel which has channelId/accessHash matching InputChannel
               const result = await client.invoke(
                 new Api.channels.GetForumTopics({
-                  channel: new Api.InputChannel({
-                    channelId: (channel.channelId?.value as unknown as number | string) ?? 0,
-                    accessHash: (channel.accessHash?.value as unknown as number | string) ?? 0,
-                  }),
+                  channel: fd.inputChannel as Api.InputChannel,
                   offsetDate: 0,
                   offsetId: 0,
                   offsetTopic: 0,
