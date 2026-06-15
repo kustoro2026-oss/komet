@@ -79,7 +79,7 @@ export default function AccountDetailPage() {
   };
 
   // Determine current destination display name
-  const savedDest = (account as { platformAccountId?: string }).platformAccountId || "";
+  const savedDest = account?.platformAccountId || "";
   const destParts = savedDest ? savedDest.split("|") : [];
   const savedChatId = destParts[0] || "";
   const savedTopicId = destParts[1] ? parseInt(destParts[1], 10) : undefined;
