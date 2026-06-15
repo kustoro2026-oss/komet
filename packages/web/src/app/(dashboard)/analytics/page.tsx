@@ -51,14 +51,19 @@ export default function AnalyticsPage() {
     const totalPosts = publishedPosts.length;
     const totalComments = Math.round(totalEngagement * 0.12);
     const totalShares = Math.round(totalEngagement * 0.08);
-    const followerGrowth = activeAccounts * 42;
+
+    // Real follower count from database (sum across all accounts)
+    const totalFollowers = accounts.reduce(
+      (sum, a) => sum + ((a as { followers?: number }).followers ?? 0),
+      0
+    );
 
     return {
       impressions: totalEngagement * 6,
       engagement: totalEngagement,
       comments: totalComments,
       shares: totalShares,
-      followers: followerGrowth,
+      followers: totalFollowers,
       engagementRate:
         totalEngagement > 0
           ? ((totalEngagement / (totalEngagement * 6)) * 100).toFixed(1)

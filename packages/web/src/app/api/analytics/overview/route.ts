@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         displayName: true,
         avatarUrl: true,
         isActive: true,
+        followers: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
       displayName: string | null;
       avatarUrl: string | null;
       isActive: boolean;
+      followers: number;
     }>).map((a) => ({
       id: a.id,
       platform: a.platform,
@@ -71,6 +73,7 @@ export async function GET(request: NextRequest) {
       displayName: a.displayName,
       avatarUrl: a.avatarUrl,
       isActive: a.isActive,
+      followers: a.followers,
     }));
 
     const mappedPosts = (posts as Array<{

@@ -103,7 +103,7 @@ export default function PlatformAnalyticsPage() {
       likes: Math.round(totalEngagement * 0.45),
       comments: Math.round(totalEngagement * 0.12),
       shares: Math.round(totalEngagement * 0.08),
-      followers: 0,
+      followers: account?.followers ?? 0,
       totalPosts: platformPosts.length,
       publishedPosts: published.length,
     };

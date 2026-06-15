@@ -16,6 +16,7 @@ interface Account {
   displayName: string;
   avatarUrl?: string;
   isActive: boolean;
+  followers?: number;
 }
 
 interface PostItem {
@@ -93,12 +94,19 @@ export function useDailyMetrics(
   });
 }
 
-// ===== Follower stats (returns empty data — real follower data not available from DB) =====
+// ===== Follower stats =====
 export function useFollowerStats() {
   return useQuery<{ accounts: { accountId: string; platform: string; followers: number; growth: number }[] }>({
     queryKey: ["analytics", "follower-stats"],
-    queryFn: async () => ({ accounts: [] }),
-    staleTime: Infinity,
+    queryFn: async () => {
+      const res = await fetch("/api/analytics/follower-stats");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || "Failed to fetch follower stats");
+      }
+      return res.json();
+    },
+    staleTime: 30_000,
   });
 }
 
