@@ -242,8 +242,8 @@ async function publishToTelegram(
     await client.connect();
 
     try {
-      // Fetch dialogs to populate entity cache for getEntity() below.
-      await client.getDialogs({ limit: 100 });
+      // Fetch dialogs to populate entity cache AND to search for the target.
+      const dialogs = await client.getDialogs({ limit: 200 });
 
       // Parse chatId — may contain topic ID in format "chatId|topicId"
       let peer: string | number = "me";
@@ -258,14 +258,31 @@ async function publishToTelegram(
         peer = isNaN(numericId) ? actualChatId : numericId;
       }
 
-      // Resolve peer — use client.getEntity() which does proper resolution
-      // with access hashes, instead of relying on dialog.inputEntity.
+      // Resolve peer: search dialogs by entity ID first.
+      // Using the full entity from dialogs is more reliable than dialog.inputEntity
+      // because GramJS can convert the full entity to a proper InputPeer internally.
       let resolvedPeer: Parameters<typeof client.sendMessage>[0] = "me";
+      let foundInDialogs = false;
 
-      if (peer === "me") {
-        resolvedPeer = "me";
-      } else {
-        console.log("[Telegram Publisher] Resolving entity from server for:", peer);
+      if (peer !== "me") {
+        const targetId = String(peer);
+        for (const dialog of dialogs) {
+          const entity = dialog.entity;
+          if (!entity) continue;
+          const entityId = String((entity as unknown as { id?: { toString(): string } }).id ?? "");
+          if (entityId === targetId) {
+            // Pass the full entity to sendMessage — GramJS will call getInputEntity() on it
+            resolvedPeer = entity as Parameters<typeof client.sendMessage>[0];
+            foundInDialogs = true;
+            console.log("[Telegram Publisher] Found entity in dialogs:", entityId, "className:", (entity as { className?: string }).className);
+            break;
+          }
+        }
+      }
+
+      // Fallback: resolve entity from server via getEntity
+      if (!foundInDialogs && peer !== "me") {
+        console.log("[Telegram Publisher] Entity not in dialogs, resolving from server:", peer);
         resolvedPeer = await client.getEntity(peer);
       }
 
