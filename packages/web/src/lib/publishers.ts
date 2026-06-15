@@ -14,7 +14,7 @@ interface TwitterPublishResult {
 
 async function publishToTwitter(accessToken: string, text: string): Promise<TwitterPublishResult> {
   try {
-    const res = await fetch("https://api.twitter.com/2/tweets", {
+    const res = await fetch("https://api.x.com/2/tweets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -24,14 +24,34 @@ async function publishToTwitter(accessToken: string, text: string): Promise<Twit
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({})) as Record<string, unknown>;
-      return { success: false, error: (err?.detail || `Twitter API error: ${res.status}`) as string };
+      const body = await res.text();
+      let errMsg: string;
+      try {
+        const parsed = JSON.parse(body);
+        // X API v2 returns errors in array: { errors: [{ message: "...", code: ... }] }
+        // Or sometimes: { detail: "...", title: "...", type: "..." }
+        if (parsed.errors?.[0]?.message) {
+          errMsg = parsed.errors[0].message;
+        } else if (parsed.detail) {
+          errMsg = parsed.detail;
+        } else if (parsed.title) {
+          errMsg = parsed.title;
+        } else {
+          errMsg = `Twitter API error: ${res.status} ${body.slice(0, 200)}`;
+        }
+      } catch {
+        errMsg = `Twitter API error: ${res.status} ${body.slice(0, 200)}`;
+      }
+      console.error("[Twitter Publisher] Error:", res.status, errMsg);
+      return { success: false, error: errMsg };
     }
 
     const data = (await res.json()) as { data: { id: string } };
     return { success: true, postId: data.data.id };
   } catch (err: unknown) {
-    return { success: false, error: (err as Error)?.message || "Network error" };
+    const msg = (err as Error)?.message || "Network error";
+    console.error("[Twitter Publisher] Exception:", msg);
+    return { success: false, error: msg };
   }
 }
 
