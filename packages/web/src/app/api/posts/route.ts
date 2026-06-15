@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -226,6 +226,8 @@ export async function POST(request: NextRequest) {
     if (publishNow && post.platforms.length > 0) {
       const postId = post.id;
       const postContent = content;
+      const postTitle = title || "Posted via Komet";
+      const postTags = tags || [];
       const postMediaItems = mediaItems || [];
       // Clone platform data before we return the response
       const platformTasks = post.platforms.map((pp: { id: string; platform: string; account: { accessToken: string | null; platformAccountId: string | null }; customContent: string | null }) => ({
@@ -323,6 +325,40 @@ export async function POST(request: NextRequest) {
                   },
                 });
                 publishResults.push({ platform: "telegram", success: result.success, error: result.error });
+              }
+            } else if (task.platform === "youtube") {
+              if (!task.accessToken) {
+                publishResults.push({ platform: "youtube", success: false, error: "No access token" });
+              } else {
+                const mediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const videoItem = mediaArr.find((m: { type: string; url: string }) => m.type === "video" || m.url?.match(/\.(mp4|mov|webm)$/i));
+                if (!videoItem) {
+                  publishResults.push({ platform: "youtube", success: false, error: "No video attached — YouTube requires video content" });
+                  await prisma.postPlatform.update({
+                    where: { id: task.id },
+                    data: { status: "failed", errorMessage: "No video attached" },
+                  });
+                } else {
+                  console.log("[YouTube Publisher] Publishing to YouTube... video:", videoItem.url.substring(0, 80));
+                  const result = await publishToYouTube(
+                    task.accessToken,
+                    postTitle,
+                    text,
+                    videoItem.url,
+                    Array.isArray(postTags) ? (postTags as string[]) : []
+                  );
+                  console.log("[YouTube Publisher] Result:", JSON.stringify(result));
+                  await prisma.postPlatform.update({
+                    where: { id: task.id },
+                    data: {
+                      status: result.success ? "published" : "failed",
+                      publishedUrl: result.success ? `https://youtube.com/watch?v=${result.postId}` : null,
+                      publishedAt: result.success ? new Date() : null,
+                      errorMessage: result.error || null,
+                    },
+                  });
+                  publishResults.push({ platform: "youtube", success: result.success, error: result.error });
+                }
               }
             } else {
               // Platform publisher not implemented yet — mark as published (placeholder)

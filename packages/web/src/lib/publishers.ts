@@ -55,6 +55,129 @@ async function publishToTwitter(accessToken: string, text: string): Promise<Twit
   }
 }
 
+// ─── YouTube ───────────────────────────────────────────────────────
+
+interface YouTubePublishResult {
+  success: boolean;
+  postId?: string;
+  error?: string;
+}
+
+async function publishToYouTube(
+  accessToken: string,
+  title: string,
+  description: string,
+  videoUrl?: string,
+  tags?: string[],
+): Promise<YouTubePublishResult> {
+  try {
+    if (!videoUrl) {
+      console.error("[YouTube Publisher] No video URL provided");
+      return { success: false, error: "YouTube publishing requires a video file. Please attach a media file to your post." };
+    }
+
+    console.log("[YouTube Publisher] Downloading video from:", videoUrl);
+
+    // Step 1: Download the video from the media URL
+    const videoRes = await fetch(videoUrl);
+    if (!videoRes.ok) {
+      return { success: false, error: `Failed to download video from storage: ${videoRes.status}` };
+    }
+
+    const videoBuffer = await videoRes.arrayBuffer();
+    const videoSize = videoBuffer.byteLength;
+    const contentType = videoRes.headers.get("content-type") || "video/mp4";
+
+    console.log("[YouTube Publisher] Video downloaded, size:", videoSize, "type:", contentType);
+
+    // Step 2: Initiate resumable upload — get upload URL
+    const metadata = {
+      snippet: {
+        title: title || "Posted via Komet",
+        description: description || "",
+        tags: tags || [],
+        categoryId: "22", // People & Blogs
+      },
+      status: {
+        privacyStatus: "unlisted",
+        selfDeclaredMadeForKids: false,
+      },
+    };
+
+    console.log("[YouTube Publisher] Initiating resumable upload...");
+
+    const initRes = await fetch(
+      "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          "X-Upload-Content-Length": String(videoSize),
+          "X-Upload-Content-Type": contentType,
+        },
+        body: JSON.stringify(metadata),
+      },
+    );
+
+    if (!initRes.ok) {
+      const errBody = await initRes.text().catch(() => "");
+      let errMsg = `YouTube init error: ${initRes.status}`;
+      try {
+        const parsed = JSON.parse(errBody);
+        errMsg = parsed?.error?.message || parsed?.error?.errors?.[0]?.message || errMsg;
+      } catch {}
+      console.error("[YouTube Publisher] Init error:", initRes.status, errBody.slice(0, 300));
+      return { success: false, error: errMsg };
+    }
+
+    // Step 3: Get the upload URL from Location header
+    const uploadUrl = initRes.headers.get("Location");
+    if (!uploadUrl) {
+      console.error("[YouTube Publisher] No Location header in init response");
+      return { success: false, error: "No upload URL returned from YouTube" };
+    }
+
+    console.log("[YouTube Publisher] Upload URL obtained, uploading video...");
+
+    // Step 4: Upload the video binary
+    const uploadRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Length": String(videoSize),
+        "Content-Type": contentType,
+      },
+      body: videoBuffer,
+    });
+
+    if (!uploadRes.ok) {
+      const errBody = await uploadRes.text().catch(() => "");
+      console.error("[YouTube Publisher] Upload error:", uploadRes.status, errBody.slice(0, 300));
+      let errMsg = `YouTube upload error: ${uploadRes.status}`;
+      try {
+        const parsed = JSON.parse(errBody);
+        errMsg = parsed?.error?.message || errMsg;
+      } catch {}
+      return { success: false, error: errMsg };
+    }
+
+    // Step 5: Parse response to get video ID
+    const uploadData = (await uploadRes.json()) as { id?: string };
+    const videoId = uploadData?.id;
+
+    if (!videoId) {
+      return { success: false, error: "No video ID returned after upload" };
+    }
+
+    console.log("[YouTube Publisher] Upload complete, video ID:", videoId);
+    return { success: true, postId: videoId };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Network error";
+    console.error("[YouTube Publisher] Exception:", msg);
+    return { success: false, error: msg };
+  }
+}
+
 // ─── TikTok ────────────────────────────────────────────────────────
 
 interface TikTokStatusResult {
@@ -405,4 +528,4 @@ async function publishToTelegram(
   }
 }
 
-export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram };
+export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube };

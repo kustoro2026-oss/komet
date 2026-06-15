@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToTelegram } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -155,6 +155,54 @@ export async function POST(request: NextRequest) {
               data: { status: "failed", errorMessage: result.error },
             });
             results.push({ platform: "telegram", success: false, error: result.error });
+          }
+        } else if (platform.platform === "youtube") {
+          if (!platform.account.accessToken) {
+            results.push({ platform: "youtube", success: false, error: "No access token" });
+            continue;
+          }
+
+          // YouTube requires video
+          const mediaItems = (post.mediaItems || []) as Array<{ type: string; url: string }>;
+          const videoItem = mediaItems.find((m) => m.type === "video" || m.url.match(/\.(mp4|mov|webm)$/i));
+
+          if (!videoItem) {
+            results.push({
+              platform: "youtube",
+              success: false,
+              error: "No video attached — YouTube requires video content",
+            });
+            continue;
+          }
+
+          console.log("[Publish] YouTube: Publishing...", "video:", videoItem.url?.substring(0, 80));
+
+          const result = await publishToYouTube(
+            platform.account.accessToken,
+            post.title || "Posted via Komet",
+            text,
+            videoItem.url,
+            (post.tags as string[]) || [],
+          );
+
+          console.log("[Publish] YouTube: Result", JSON.stringify(result));
+
+          if (result.success) {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: "published",
+                publishedUrl: `https://youtube.com/watch?v=${result.postId}`,
+                publishedAt: new Date(),
+              },
+            });
+            results.push({ platform: "youtube", success: true });
+          } else {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: { status: "failed", errorMessage: result.error },
+            });
+            results.push({ platform: "youtube", success: false, error: result.error });
           }
         } else {
           // Platform not yet supported
