@@ -1,7 +1,7 @@
 // Inline publisher functions for social media platforms.
 // Moved to @komet/web after removing the @komet/api package.
 
-import { TelegramClient } from "telegram";
+import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
 
 // ─── Twitter ───────────────────────────────────────────────────────
@@ -268,9 +268,10 @@ async function publishToTelegram(
         peer = isNaN(numericId) ? actualChatId : numericId;
       }
 
-      // Resolve peer: search dialogs by entity ID first.
-      // Using the full entity from dialogs is more reliable than dialog.inputEntity
-      // because GramJS can convert the full entity to a proper InputPeer internally.
+      // Resolve peer: prefer username resolution (most reliable for userbots).
+      // GramJS userbots often fail to resolve raw numeric IDs for entities
+      // they haven't interacted with recently. Resolving by username first
+      // forces the server to return a fresh, valid peer reference.
       let resolvedPeer: Parameters<typeof client.sendMessage>[0] = "me";
       let foundInDialogs = false;
 
@@ -281,10 +282,31 @@ async function publishToTelegram(
           if (!entity) continue;
           const entityId = String((entity as unknown as { id?: { toString(): string } }).id ?? "");
           if (entityId === targetId) {
-            // Pass the full entity to sendMessage — GramJS will call getInputEntity() on it
-            resolvedPeer = entity as Parameters<typeof client.sendMessage>[0];
             foundInDialogs = true;
-            console.log("[Telegram Publisher] Found entity in dialogs:", entityId, "className:", (entity as { className?: string }).className);
+            const username = (entity as unknown as { username?: string }).username;
+
+            if (username) {
+              // Resolve by username — forces server to return a valid peer
+              console.log("[Telegram Publisher] Resolving by username:", username);
+              resolvedPeer = await client.getEntity(username);
+            } else {
+              // No username available — construct InputPeer from entity details
+              const className = (entity as { className?: string }).className || "";
+              console.log("[Telegram Publisher] No username, className:", className, "— constructing InputPeer");
+              /* eslint-disable @typescript-eslint/no-explicit-any */
+              if (className === "Chat") {
+                resolvedPeer = new Api.InputPeerChat({ chatId: entityId as any });
+              } else if (className === "Channel") {
+                const ch = entity as unknown as { accessHash?: { value?: unknown } };
+                resolvedPeer = new Api.InputPeerChannel({
+                  channelId: entityId as any,
+                  accessHash: (ch.accessHash?.value ?? 0) as any,
+                });
+              } else {
+                resolvedPeer = dialog.inputEntity;
+              }
+              /* eslint-enable @typescript-eslint/no-explicit-any */
+            }
             break;
           }
         }
