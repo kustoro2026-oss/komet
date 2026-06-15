@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       const dialogs = await client.getDialogs({ limit: 200 });
 
       const chats: ChatInfo[] = [];
-      const forumDialogs: { dialog: (typeof dialogs)[number]; chatId: string; inputChannel: unknown }[] = [];
+      const forumDialogs: { dialog: (typeof dialogs)[number]; chatId: string; inputChannel: Api.InputChannel }[] = [];
 
       for (const dialog of dialogs) {
         const entity = dialog.entity;
@@ -104,7 +104,14 @@ export async function GET(request: NextRequest) {
           chats.push({ id, name, type, username, isForum });
           // Collect forum groups for topic fetching
           if (isForum) {
-            forumDialogs.push({ dialog, chatId: id, inputChannel: dialog.inputEntity });
+            const ch = entity as unknown as { accessHash?: { value?: unknown } };
+            /* eslint-disable @typescript-eslint/no-explicit-any */
+            const inputChannel = new Api.InputChannel({
+              channelId: id as any,
+              accessHash: (ch.accessHash?.value ?? 0) as any,
+            });
+            /* eslint-enable @typescript-eslint/no-explicit-any */
+            forumDialogs.push({ dialog, chatId: id, inputChannel });
           }
           continue;
         } else {
@@ -119,10 +126,10 @@ export async function GET(request: NextRequest) {
         const topicResults = await Promise.allSettled(
           forumDialogs.map(async (fd) => {
             try {
-              // inputEntity is InputPeerChannel which has channelId/accessHash matching InputChannel
+              // inputChannel is now a proper Api.InputChannel (not InputPeerChannel)
               const result = await client.invoke(
                 new Api.channels.GetForumTopics({
-                  channel: fd.inputChannel as Api.InputChannel,
+                  channel: fd.inputChannel,
                   offsetDate: 0,
                   offsetId: 0,
                   offsetTopic: 0,

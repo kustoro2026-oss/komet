@@ -286,9 +286,24 @@ async function publishToTelegram(
             const username = (entity as unknown as { username?: string }).username;
 
             if (username) {
-              // Resolve by username — forces server to return a valid peer
+              // Resolve by username — forces server to return a valid, fresh peer.
+              // Extract accessHash from the resolved entity so we can construct
+              // a proper InputPeer (critical for Channels/forums).
               console.log("[Telegram Publisher] Resolving by username:", username);
-              resolvedPeer = await client.getEntity(username);
+              const resolved = await client.getEntity(username);
+              const resolvedClass = (resolved as { className?: string }).className || "";
+              if (resolvedClass === "Channel") {
+                const ch = resolved as unknown as { id?: { toString(): string }; accessHash?: { value?: unknown } };
+                console.log("[Telegram Publisher] Resolved Channel, accessHash:", ch.accessHash?.value);
+                /* eslint-disable @typescript-eslint/no-explicit-any */
+                resolvedPeer = new Api.InputPeerChannel({
+                  channelId: (ch.id?.toString() ?? entityId) as any,
+                  accessHash: (ch.accessHash?.value ?? 0) as any,
+                });
+                /* eslint-enable @typescript-eslint/no-explicit-any */
+              } else {
+                resolvedPeer = resolved as Parameters<typeof client.sendMessage>[0];
+              }
             } else {
               // No username available — construct InputPeer from entity details
               const className = (entity as { className?: string }).className || "";
