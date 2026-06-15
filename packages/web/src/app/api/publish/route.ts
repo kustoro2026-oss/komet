@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
+          console.log("[Telegram Publish] Sending to chatId:", platform.account.platformAccountId || "(none)");
           const result = await publishToTelegram(
             platform.account.accessToken,
             text,

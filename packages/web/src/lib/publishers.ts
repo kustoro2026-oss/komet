@@ -233,6 +233,16 @@ async function publishToTelegram(
     return { success: false, error: "Telegram API credentials not configured" };
   }
 
+  console.log("[Telegram Publisher] publishToTelegram called with chatId:", chatId || "(undefined)");
+
+  // If chatId is a phone number (starts with +), default to "me".
+  // Phone numbers are not valid chat destinations.
+  let effectiveChatId = chatId;
+  if (effectiveChatId && effectiveChatId.startsWith("+")) {
+    console.log("[Telegram Publisher] chatId is a phone number, defaulting to Saved Messages");
+    effectiveChatId = "me";
+  }
+
   try {
     const stringSession = new StringSession(sessionString);
     const client = new TelegramClient(stringSession, TG_API_ID, TG_API_HASH, {
@@ -248,11 +258,11 @@ async function publishToTelegram(
       // Parse chatId — may contain topic ID in format "chatId|topicId"
       let peer: string | number = "me";
       let forumTopicId: number | undefined;
-      if (chatId && chatId !== "me") {
-        const pipeIdx = chatId.indexOf("|");
-        const actualChatId = pipeIdx >= 0 ? chatId.substring(0, pipeIdx) : chatId;
+      if (effectiveChatId && effectiveChatId !== "me") {
+        const pipeIdx = effectiveChatId.indexOf("|");
+        const actualChatId = pipeIdx >= 0 ? effectiveChatId.substring(0, pipeIdx) : effectiveChatId;
         if (pipeIdx >= 0) {
-          forumTopicId = parseInt(chatId.substring(pipeIdx + 1), 10) || undefined;
+          forumTopicId = parseInt(effectiveChatId.substring(pipeIdx + 1), 10) || undefined;
         }
         const numericId = parseInt(actualChatId, 10);
         peer = isNaN(numericId) ? actualChatId : numericId;
@@ -292,20 +302,40 @@ async function publishToTelegram(
         sendOpts.replyTo = forumTopicId;
       }
 
-      // Try to send. If PEER_ID_INVALID, the group may be a forum — retry with General topic.
+      // Try to send. If PEER_ID_INVALID, retry with General topic (forum).
+      // If that also fails, fall back to "me" (Saved Messages).
       try {
         const result = await client.sendMessage(resolvedPeer, sendOpts);
         const messageId = (result as unknown as { id?: number })?.id;
         return { success: true, messageId };
       } catch (sendErr: unknown) {
         const sendMsg = sendErr instanceof Error ? sendErr.message : String(sendErr);
+        console.error("[Telegram Publisher] sendMessage failed:", sendMsg);
+
         if (sendMsg.includes("PEER_ID_INVALID") && !sendOpts.replyTo) {
-          console.log("[Telegram Publisher] PEER_ID_INVALID — retrying with General topic (forum group)");
+          console.log("[Telegram Publisher] Retrying with General topic (forum group)");
           sendOpts.replyTo = 1;
-          const retryResult = await client.sendMessage(resolvedPeer, sendOpts);
-          const retryMessageId = (retryResult as unknown as { id?: number })?.id;
-          return { success: true, messageId: retryMessageId };
+          try {
+            const retryResult = await client.sendMessage(resolvedPeer, sendOpts);
+            const retryMessageId = (retryResult as unknown as { id?: number })?.id;
+            return { success: true, messageId: retryMessageId };
+          } catch (retryErr: unknown) {
+            console.error("[Telegram Publisher] Retry also failed:", retryErr instanceof Error ? retryErr.message : String(retryErr));
+          }
         }
+
+        // Ultimate fallback: send to "me" (Saved Messages) if peer was not "me"
+        if (peer !== "me") {
+          console.log("[Telegram Publisher] Falling back to Saved Messages");
+          try {
+            const fbResult = await client.sendMessage("me", { message: text });
+            const fbMessageId = (fbResult as unknown as { id?: number })?.id;
+            return { success: true, messageId: fbMessageId };
+          } catch (fbErr: unknown) {
+            console.error("[Telegram Publisher] Fallback to 'me' also failed:", fbErr instanceof Error ? fbErr.message : String(fbErr));
+          }
+        }
+
         throw sendErr;
       }
     } finally {

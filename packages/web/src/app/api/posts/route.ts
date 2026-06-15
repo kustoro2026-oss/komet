@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
               if (!task.accessToken) {
                 publishResults.push({ platform: "telegram", success: false, error: "No session available. Please reconnect Telegram." });
               } else {
-                console.log("[Telegram Publisher] Sending message...");
+                console.log("[Telegram Publisher] Sending message to chatId:", task.platformAccountId || "(none)");
                 const result = await publishToTelegram(
                   task.accessToken,
                   text,
