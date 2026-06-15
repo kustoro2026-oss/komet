@@ -627,7 +627,7 @@ export function getPlatformAuthUrl(
     redirect_uri: options.redirectUri,
     response_type: "code",
     scope: cfg.scopes.join(scopeSeparator),
-    state: JSON.stringify({ s: options.state, p: platform, pid: options.profileId }),
+    state: options.state,
     ...cfg.extraAuthorizeParams,
   });
 
