@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch boards from Pinterest API (paginated, limit 100)
-    const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api-sandbox.pinterest.com";
+    const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api.pinterest.com";
     const res = await fetch(
       `${pinterestApiBase}/v5/boards?page_size=100`,
       {
