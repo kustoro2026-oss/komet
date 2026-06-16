@@ -290,7 +290,9 @@ export async function POST(request: NextRequest) {
                 publishResults.push({ platform: "discord", success: false, error: "No webhook URL. Please reconnect Discord." });
               } else {
                 console.log("[Discord Publisher] Sending via webhook...");
-                const result = await publishToDiscord(task.accessToken, text);
+                const mediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const imageItem = mediaArr.find((m: { type: string; url: string }) => m.type === "image" || m.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+                const result = await publishToDiscord(task.accessToken, text, imageItem?.url);
                 console.log("[Discord Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({
                   where: { id: task.id },

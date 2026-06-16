@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
     // Publish to each platform
     for (const platform of post.platforms) {
       const text = platform.customContent || post.content;
+      // Get media items for platforms that support attachments
+      const mediaItems = (post.mediaItems || []) as Array<{ type: string; url: string }>;
+      const imageItem = mediaItems.find((m) => m.type === "image" || m.url.match(/.(jpg|jpeg|png|gif|webp)$/i));
 
       try {
         if (platform.platform === "twitter") {
@@ -233,7 +236,11 @@ export async function POST(request: NextRequest) {
           }
 
           console.log("[Discord Publisher] Sending via webhook...");
-          const result = await publishToDiscord(platform.account.accessToken, text);
+          const result = await publishToDiscord(
+            platform.account.accessToken,
+            text,
+            imageItem?.url,
+          );
           console.log("[Discord Publisher] Result:", JSON.stringify(result));
 
           if (result.success) {

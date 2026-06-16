@@ -286,16 +286,29 @@ interface DiscordPublishResult {
 async function publishToDiscord(
   webhookUrl: string,
   content: string,
+  mediaUrl?: string,
 ): Promise<DiscordPublishResult> {
   try {
     // Add ?wait=true to get message object back (otherwise Discord returns 204 No Content)
     const url = webhookUrl.includes("?")
       ? `${webhookUrl}&wait=true`
       : `${webhookUrl}?wait=true`;
+
+    const payload: Record<string, unknown> = { content };
+
+    // If there's a media URL, add as embed (Discord webhook supports image embeds)
+    if (mediaUrl) {
+      payload.embeds = [
+        {
+          image: { url: mediaUrl },
+        },
+      ];
+    }
+
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
