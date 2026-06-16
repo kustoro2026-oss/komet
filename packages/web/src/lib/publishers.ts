@@ -329,13 +329,19 @@ async function publishToDiscord(
 
     // Handle empty response (204 No Content without wait=true) or parse JSON
     const text = await res.text().catch(() => "");
-    if (!text) {
+    if (!text.trim()) {
       console.log("[Discord Webhook] Message sent (no body returned)");
       return { success: true };
     }
-    const data = JSON.parse(text) as { id?: string };
-    console.log("[Discord Webhook] Message sent, id:", data.id);
-    return { success: true, messageId: data.id };
+    try {
+      const data = JSON.parse(text) as { id?: string };
+      console.log("[Discord Webhook] Message sent, id:", data.id);
+      return { success: true, messageId: data.id };
+    } catch {
+      // Response was not JSON but request succeeded
+      console.log("[Discord Webhook] Message sent (non-JSON response)");
+      return { success: true };
+    }
   } catch (err: unknown) {
     console.error("[Discord Webhook] Error:", (err as Error)?.message);
     return { success: false, error: (err as Error)?.message || "Network error" };
