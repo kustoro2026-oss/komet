@@ -285,18 +285,12 @@ export async function POST(request: NextRequest) {
                 publishResults.push({ platform: "twitter", success: result.success, error: result.error });
               }
             } else if (task.platform === "discord") {
-              // Discord: accessToken stores bot token, platformAccountId stores channel ID
+              // Discord: accessToken now stores webhook URL (from webhook.incoming OAuth)
               if (!task.accessToken) {
-                publishResults.push({ platform: "discord", success: false, error: "No bot token. Please reconnect Discord." });
-              } else if (!task.platformAccountId) {
-                publishResults.push({ platform: "discord", success: false, error: "No channel selected. Please configure a Discord channel." });
-                await prisma.postPlatform.update({
-                  where: { id: task.id },
-                  data: { status: "failed", errorMessage: "No channel selected." },
-                });
+                publishResults.push({ platform: "discord", success: false, error: "No webhook URL. Please reconnect Discord." });
               } else {
-                console.log("[Discord Publisher] Sending via bot...");
-                const result = await publishToDiscord(task.accessToken, text, task.platformAccountId);
+                console.log("[Discord Publisher] Sending via webhook...");
+                const result = await publishToDiscord(task.accessToken, text);
                 console.log("[Discord Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({
                   where: { id: task.id },

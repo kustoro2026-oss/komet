@@ -442,30 +442,31 @@ register({
   authorizeUrl: "https://discord.com/oauth2/authorize",
   tokenUrl: "https://discord.com/api/oauth2/token",
   profileUrl: "https://discord.com/api/users/@me",
-  scopes: ["identify", "guilds", "bot"],
+  scopes: ["identify", "guilds", "webhook.incoming"],
   tokenAuth: "body",
   clientIdEnv: "DISCORD_CLIENT_ID",
   clientSecretEnv: "DISCORD_CLIENT_SECRET",
   usePkce: false,
   redirectPath: "/api/oauth/callback",
-  extraAuthorizeParams: { response_type: "code", permissions: "3072" },
+  extraAuthorizeParams: { response_type: "code" },
   tokenContentType: "form",
   transformToken: (raw) => {
-    // bot scope returns bot data in token response
-    const botToken = (raw.bot as { token?: string } | undefined)?.token || "";
-    const userOAuthToken = raw.access_token as string;
-    // AccessToken stores bot token (used by publishToDiscord via Bot API)
-    // RefreshToken stores the user OAuth token (used by channels API for guild listing)
-    // platformAccountId stores the selected text channel ID (set after channel selection)
+    // webhook.incoming returns webhook object in token response
+    // Format: { url: "https://discord.com/api/webhooks/...", channel_id: "..." }
+    const webhook = raw.webhook as { url?: string; channel_id?: string } | undefined;
+    const oauthToken = raw.access_token as string;
+    // AccessToken stores webhook URL (used by publishToDiscord)
+    // RefreshToken stores the OAuth bearer token (used by channels API for guild listing)
+    // Discord webhook.incoming doesn't return refresh_token, so this field is safe to reuse.
     return {
-      accessToken: botToken,
-      refreshToken: userOAuthToken,
+      accessToken: webhook?.url || oauthToken,
+      refreshToken: oauthToken,
       expiresIn: raw.expires_in as number | undefined,
     };
   },
-  fetchProfile: async (_botToken, tokenResponse) => {
-    // Use user OAuth access_token for user profile API
-    const rawToken = (tokenResponse?.access_token as string) || _botToken;
+  fetchProfile: async (_webhookUrl, tokenResponse) => {
+    // accessToken stores webhook URL; use raw token from tokenResponse for API calls
+    const rawToken = (tokenResponse?.access_token as string) || _webhookUrl;
     const res = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${rawToken}` },
     });
