@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToDiscord, publishToPinterest } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToDiscord, publishToPinterest, publishToLinkedIn } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -297,6 +297,40 @@ export async function POST(request: NextRequest) {
               data: { status: "failed", errorMessage: result.error },
             });
             results.push({ platform: "pinterest", success: false, error: result.error });
+          }
+        } else if (platform.platform === "linkedin") {
+          if (!platform.account.accessToken) {
+            results.push({ platform: "linkedin", success: false, error: "No access token" });
+            continue;
+          }
+          if (!platform.account.platformAccountId) {
+            results.push({ platform: "linkedin", success: false, error: "No profile ID. Please reconnect." });
+            continue;
+          }
+
+          console.log("[LinkedIn Publisher] Creating post...");
+          const result = await publishToLinkedIn(
+            platform.account.accessToken,
+            text,
+            platform.account.platformAccountId,
+          );
+
+          if (result.success) {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: "published",
+                publishedUrl: `https://www.linkedin.com/feed/update/${result.postId}`,
+                publishedAt: new Date(),
+              },
+            });
+            results.push({ platform: "linkedin", success: true });
+          } else {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: { status: "failed", errorMessage: result.error },
+            });
+            results.push({ platform: "linkedin", success: false, error: result.error });
           }
         } else {
           // Platform not yet supported

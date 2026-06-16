@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest, publishToLinkedIn } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -432,6 +432,34 @@ export async function POST(request: NextRequest) {
                   },
                 });
                 publishResults.push({ platform: "pinterest", success: result.success, error: result.error });
+              }
+            } else if (task.platform === "linkedin") {
+              if (!task.accessToken) {
+                publishResults.push({ platform: "linkedin", success: false, error: "No access token" });
+              } else if (!task.platformAccountId) {
+                publishResults.push({ platform: "linkedin", success: false, error: "No profile ID. Please reconnect." });
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: { status: "failed", errorMessage: "No profile ID" },
+                });
+              } else {
+                console.log("[LinkedIn Publisher] Creating post...");
+                const result = await publishToLinkedIn(
+                  task.accessToken,
+                  text,
+                  task.platformAccountId,
+                );
+                console.log("[LinkedIn Publisher] Result:", JSON.stringify(result));
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: {
+                    status: result.success ? "published" : "failed",
+                    publishedUrl: result.success ? `https://www.linkedin.com/feed/update/${result.postId}` : null,
+                    publishedAt: result.success ? new Date() : null,
+                    errorMessage: result.error || null,
+                  },
+                });
+                publishResults.push({ platform: "linkedin", success: result.success, error: result.error });
               }
             } else {
               // Platform publisher not implemented yet — mark as published (placeholder)

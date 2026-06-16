@@ -679,4 +679,67 @@ async function publishToPinterest(
   }
 }
 
-export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest };
+// ─── LinkedIn ────────────────────────────────────────────────────
+
+interface LinkedInPublishResult {
+  success: boolean;
+  postId?: string;
+  error?: string;
+}
+
+/**
+ * Publish a text post to LinkedIn personal profile.
+ * Uses w_member_social scope.
+ * platformAccountId stores the LinkedIn person ID (sub from OpenID).
+ */
+async function publishToLinkedIn(
+  accessToken: string,
+  text: string,
+  personId?: string,
+): Promise<LinkedInPublishResult> {
+  if (!personId) {
+    return { success: false, error: "No LinkedIn profile ID. Please reconnect." };
+  }
+
+  try {
+    const author = `urn:li:person:${personId}`;
+
+    const res = await fetch("https://api.linkedin.com/rest/posts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+        "Linkedin-Version": "202606",
+      },
+      body: JSON.stringify({
+        author,
+        commentary: text,
+        visibility: "PUBLIC",
+        distribution: {
+          feedDistribution: "MAIN_FEED",
+          targetEntities: [],
+          thirdPartyDistributionChannels: [],
+        },
+        lifecycleState: "PUBLISHED",
+        isReshareDisabledByAuthor: false,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => "");
+      console.error("[LinkedIn Post] Error:", res.status, err);
+      return { success: false, error: `LinkedIn error: ${res.status} ${err.substring(0, 200)}` };
+    }
+
+    // Post ID is in x-restli-id response header
+    const postId = res.headers.get("x-restli-id") || "";
+    console.log("[LinkedIn Post] Created, id:", postId);
+    return { success: true, postId };
+  } catch (err: unknown) {
+    console.error("[LinkedIn Post] Error:", (err as Error)?.message);
+    return { success: false, error: (err as Error)?.message || "Network error" };
+  }
+}
+
+export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest, publishToLinkedIn };
