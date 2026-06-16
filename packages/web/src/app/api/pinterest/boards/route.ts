@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch boards from Pinterest API (paginated, limit 100)
-    const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api.pinterest.com";
+    const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api-sandbox.pinterest.com";
     const boardsUrl = `${pinterestApiBase}/v5/boards?page_size=100`;
     console.log("[Pinterest Boards] Fetching from:", boardsUrl);
     const res = await fetch(
@@ -70,6 +70,39 @@ export async function GET(request: NextRequest) {
       description: b.description || "",
       privacy: b.privacy || "PUBLIC",
     }));
+
+    // Auto-create a default board in sandbox if no boards exist
+    if (boards.length === 0) {
+      console.log("[Pinterest Boards] No boards found, creating default board in sandbox...");
+      const createRes = await fetch(`${pinterestApiBase}/v5/boards`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${account.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "Komet Pins",
+          description: "Pins published from Komet",
+          privacy: "PUBLIC",
+        }),
+      });
+
+      console.log("[Pinterest Boards] Create board status:", createRes.status);
+
+      if (createRes.ok) {
+        const newBoard = (await createRes.json()) as PinterestBoard;
+        console.log("[Pinterest Boards] Created board:", newBoard.id, newBoard.name);
+        boards.push({
+          id: newBoard.id,
+          name: newBoard.name,
+          description: newBoard.description || "",
+          privacy: newBoard.privacy || "PUBLIC",
+        });
+      } else {
+        const errText = await createRes.text().catch(() => "");
+        console.error("[Pinterest Boards] Failed to create board:", errText.substring(0, 500));
+      }
+    }
 
     return NextResponse.json({ boards });
   } catch (err) {
