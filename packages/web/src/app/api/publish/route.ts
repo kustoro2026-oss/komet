@@ -313,6 +313,7 @@ export async function POST(request: NextRequest) {
             platform.account.accessToken,
             text,
             platform.account.platformAccountId,
+            imageItem?.url,
           );
 
           if (result.success) {

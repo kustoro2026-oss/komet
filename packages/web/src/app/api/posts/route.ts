@@ -444,10 +444,13 @@ export async function POST(request: NextRequest) {
                 });
               } else {
                 console.log("[LinkedIn Publisher] Creating post...");
+                const linkedinMediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const linkedinImageItem = linkedinMediaArr.find((m: { type: string; url: string }) => m.type === "image" || m.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
                 const result = await publishToLinkedIn(
                   task.accessToken,
                   text,
                   task.platformAccountId,
+                  linkedinImageItem?.url,
                 );
                 console.log("[LinkedIn Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({

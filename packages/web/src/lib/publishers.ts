@@ -696,6 +696,7 @@ async function publishToLinkedIn(
   accessToken: string,
   text: string,
   personId?: string,
+  mediaUrl?: string,
 ): Promise<LinkedInPublishResult> {
   if (!personId) {
     return { success: false, error: "No LinkedIn profile ID. Please reconnect." };
@@ -703,27 +704,102 @@ async function publishToLinkedIn(
 
   try {
     const author = `urn:li:person:${personId}`;
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "X-Restli-Protocol-Version": "2.0.0",
+      "Linkedin-Version": "202606",
+    };
+
+    let imageUrn: string | undefined;
+
+    // If mediaUrl is provided, upload image via 3-step LinkedIn flow
+    if (mediaUrl) {
+      try {
+        // Step 1: Register image upload
+        const registerRes = await fetch(
+          "https://api.linkedin.com/rest/images?action=initializeUpload",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              initializeUploadRequest: {
+                owner: author,
+              },
+            }),
+          }
+        );
+
+        if (!registerRes.ok) {
+          const regErr = await registerRes.text().catch(() => "");
+          console.error("[LinkedIn Media] Register upload failed:", registerRes.status, regErr);
+        } else {
+          const regData = (await registerRes.json()) as {
+            value?: { uploadUrl?: string; image?: string };
+          };
+          const uploadUrl = regData?.value?.uploadUrl;
+          imageUrn = regData?.value?.image;
+
+          if (uploadUrl && imageUrn) {
+            // Step 2: Download image from mediaUrl
+            const imgRes = await fetch(mediaUrl);
+            if (!imgRes.ok) {
+              console.error("[LinkedIn Media] Failed to download image from:", mediaUrl);
+              imageUrn = undefined;
+            } else {
+              const imgBuffer = await imgRes.arrayBuffer();
+
+              // Upload binary to LinkedIn
+              const uploadRes = await fetch(uploadUrl, {
+                method: "PUT",
+                headers: { "Content-Type": "image/jpeg" },
+                body: imgBuffer,
+              });
+
+              if (!uploadRes.ok) {
+                const upErr = await uploadRes.text().catch(() => "");
+                console.error("[LinkedIn Media] Binary upload failed:", uploadRes.status, upErr);
+                imageUrn = undefined;
+              } else {
+                console.log("[LinkedIn Media] Image uploaded successfully:", imageUrn);
+              }
+            }
+          }
+        }
+      } catch (mediaErr) {
+        console.error("[LinkedIn Media] Error during image upload:", (mediaErr as Error)?.message);
+        // Continue with text-only post if image upload fails
+        imageUrn = undefined;
+      }
+    }
+
+    // Step 3: Create post (with or without media)
+    const postBody: Record<string, unknown> = {
+      author,
+      commentary: text,
+      visibility: "PUBLIC",
+      distribution: {
+        feedDistribution: "MAIN_FEED",
+        targetEntities: [],
+        thirdPartyDistributionChannels: [],
+      },
+      lifecycleState: "PUBLISHED",
+      isReshareDisabledByAuthor: false,
+    };
+
+    if (imageUrn) {
+      postBody.content = {
+        media: {
+          id: imageUrn,
+          altText: "Image posted from Komet",
+        },
+      };
+    }
 
     const res = await fetch("https://api.linkedin.com/rest/posts", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        "X-Restli-Protocol-Version": "2.0.0",
-        "Linkedin-Version": "202606",
-      },
-      body: JSON.stringify({
-        author,
-        commentary: text,
-        visibility: "PUBLIC",
-        distribution: {
-          feedDistribution: "MAIN_FEED",
-          targetEntities: [],
-          thirdPartyDistributionChannels: [],
-        },
-        lifecycleState: "PUBLISHED",
-        isReshareDisabledByAuthor: false,
-      }),
+      headers,
+      body: JSON.stringify(postBody),
     });
 
     if (!res.ok) {
