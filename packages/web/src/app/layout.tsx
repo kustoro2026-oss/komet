@@ -33,6 +33,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   other: {
     "mobile-web-app-capable": "yes",
+    "p:domain_verify": "aa63536e18ad401966953d152a8174d2",
   },
   appleWebApp: {
     capable: true,

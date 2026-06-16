@@ -615,4 +615,68 @@ async function publishToTelegram(
   }
 }
 
-export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken };
+// ─── Pinterest ────────────────────────────────────────────────────
+
+interface PinterestPublishResult {
+  success: boolean;
+  pinId?: string;
+  error?: string;
+}
+
+/**
+ * Publish a pin to Pinterest.
+ * Uses boards:write and pins:write scopes.
+ * boardId should be stored in platformAccountId.
+ */
+async function publishToPinterest(
+  accessToken: string,
+  text: string,
+  boardId?: string,
+  mediaUrl?: string,
+): Promise<PinterestPublishResult> {
+  if (!boardId) {
+    return { success: false, error: "No board selected. Please reconnect Pinterest." };
+  }
+  if (!mediaUrl) {
+    return { success: false, error: "Pinterest requires an image. Attach an image to your post." };
+  }
+
+  try {
+    // Split text: first line as title (max 100 chars), rest as description
+    const lines = text.split("\n");
+    const title = lines[0]?.substring(0, 100) || "New Pin";
+    const description = lines.slice(1).join("\n").substring(0, 500);
+
+    const res = await fetch("https://api.pinterest.com/v5/pins", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        board_id: boardId,
+        title,
+        description,
+        media_source: {
+          source_type: "image_url",
+          url: mediaUrl,
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => "");
+      console.error("[Pinterest Pin] Error:", res.status, err);
+      return { success: false, error: `Pinterest error: ${res.status} ${err.substring(0, 200)}` };
+    }
+
+    const data = (await res.json()) as { id?: string };
+    console.log("[Pinterest Pin] Created, id:", data.id);
+    return { success: true, pinId: data.id };
+  } catch (err: unknown) {
+    console.error("[Pinterest Pin] Error:", (err as Error)?.message);
+    return { success: false, error: (err as Error)?.message || "Network error" };
+  }
+}
+
+export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest };

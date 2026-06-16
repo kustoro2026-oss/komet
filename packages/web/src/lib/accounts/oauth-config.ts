@@ -602,6 +602,47 @@ register({
   },
 });
 
+// ──────────────────────────────────────────
+// 13. Pinterest — OAuth 2.0
+// ──────────────────────────────────────────
+register({
+  platform: "pinterest",
+  label: "Pinterest",
+  authorizeUrl: "https://www.pinterest.com/oauth/",
+  tokenUrl: "https://api.pinterest.com/v5/oauth/token",
+  profileUrl: "https://api.pinterest.com/v5/user_account",
+  scopes: ["boards:read", "boards:write", "pins:read", "pins:write", "user_accounts:read"],
+  tokenAuth: "basic",
+  clientIdEnv: "PINTEREST_CLIENT_ID",
+  clientSecretEnv: "PINTEREST_CLIENT_SECRET",
+  usePkce: false,
+  redirectPath: "/api/oauth/callback",
+  extraAuthorizeParams: { response_type: "code", scope: "boards:read,boards:write,pins:read,pins:write,user_accounts:read" },
+  tokenContentType: "form",
+  transformToken: (raw) => ({
+    accessToken: raw.access_token as string,
+    refreshToken: raw.refresh_token as string | undefined,
+    expiresIn: raw.expires_in as number | undefined,
+  }),
+  fetchProfile: async (accessToken) => {
+    const res = await fetch("https://api.pinterest.com/v5/user_account", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const data = (await res.json()) as {
+      username?: string;
+      full_name?: string;
+      profile_image?: string;
+      id?: string;
+    };
+    return {
+      platformAccountId: data.username || "",
+      username: data.username || "",
+      displayName: data.full_name || data.username || "",
+      avatarUrl: data.profile_image,
+    };
+  },
+});
+
 // ===== Exported Helpers =====
 
 export function getOAuthConfig(platform: string): OAuthConfig | undefined {

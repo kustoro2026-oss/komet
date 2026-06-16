@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -401,6 +401,37 @@ export async function POST(request: NextRequest) {
                   });
                   publishResults.push({ platform: "youtube", success: result.success, error: result.error });
                 }
+              }
+            } else if (task.platform === "pinterest") {
+              if (!task.accessToken) {
+                publishResults.push({ platform: "pinterest", success: false, error: "No access token" });
+              } else if (!task.platformAccountId) {
+                publishResults.push({ platform: "pinterest", success: false, error: "No board selected. Please select a board first." });
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: { status: "failed", errorMessage: "No board selected" },
+                });
+              } else {
+                const pinterestMediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const pinterestImageItem = pinterestMediaArr.find((m: { type: string; url: string }) => m.type === "image" || m.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+                console.log("[Pinterest Publisher] Creating pin on board:", task.platformAccountId);
+                const result = await publishToPinterest(
+                  task.accessToken,
+                  text,
+                  task.platformAccountId,
+                  pinterestImageItem?.url,
+                );
+                console.log("[Pinterest Publisher] Result:", JSON.stringify(result));
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: {
+                    status: result.success ? "published" : "failed",
+                    publishedUrl: result.success ? `https://www.pinterest.com/pin/${result.pinId}` : null,
+                    publishedAt: result.success ? new Date() : null,
+                    errorMessage: result.error || null,
+                  },
+                });
+                publishResults.push({ platform: "pinterest", success: result.success, error: result.error });
               }
             } else {
               // Platform publisher not implemented yet — mark as published (placeholder)
