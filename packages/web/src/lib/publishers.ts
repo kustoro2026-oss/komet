@@ -288,7 +288,11 @@ async function publishToDiscord(
   content: string,
 ): Promise<DiscordPublishResult> {
   try {
-    const res = await fetch(webhookUrl, {
+    // Add ?wait=true to get message object back (otherwise Discord returns 204 No Content)
+    const url = webhookUrl.includes("?")
+      ? `${webhookUrl}&wait=true`
+      : `${webhookUrl}?wait=true`;
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
@@ -300,7 +304,13 @@ async function publishToDiscord(
       return { success: false, error: `Discord webhook error: ${res.status}` };
     }
 
-    const data = (await res.json()) as { id?: string };
+    // Handle empty response (204 No Content without wait=true) or parse JSON
+    const text = await res.text().catch(() => "");
+    if (!text) {
+      console.log("[Discord Webhook] Message sent (no body returned)");
+      return { success: true };
+    }
+    const data = JSON.parse(text) as { id?: string };
     console.log("[Discord Webhook] Message sent, id:", data.id);
     return { success: true, messageId: data.id };
   } catch (err: unknown) {
