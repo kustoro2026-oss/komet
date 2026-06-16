@@ -30,17 +30,28 @@ export default function AccountDetailPage() {
   const [expandedForums, setExpandedForums] = useState<Set<string>>(new Set());
   const destDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Pinterest board state
+  const [pinBoards, setPinBoards] = useState<{ id: string; name: string; description: string; privacy: string }[]>([]);
+  const [pinBoardsLoading, setPinBoardsLoading] = useState(false);
+  const [showPinBoardDropdown, setShowPinBoardDropdown] = useState(false);
+  const [pinBoardUpdating, setPinBoardUpdating] = useState(false);
+  const [pinBoardUpdated, setPinBoardUpdated] = useState(false);
+  const pinBoardDropdownRef = useRef<HTMLDivElement>(null);
+
   // Close dropdown on outside click
   useEffect(() => {
-    if (!showDestDropdown) return;
+    if (!showDestDropdown && !showPinBoardDropdown) return;
     const handler = (e: MouseEvent) => {
       if (destDropdownRef.current && !destDropdownRef.current.contains(e.target as Node)) {
         setShowDestDropdown(false);
       }
+      if (pinBoardDropdownRef.current && !pinBoardDropdownRef.current.contains(e.target as Node)) {
+        setShowPinBoardDropdown(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [showDestDropdown]);
+  }, [showDestDropdown, showPinBoardDropdown]);
   const [destUpdated, setDestUpdated] = useState(false);
 
   // Find the account from real API data
@@ -63,6 +74,23 @@ export default function AccountDetailPage() {
     return () => { cancelled = true; };
   }, [account?.id, account?.platform, account?.isActive]);
 
+  // Fetch Pinterest boards when viewing a Pinterest account
+  useEffect(() => {
+    if (!account || account.platform !== "pinterest" || !account.isActive) return;
+    let cancelled = false;
+    setPinBoardsLoading(true);
+    fetch(`/api/pinterest/boards?accountId=${account.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setPinBoards(data.boards || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setPinBoardsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [account?.id, account?.platform, account?.isActive]);
+
   const handleDestinationChange = async (chatId: string) => {
     if (!account || destUpdating) return;
     setDestUpdating(true);
@@ -75,6 +103,21 @@ export default function AccountDetailPage() {
     } finally {
       setDestUpdating(false);
       setShowDestDropdown(false);
+    }
+  };
+
+  const handlePinBoardChange = async (boardId: string) => {
+    if (!account || pinBoardUpdating) return;
+    setPinBoardUpdating(true);
+    try {
+      await updateAccountMutation.mutateAsync({ accountId: account.id, platformAccountId: boardId });
+      setPinBoardUpdated(true);
+      setTimeout(() => setPinBoardUpdated(false), 2000);
+    } catch {
+      // error handled by mutation state
+    } finally {
+      setPinBoardUpdating(false);
+      setShowPinBoardDropdown(false);
     }
   };
 
@@ -361,6 +404,86 @@ export default function AccountDetailPage() {
                       </div>
                     )}
                   </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Pinterest Default Board */}
+            {account.platform === "pinterest" && account.isActive && (
+              <div className="border-t border-[var(--color-ink-muted)] pt-4 mt-4">
+                <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)] mb-1">
+                  Default Board
+                </h3>
+                <p className="text-caption text-[var(--color-on-dark-soft)] mb-3">
+                  Pins will be published to the selected board by default.
+                </p>
+
+                {pinBoardsLoading ? (
+                  <div className="flex items-center gap-2 text-caption text-[var(--color-on-dark-muted)]">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading boards…
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative" ref={pinBoardDropdownRef}>
+                      <button
+                        onClick={() => setShowPinBoardDropdown(!showPinBoardDropdown)}
+                        disabled={pinBoardUpdating}
+                        className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-4 py-2.5 text-body-sm text-[var(--color-on-dark)] hover:border-[#BD081C] disabled:opacity-50 transition-colors"
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          <PlatformIcon platform="pinterest" className="h-4 w-4 shrink-0" />
+                          <span className="truncate">
+                            {pinBoards.find((b) => b.id === account.platformAccountId)?.name || "No board selected"}
+                          </span>
+                        </span>
+                        {pinBoardUpdating ? (
+                          <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                        ) : (
+                          <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--color-on-dark-muted)] transition-transform ${showPinBoardDropdown ? "rotate-180" : ""}`} />
+                        )}
+                      </button>
+
+                      {pinBoardUpdated && (
+                        <span className="mt-1.5 flex items-center gap-1 text-caption text-[var(--color-success)]">
+                          <Check className="h-3.5 w-3.5" />
+                          Board updated
+                        </span>
+                      )}
+
+                      {showPinBoardDropdown && (
+                        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark-elevated)] shadow-xl max-h-80 overflow-y-auto">
+                          {pinBoards.length === 0 ? (
+                            <div className="px-4 py-3 text-caption text-[var(--color-on-dark-muted)]">No boards found</div>
+                          ) : (
+                            pinBoards.map((board) => {
+                              const isSelected = account.platformAccountId === board.id;
+                              return (
+                                <button
+                                  key={board.id}
+                                  onClick={() => handlePinBoardChange(board.id)}
+                                  disabled={pinBoardUpdating}
+                                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-body-sm transition-colors hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50 ${
+                                    isSelected
+                                      ? "bg-[#BD081C]/10 text-[#BD081C]"
+                                      : "text-[var(--color-on-dark)]"
+                                  }`}
+                                >
+                                  <span className="flex-1 truncate">{board.name}</span>
+                                  {board.privacy !== "PUBLIC" && (
+                                    <span className="shrink-0 text-micro text-[var(--color-on-dark-muted)] bg-[var(--color-surface-dark)] px-2 py-0.5 rounded-full">
+                                      {board.privacy}
+                                    </span>
+                                  )}
+                                  {isSelected && <Check className="h-4 w-4 shrink-0" />}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
               </div>

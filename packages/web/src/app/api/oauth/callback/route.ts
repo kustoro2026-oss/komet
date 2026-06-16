@@ -110,7 +110,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    let accountId: string;
+
     if (existingAccount) {
+      accountId = existingAccount.id;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (prisma.socialAccount as any).update({
         where: { id: existingAccount.id },
@@ -127,7 +130,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (prisma.socialAccount as any).create({
+      const newAccount = await (prisma.socialAccount as any).create({
         data: {
           profileId: oauthState.profileId,
           platform: oauthState.platform,
@@ -142,6 +145,7 @@ export async function GET(request: NextRequest) {
           isActive: true,
         },
       });
+      accountId = newAccount.id;
     }
 
     // Create notification for account connection (fire-and-forget)
@@ -166,6 +170,13 @@ export async function GET(request: NextRequest) {
         console.error("[OAuth Callback] Failed to create notification:", notifErr);
       }
     })();
+
+    // For Pinterest, redirect to board selection page
+    if (oauthState.platform === "pinterest") {
+      return NextResponse.redirect(
+        new URL(`/accounts/pinterest-board?accountId=${accountId}`, request.url)
+      );
+    }
 
     // Redirect to accounts page with success
     return NextResponse.redirect(new URL("/accounts?connected=true", request.url));
