@@ -141,6 +141,7 @@ export async function POST(request: NextRequest) {
             platform.account.accessToken,
             text,
             platform.account.platformAccountId || undefined,
+            imageItem?.url,
           );
 
           if (result.success) {

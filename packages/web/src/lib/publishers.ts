@@ -442,12 +442,13 @@ async function publishToTelegram(
   sessionString: string,
   text: string,
   chatId?: string,
+  mediaUrl?: string,
 ): Promise<TelegramPublishResult> {
   if (!TG_API_ID || !TG_API_HASH) {
     return { success: false, error: "Telegram API credentials not configured" };
   }
 
-  console.log("[Telegram Publisher] publishToTelegram called with chatId:", chatId || "(undefined)");
+  console.log("[Telegram Publisher] publishToTelegram called with chatId:", chatId || "(undefined)", "mediaUrl:", mediaUrl ? "yes" : "no");
 
   // If chatId is a phone number (starts with +), default to "me".
   // Phone numbers are not valid chat destinations.
@@ -547,7 +548,22 @@ async function publishToTelegram(
         resolvedPeer = await client.getEntity(peer);
       }
 
-      const sendOpts: { message: string; replyTo?: number } = { message: text };
+      const sendFunc = async (target: typeof resolvedPeer, opts: Record<string, unknown>) => {
+        if (mediaUrl) {
+          console.log("[Telegram Publisher] Sending with media:", mediaUrl.substring(0, 80));
+          return await client.sendFile(target, {
+            file: mediaUrl,
+            caption: text || undefined,
+            replyTo: opts.replyTo as number | undefined,
+          });
+        }
+        return await client.sendMessage(target, {
+          message: text,
+          replyTo: opts.replyTo as number | undefined,
+        });
+      };
+
+      const sendOpts: Record<string, unknown> = {};
       if (forumTopicId) {
         console.log("[Telegram Publisher] Sending to explicit topic:", forumTopicId);
         sendOpts.replyTo = forumTopicId;
@@ -556,7 +572,7 @@ async function publishToTelegram(
       // Try to send. If PEER_ID_INVALID, retry with General topic (forum).
       // If that also fails, fall back to "me" (Saved Messages).
       try {
-        const result = await client.sendMessage(resolvedPeer, sendOpts);
+        const result = await sendFunc(resolvedPeer, sendOpts);
         const messageId = (result as unknown as { id?: number })?.id;
         return { success: true, messageId };
       } catch (sendErr: unknown) {
@@ -567,7 +583,7 @@ async function publishToTelegram(
           console.log("[Telegram Publisher] Retrying with General topic (forum group)");
           sendOpts.replyTo = 1;
           try {
-            const retryResult = await client.sendMessage(resolvedPeer, sendOpts);
+            const retryResult = await sendFunc(resolvedPeer, sendOpts);
             const retryMessageId = (retryResult as unknown as { id?: number })?.id;
             return { success: true, messageId: retryMessageId };
           } catch (retryErr: unknown) {
@@ -579,7 +595,7 @@ async function publishToTelegram(
         if (peer !== "me") {
           console.log("[Telegram Publisher] Falling back to Saved Messages");
           try {
-            const fbResult = await client.sendMessage("me", { message: text });
+            const fbResult = await sendFunc("me", { message: text });
             const fbMessageId = (fbResult as unknown as { id?: number })?.id;
             return { success: true, messageId: fbMessageId };
           } catch (fbErr: unknown) {

@@ -319,10 +319,13 @@ export async function POST(request: NextRequest) {
                 publishResults.push({ platform: "telegram", success: false, error: "No session available. Please reconnect Telegram." });
               } else {
                 console.log("[Telegram Publisher] Sending message to chatId:", task.platformAccountId || "(none)");
+                const tgMediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const tgImageItem = tgMediaArr.find((m: { type: string; url: string }) => m.type === "image" || m.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
                 const result = await publishToTelegram(
                   task.accessToken,
                   text,
                   task.platformAccountId || undefined,
+                  tgImageItem?.url,
                 );
                 console.log("[Telegram Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({
