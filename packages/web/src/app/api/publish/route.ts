@@ -226,14 +226,23 @@ export async function POST(request: NextRequest) {
             results.push({ platform: "youtube", success: false, error: result.error });
           }
         } else if (platform.platform === "discord") {
-          // Discord: accessToken stores webhook URL (from webhook.incoming OAuth)
+          // Discord: accessToken stores bot token, platformAccountId stores channel ID
           if (!platform.account.accessToken) {
-            results.push({ platform: "discord", success: false, error: "No webhook URL. Please reconnect Discord." });
+            results.push({ platform: "discord", success: false, error: "No bot token. Please reconnect Discord." });
             continue;
           }
 
-          console.log("[Discord Publisher] Sending via webhook...");
-          const result = await publishToDiscord(platform.account.accessToken, text);
+          if (!platform.account.platformAccountId) {
+            results.push({ platform: "discord", success: false, error: "No channel selected. Please configure a Discord channel." });
+            continue;
+          }
+
+          console.log("[Discord Publisher] Sending via bot...");
+          const result = await publishToDiscord(
+            platform.account.accessToken,
+            text,
+            platform.account.platformAccountId,
+          );
           console.log("[Discord Publisher] Result:", JSON.stringify(result));
 
           if (result.success) {

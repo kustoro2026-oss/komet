@@ -284,27 +284,35 @@ interface DiscordPublishResult {
 }
 
 async function publishToDiscord(
-  webhookUrl: string,
+  botToken: string,
   content: string,
+  channelId?: string,
 ): Promise<DiscordPublishResult> {
   try {
-    const res = await fetch(webhookUrl, {
+    if (!channelId) {
+      return { success: false, error: "No channel selected. Please configure a Discord channel." };
+    }
+
+    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bot ${botToken}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ content }),
     });
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");
-      console.error("[Discord Webhook] Error:", res.status, err);
-      return { success: false, error: `Discord webhook error: ${res.status}` };
+      console.error("[Discord Bot] Error:", res.status, err);
+      return { success: false, error: `Discord API error: ${res.status}` };
     }
 
     const data = (await res.json()) as { id?: string };
-    console.log("[Discord Webhook] Message sent, id:", data.id);
+    console.log("[Discord Bot] Message sent, id:", data.id);
     return { success: true, messageId: data.id };
   } catch (err: unknown) {
-    console.error("[Discord Webhook] Error:", (err as Error)?.message);
+    console.error("[Discord Bot] Error:", (err as Error)?.message);
     return { success: false, error: (err as Error)?.message || "Network error" };
   }
 }
