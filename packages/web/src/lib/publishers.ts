@@ -287,6 +287,8 @@ async function publishToDiscord(
   webhookUrl: string,
   content: string,
   mediaUrl?: string,
+  username?: string,
+  avatarUrl?: string,
 ): Promise<DiscordPublishResult> {
   try {
     // Add ?wait=true to get message object back (otherwise Discord returns 204 No Content)
@@ -295,6 +297,14 @@ async function publishToDiscord(
       : `${webhookUrl}?wait=true`;
 
     const payload: Record<string, unknown> = { content };
+
+    // Set webhook sender name to the user's Discord username
+    if (username) {
+      payload.username = username;
+    }
+    if (avatarUrl) {
+      payload.avatar_url = avatarUrl;
+    }
 
     // If there's a media URL, add as embed (Discord webhook supports image embeds)
     if (mediaUrl) {

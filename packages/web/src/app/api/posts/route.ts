@@ -230,12 +230,14 @@ export async function POST(request: NextRequest) {
       const postTags = tags || [];
       const postMediaItems = mediaItems || [];
       // Clone platform data before we return the response
-      const platformTasks = post.platforms.map((pp: { id: string; platform: string; account: { accessToken: string | null; platformAccountId: string | null }; customContent: string | null }) => ({
+      const platformTasks = post.platforms.map((pp: { id: string; platform: string; account: { accessToken: string | null; platformAccountId: string | null; displayName: string | null; avatarUrl: string | null }; customContent: string | null }) => ({
         id: pp.id,
         platform: pp.platform,
         accessToken: pp.account.accessToken as string | null,
         platformAccountId: pp.account.platformAccountId as string | null,
         customContent: pp.customContent as string | null,
+        displayName: pp.account.displayName as string | null,
+        avatarUrl: pp.account.avatarUrl as string | null,
       }));
 
       void (async () => {
@@ -292,7 +294,13 @@ export async function POST(request: NextRequest) {
                 console.log("[Discord Publisher] Sending via webhook...");
                 const mediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
                 const imageItem = mediaArr.find((m: { type: string; url: string }) => m.type === "image" || m.url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
-                const result = await publishToDiscord(task.accessToken, text, imageItem?.url);
+                const result = await publishToDiscord(
+                  task.accessToken,
+                  text,
+                  imageItem?.url,
+                  task.displayName || task.platformAccountId || undefined,
+                  task.avatarUrl || undefined,
+                );
                 console.log("[Discord Publisher] Result:", JSON.stringify(result));
                 await prisma.postPlatform.update({
                   where: { id: task.id },

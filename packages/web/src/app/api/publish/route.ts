@@ -240,6 +240,8 @@ export async function POST(request: NextRequest) {
             platform.account.accessToken,
             text,
             imageItem?.url,
+            platform.account.displayName || platform.account.username || undefined,
+            platform.account.avatarUrl || undefined,
           );
           console.log("[Discord Publisher] Result:", JSON.stringify(result));
 
