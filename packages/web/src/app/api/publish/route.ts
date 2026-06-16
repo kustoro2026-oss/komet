@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -175,10 +175,31 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
+          // Refresh token if expired
+          let token = platform.account.accessToken;
+          if (platform.account.tokenExpiresAt && new Date() >= new Date(platform.account.tokenExpiresAt)) {
+            console.log("[Publish] YouTube: Token expired, refreshing...");
+            if (!platform.account.refreshToken) {
+              results.push({ platform: "youtube", success: false, error: "No refresh token available. Please reconnect YouTube." });
+              continue;
+            }
+            const newToken = await refreshGoogleToken(platform.account.refreshToken);
+            if (!newToken) {
+              results.push({ platform: "youtube", success: false, error: "Token expired and refresh failed. Please reconnect YouTube." });
+              continue;
+            }
+            token = newToken;
+            // Update DB with new token
+            await prisma.socialAccount.update({
+              where: { id: platform.account.id },
+              data: { accessToken: newToken, tokenExpiresAt: new Date(Date.now() + 3600 * 1000) },
+            });
+          }
+
           console.log("[Publish] YouTube: Publishing...", "video:", videoItem.url?.substring(0, 80));
 
           const result = await publishToYouTube(
-            platform.account.accessToken,
+            token,
             post.title || "Posted via Komet",
             text,
             videoItem.url,

@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -339,9 +339,38 @@ export async function POST(request: NextRequest) {
                     data: { status: "failed", errorMessage: "No video attached" },
                   });
                 } else {
+                  // Refresh token if expired
+                  const socAcc = post.platforms.find((p: { id: string }) => p.id === task.id)?.account;
+                  let token = task.accessToken;
+                  if (socAcc?.tokenExpiresAt && new Date() >= new Date(socAcc.tokenExpiresAt)) {
+                    console.log("[YouTube Publisher] Token expired, refreshing...");
+                    if (!socAcc.refreshToken) {
+                      publishResults.push({ platform: "youtube", success: false, error: "No refresh token. Please reconnect YouTube." });
+                      await prisma.postPlatform.update({
+                        where: { id: task.id },
+                        data: { status: "failed", errorMessage: "No refresh token. Please reconnect YouTube." },
+                      });
+                      continue;
+                    }
+                    const newToken = await refreshGoogleToken(socAcc.refreshToken);
+                    if (!newToken) {
+                      publishResults.push({ platform: "youtube", success: false, error: "Token refresh failed. Please reconnect YouTube." });
+                      await prisma.postPlatform.update({
+                        where: { id: task.id },
+                        data: { status: "failed", errorMessage: "Token refresh failed. Please reconnect YouTube." },
+                      });
+                      continue;
+                    }
+                    token = newToken;
+                    await prisma.socialAccount.update({
+                      where: { id: socAcc.id },
+                      data: { accessToken: newToken, tokenExpiresAt: new Date(Date.now() + 3600 * 1000) },
+                    });
+                  }
+
                   console.log("[YouTube Publisher] Publishing to YouTube... video:", videoItem.url.substring(0, 80));
                   const result = await publishToYouTube(
-                    task.accessToken,
+                    token,
                     postTitle,
                     text,
                     videoItem.url,

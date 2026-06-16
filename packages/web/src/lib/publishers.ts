@@ -63,6 +63,38 @@ interface YouTubePublishResult {
   error?: string;
 }
 
+/**
+ * Refresh an expired Google/YouTube OAuth token.
+ * Returns the new access token, or null if refresh fails.
+ */
+async function refreshGoogleToken(refreshToken: string): Promise<string | null> {
+  try {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: process.env.YOUTUBE_CLIENT_ID || "",
+        client_secret: process.env.YOUTUBE_CLIENT_SECRET || "",
+        refresh_token: refreshToken,
+        grant_type: "refresh_token",
+      }).toString(),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.error("[Google Token Refresh] Error:", res.status, errBody.slice(0, 200));
+      return null;
+    }
+
+    const data = (await res.json()) as { access_token: string; expires_in?: number };
+    console.log("[Google Token Refresh] Success, new token obtained, expires_in:", data.expires_in);
+    return data.access_token;
+  } catch (err: unknown) {
+    console.error("[Google Token Refresh] Exception:", (err as Error)?.message);
+    return null;
+  }
+}
+
 async function publishToYouTube(
   accessToken: string,
   title: string,
@@ -528,4 +560,4 @@ async function publishToTelegram(
   }
 }
 
-export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube };
+export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken };
