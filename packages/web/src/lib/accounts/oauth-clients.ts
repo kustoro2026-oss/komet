@@ -53,6 +53,10 @@ export async function exchangeCodeForTokens(
     body.delete("client_secret");
   }
 
+  if (platform === "pinterest") {
+    console.log("[OAuth Token Exchange] Pinterest tokenUrl:", cfg.tokenUrl);
+  }
+
   const res = await fetch(cfg.tokenUrl, {
     method: "POST",
     headers,
