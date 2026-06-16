@@ -317,8 +317,8 @@ register({
   platform: "pinterest",
   label: "Pinterest",
   authorizeUrl: "https://www.pinterest.com/oauth/",
-  tokenUrl: "https://api.pinterest.com/v5/oauth/token",
-  profileUrl: "https://api.pinterest.com/v5/user_account",
+  tokenUrl: `${process.env.PINTEREST_API_BASE_URL || "https://api-sandbox.pinterest.com"}/v5/oauth/token`,
+  profileUrl: `${process.env.PINTEREST_API_BASE_URL || "https://api-sandbox.pinterest.com"}/v5/user_account`,
   scopes: ["boards:read", "boards:write", "pins:read", "pins:write", "user_accounts:read"],
   tokenAuth: "basic",
   clientIdEnv: "PINTEREST_CLIENT_ID",
@@ -333,7 +333,8 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken) => {
-    const res = await fetch("https://api.pinterest.com/v5/user_account", {
+    const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api-sandbox.pinterest.com";
+    const res = await fetch(`${pinterestApiBase}/v5/user_account`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const data = (await res.json()) as {
