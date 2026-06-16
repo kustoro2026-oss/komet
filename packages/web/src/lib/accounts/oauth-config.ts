@@ -442,7 +442,7 @@ register({
   authorizeUrl: "https://discord.com/oauth2/authorize",
   tokenUrl: "https://discord.com/api/oauth2/token",
   profileUrl: "https://discord.com/api/users/@me",
-  scopes: ["identify", "guilds", "bot", "webhook.incoming"],
+  scopes: ["identify", "guilds", "webhook.incoming"],
   tokenAuth: "body",
   clientIdEnv: "DISCORD_CLIENT_ID",
   clientSecretEnv: "DISCORD_CLIENT_SECRET",
@@ -454,11 +454,13 @@ register({
     // webhook.incoming returns webhook object in token response
     // Format: { url: "https://discord.com/api/webhooks/...", channel_id: "..." }
     const webhook = raw.webhook as { url?: string; channel_id?: string } | undefined;
-    const token = raw.access_token as string;
-    // Store webhook URL as accessToken so publisher can use it directly
+    const oauthToken = raw.access_token as string;
+    // AccessToken stores webhook URL (used by publishToDiscord)
+    // RefreshToken stores the OAuth bearer token (used by channels API for guild listing)
+    // Discord webhook.incoming doesn't return refresh_token, so this field is safe to reuse.
     return {
-      accessToken: webhook?.url || token,
-      refreshToken: raw.refresh_token as string | undefined,
+      accessToken: webhook?.url || oauthToken,
+      refreshToken: oauthToken,
       expiresIn: raw.expires_in as number | undefined,
     };
   },

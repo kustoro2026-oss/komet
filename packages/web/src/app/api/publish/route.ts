@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToDiscord } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -224,6 +224,34 @@ export async function POST(request: NextRequest) {
               data: { status: "failed", errorMessage: result.error },
             });
             results.push({ platform: "youtube", success: false, error: result.error });
+          }
+        } else if (platform.platform === "discord") {
+          // Discord: accessToken stores webhook URL (from webhook.incoming OAuth)
+          if (!platform.account.accessToken) {
+            results.push({ platform: "discord", success: false, error: "No webhook URL. Please reconnect Discord." });
+            continue;
+          }
+
+          console.log("[Discord Publisher] Sending via webhook...");
+          const result = await publishToDiscord(platform.account.accessToken, text);
+          console.log("[Discord Publisher] Result:", JSON.stringify(result));
+
+          if (result.success) {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: "published",
+                publishedUrl: `https://discord.com/channels/@me`,
+                publishedAt: new Date(),
+              },
+            });
+            results.push({ platform: "discord", success: true });
+          } else {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: { status: "failed", errorMessage: result.error },
+            });
+            results.push({ platform: "discord", success: false, error: result.error });
           }
         } else {
           // Platform not yet supported
