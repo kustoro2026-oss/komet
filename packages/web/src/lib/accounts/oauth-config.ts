@@ -179,49 +179,6 @@ register({
 });
 
 // ──────────────────────────────────────────
-// 4. LinkedIn — OAuth 2.0
-// ──────────────────────────────────────────
-register({
-  platform: "linkedin",
-  label: "LinkedIn",
-  authorizeUrl: "https://www.linkedin.com/oauth/v2/authorization",
-  tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
-  profileUrl: "https://api.linkedin.com/v2/userinfo",
-  scopes: ["openid", "profile", "email", "w_member_social"],
-  tokenAuth: "body",
-  clientIdEnv: "LINKEDIN_CLIENT_ID",
-  clientSecretEnv: "LINKEDIN_CLIENT_SECRET",
-  usePkce: false,
-  redirectPath: "/api/oauth/callback",
-  tokenContentType: "form",
-  transformToken: (raw) => ({
-    accessToken: raw.access_token as string,
-    refreshToken: undefined,
-    expiresIn: raw.expires_in as number | undefined,
-  }),
-  fetchProfile: async (accessToken) => {
-    const res = await fetch("https://api.linkedin.com/v2/userinfo", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const data = (await res.json()) as {
-      sub?: string;
-      name?: string;
-      given_name?: string;
-      family_name?: string;
-      picture?: string;
-      email?: string;
-    };
-    const displayName = data.name || `${data.given_name || ""} ${data.family_name || ""}`.trim();
-    return {
-      platformAccountId: data.sub || "",
-      username: data.email?.split("@")[0] || displayName.toLowerCase().replace(/\s+/g, "-"),
-      displayName,
-      avatarUrl: data.picture,
-    };
-  },
-});
-
-// ──────────────────────────────────────────
 // 5. YouTube — OAuth 2.0 (Google)
 // ──────────────────────────────────────────
 register({
@@ -610,8 +567,8 @@ register({
   label: "LinkedIn",
   authorizeUrl: "https://www.linkedin.com/oauth/v2/authorization",
   tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
-  profileUrl: "https://api.linkedin.com/v2/me",
-  scopes: ["w_member_social", "r_liteprofile", "openid"],
+  profileUrl: "https://api.linkedin.com/v2/userinfo",
+  scopes: ["openid", "profile", "email", "w_member_social"],
   tokenAuth: "body",
   clientIdEnv: "LINKEDIN_CLIENT_ID",
   clientSecretEnv: "LINKEDIN_CLIENT_SECRET",
@@ -625,22 +582,22 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken) => {
-    const res = await fetch("https://api.linkedin.com/v2/me", {
+    const res = await fetch("https://api.linkedin.com/v2/userinfo", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const data = (await res.json()) as {
       sub?: string;
-      id?: string;
       name?: string;
       given_name?: string;
       family_name?: string;
       picture?: string;
+      email?: string;
     };
-    const personId = data.sub || data.id || "";
+    const displayName = data.name || `${data.given_name || ""} ${data.family_name || ""}`.trim();
     return {
-      platformAccountId: personId,
-      username: data.name?.toLowerCase().replace(/\s+/g, "_") || data.given_name || "",
-      displayName: data.name || `${data.given_name || ""} ${data.family_name || ""}`.trim() || "",
+      platformAccountId: data.sub || "",
+      username: data.email?.split("@")[0] || displayName.toLowerCase().replace(/\s+/g, "-"),
+      displayName,
       avatarUrl: data.picture,
     };
   },
