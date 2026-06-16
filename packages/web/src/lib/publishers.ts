@@ -647,7 +647,8 @@ async function publishToPinterest(
     const title = lines[0]?.substring(0, 100) || "New Pin";
     const description = lines.slice(1).join("\n").substring(0, 500);
 
-    const res = await fetch("https://api.pinterest.com/v5/pins", {
+    const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api-sandbox.pinterest.com";
+    const res = await fetch(`${pinterestApiBase}/v5/pins`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
