@@ -36,15 +36,20 @@ export async function GET(request: NextRequest) {
 
     // Fetch boards from Pinterest API (paginated, limit 100)
     const pinterestApiBase = process.env.PINTEREST_API_BASE_URL || "https://api.pinterest.com";
+    const boardsUrl = `${pinterestApiBase}/v5/boards?page_size=100`;
+    console.log("[Pinterest Boards] Fetching from:", boardsUrl);
     const res = await fetch(
-      `${pinterestApiBase}/v5/boards?page_size=100`,
+      boardsUrl,
       {
         headers: { Authorization: `Bearer ${account.accessToken}` },
       }
     );
 
+    console.log("[Pinterest Boards] Response status:", res.status);
+
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
+      console.error("[Pinterest Boards] Error response:", errText.substring(0, 500));
       return NextResponse.json(
         { error: `Failed to fetch boards: ${res.status} ${errText.substring(0, 200)}` },
         { status: 502 }
@@ -55,6 +60,9 @@ export async function GET(request: NextRequest) {
       items?: PinterestBoard[];
       page?: { cursor?: string };
     };
+
+    console.log("[Pinterest Boards] Items count:", data.items?.length ?? 0);
+    console.log("[Pinterest Boards] Raw data keys:", Object.keys(data));
 
     const boards = (data.items || []).map((b) => ({
       id: b.id,
