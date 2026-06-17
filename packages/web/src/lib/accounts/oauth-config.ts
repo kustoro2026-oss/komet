@@ -447,24 +447,25 @@ register({
 });
 
 // ──────────────────────────────────────────
-// 11. Snapchat — OAuth 2.0 (Snap Kit Login Kit)
-// Docs: https://developers.snap.com/snap-kit/login-kit/Tutorials/web
+// 11. Snapchat — OAuth 2.0 (Marketing API / Public Profile API)
+// Docs: https://developers.snap.com/marketing-api/Ads-API/authentication
+//       https://www.ayrshare.com/complete-guide-to-snapchat-api-integration/
 // ──────────────────────────────────────────
+// NOTE: This replaces the old Snap Kit Login Kit OAuth.
+// Marketing API uses different endpoints & scopes than Login Kit.
+// Credentials must come from Snap Business Manager (not Snap Kit Portal).
+// redirect_uri is REQUIRED in token exchange (handled automatically).
 register({
   platform: "snapchat",
   label: "Snapchat",
-  authorizeUrl: "https://accounts.snapchat.com/accounts/oauth2/auth",
-  tokenUrl: "https://accounts.snapchat.com/accounts/oauth2/token",
-  profileUrl: "https://kit.snapchat.com/v1/me",
-  scopes: [
-    "https://auth.snapchat.com/oauth2/api/user.display_name",
-    "https://auth.snapchat.com/oauth2/api/user.bitmoji.avatar",
-    "https://auth.snapchat.com/oauth2/api/user.external_id",
-  ],
+  authorizeUrl: "https://accounts.snapchat.com/login/oauth2/authorize",
+  tokenUrl: "https://accounts.snapchat.com/login/oauth2/access_token",
+  profileUrl: "https://businessapi.snapchat.com/v1/public_profiles",
+  scopes: ["snapchat-profile-api"],
   tokenAuth: "body",
   clientIdEnv: "SNAPCHAT_CLIENT_ID",
   clientSecretEnv: "SNAPCHAT_CLIENT_SECRET",
-  usePkce: true,
+  usePkce: false,
   redirectPath: "/api/oauth/callback",
   extraAuthorizeParams: { response_type: "code" },
   tokenContentType: "form",
@@ -474,33 +475,37 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken) => {
-    // Snap Kit Login Kit uses a GraphQL query parameter — without it, the API returns no fields.
-    // Uses camelCase field names: externalId, displayName, bitmoji.avatar
-    // Ref: https://github.com/SocialiteProviders/Snapchat/blob/master/Provider.php
-    const query = "{me{externalId displayName bitmoji{avatar}}}";
-    const url = `https://kit.snapchat.com/v1/me?query=${encodeURIComponent(query)}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const data = (await res.json()) as {
-      data?: {
-        me?: {
-          externalId?: string;
-          displayName?: string;
-          bitmoji?: { avatar?: string };
-        };
-      };
-    };
-    const me = data?.data?.me || {};
-    const externalId = me.externalId || "";
-    const displayName = me.displayName || "";
-    const avatarUrl = me.bitmoji?.avatar || undefined;
+    // Try to list public profiles for the authenticated organization.
+    // A Public Profile is REQUIRED for publishing Stories/Spotlight.
+    try {
+      const res = await fetch("https://businessapi.snapchat.com/v1/public_profiles", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (res.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = await res.json() as any;
+        const profiles: Array<Record<string, unknown>> = data?.public_profiles || data?.profiles || [];
+        if (profiles.length > 0) {
+          const p = profiles[0];
+          return {
+            platformAccountId: (p.id || p.profile_id || "") as string,
+            username: ((p.username || (p.display_name as string)?.toLowerCase().replace(/\s+/g, "_")) || "snapchat_profile") as string,
+            displayName: ((p.display_name || p.name) || "Snapchat Public Profile") as string,
+            avatarUrl: p.avatar_url as string | undefined,
+          };
+        }
+      }
+    } catch {
+      console.warn("[Snapchat OAuth] Could not fetch public profiles");
+    }
 
+    // Fallback: no Public Profile found yet.
+    // User must create a Public Profile in Snapchat Business Manager before publishing.
     return {
-      platformAccountId: externalId,
-      username: displayName.toLowerCase().replace(/\s+/g, "_") || externalId || "snapchat_user",
-      displayName: displayName || "Snapchat User",
-      avatarUrl,
+      platformAccountId: "",
+      username: "snapchat_user",
+      displayName: "Snapchat (Public Profile needed)",
+      avatarUrl: undefined,
     };
   },
 });

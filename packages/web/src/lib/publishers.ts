@@ -3,6 +3,7 @@
 
 import { TelegramClient, Api } from "telegram";
 import { StringSession } from "telegram/sessions";
+import * as crypto from "crypto";
 
 // ─── Twitter ───────────────────────────────────────────────────────
 
@@ -820,4 +821,204 @@ async function publishToLinkedIn(
   }
 }
 
-export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest, publishToLinkedIn };
+// ─── Snapchat ─────────────────────────────────────────────────────
+// Uses Snapchat Public Profile API (Marketing API OAuth)
+// Docs: https://www.ayrshare.com/complete-guide-to-snapchat-api-integration/
+// Requires: snapchat-profile-api scope, AES-256-CBC encrypted media upload
+
+interface SnapchatPublishResult {
+  success: boolean;
+  storyId?: string;
+  postUrl?: string;
+  error?: string;
+}
+
+/**
+ * Upload media to Snapchat with AES-256-CBC encryption.
+ * Returns the media_id needed for story creation.
+ */
+async function uploadSnapchatMedia(
+  accessToken: string,
+  profileId: string,
+  mediaUrl: string,
+): Promise<string> {
+  // Determine media type from URL extension
+  const isVideo = /\.(mp4|mov|webm)$/i.test(mediaUrl);
+  const mediaType = isVideo ? "VIDEO" : "IMAGE";
+
+  // Generate AES-256-CBC encryption key & IV
+  const key = crypto.randomBytes(32); // 256 bits
+  const iv = crypto.randomBytes(16);  // 128 bits
+
+  console.log("[Snapchat Media] Creating container, type:", mediaType);
+
+  // Step 1: Create media container
+  const containerRes = await fetch(
+    `https://businessapi.snapchat.com/v1/public_profiles/${profileId}/media`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: mediaType,
+        name: `komet-media-${Date.now()}`,
+        key: key.toString("base64"),
+        iv: iv.toString("base64"),
+      }),
+    },
+  );
+
+  if (!containerRes.ok) {
+    const errText = await containerRes.text().catch(() => "");
+    console.error("[Snapchat Media] Container error:", containerRes.status, errText);
+    throw new Error(`Snapchat media container failed: ${containerRes.status} ${errText.slice(0, 200)}`);
+  }
+
+  const containerData = (await containerRes.json()) as {
+    media_id?: string;
+    upload_urls?: string[];
+    upload_url?: string;
+  };
+
+  const mediaId = containerData.media_id;
+  if (!mediaId) {
+    throw new Error("No media_id returned from Snapchat container");
+  }
+
+  console.log("[Snapchat Media] Container created, media_id:", mediaId);
+
+  // Step 2: Download the media from our storage
+  const mediaRes = await fetch(mediaUrl);
+  if (!mediaRes.ok) {
+    throw new Error(`Failed to download media from storage: ${mediaRes.status}`);
+  }
+  const mediaBuffer = Buffer.from(await mediaRes.arrayBuffer());
+  console.log("[Snapchat Media] Downloaded, size:", mediaBuffer.length, "bytes");
+
+  // Step 3: Encrypt with AES-256-CBC
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  const encrypted = Buffer.concat([cipher.update(mediaBuffer), cipher.final()]);
+  console.log("[Snapchat Media] Encrypted, size:", encrypted.length, "bytes");
+
+  // Step 4: Upload encrypted media to Snapchat
+  const uploadUrls = containerData.upload_urls || (containerData.upload_url ? [containerData.upload_url] : []);
+
+  if (uploadUrls.length === 0) {
+    // No upload URLs — some API versions embed upload in container creation
+    console.log("[Snapchat Media] No upload URLs — assuming direct upload or auto-finalize");
+  } else if (uploadUrls.length === 1) {
+    // Single URL: upload all at once
+    const upRes = await fetch(uploadUrls[0], {
+      method: "PUT",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: encrypted,
+    });
+    if (!upRes.ok) {
+      const upErr = await upRes.text().catch(() => "");
+      console.error("[Snapchat Media] Upload error:", upRes.status, upErr);
+      throw new Error(`Snapchat media upload failed: ${upRes.status}`);
+    }
+    console.log("[Snapchat Media] Uploaded to single URL, status:", upRes.status);
+  } else {
+    // Multiple URLs: split encrypted data into chunks
+    const chunkSize = Math.ceil(encrypted.length / uploadUrls.length);
+    for (let i = 0; i < uploadUrls.length; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, encrypted.length);
+      const chunk = encrypted.subarray(start, end);
+      const upRes = await fetch(uploadUrls[i], {
+        method: "PUT",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: chunk,
+      });
+      if (!upRes.ok) {
+        const upErr = await upRes.text().catch(() => "");
+        console.error(`[Snapchat Media] Chunk ${i + 1}/${uploadUrls.length} error:`, upRes.status, upErr);
+        throw new Error(`Snapchat media chunk upload failed: ${upRes.status}`);
+      }
+    }
+    console.log(`[Snapchat Media] Uploaded ${uploadUrls.length} chunks`);
+  }
+
+  return mediaId;
+}
+
+/**
+ * Publish a Story or Spotlight to Snapchat Public Profile.
+ * profileId must be the Snapchat Public Profile ID.
+ */
+async function publishToSnapchat(
+  accessToken: string,
+  profileId: string,
+  mediaUrl: string,
+  caption?: string,
+): Promise<SnapchatPublishResult> {
+  if (!profileId) {
+    return {
+      success: false,
+      error: "No Snapchat Public Profile connected. Create a Public Profile in Snapchat Business Manager and reconnect.",
+    };
+  }
+
+  if (!mediaUrl) {
+    return {
+      success: false,
+      error: "Snapchat requires an image or video. Please attach media to your post.",
+    };
+  }
+
+  try {
+    // Step 1: Upload & encrypt media
+    console.log("[Snapchat Publisher] Uploading media...");
+    const mediaId = await uploadSnapchatMedia(accessToken, profileId, mediaUrl);
+    console.log("[Snapchat Publisher] Media uploaded, id:", mediaId);
+
+    // Step 2: Create story
+    const publishUrl = `https://businessapi.snapchat.com/v1/public_profiles/${profileId}/stories`;
+    const publishBody: Record<string, unknown> = { media_id: mediaId };
+
+    console.log("[Snapchat Publisher] Creating story...");
+    const publishRes = await fetch(publishUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(publishBody),
+    });
+
+    if (!publishRes.ok) {
+      const errText = await publishRes.text().catch(() => "");
+      console.error("[Snapchat Publisher] Publish error:", publishRes.status, errText);
+      return { success: false, error: `Snapchat publish error: ${publishRes.status} ${errText.slice(0, 200)}` };
+    }
+
+    const publishData = (await publishRes.json()) as {
+      request_status?: string;
+      stories?: Array<{ story?: { id?: string } }>;
+    };
+
+    if (publishData.request_status !== "SUCCESS") {
+      return {
+        success: false,
+        error: `Snapchat publish failed: ${JSON.stringify(publishData)}`,
+      };
+    }
+
+    const storyId = publishData.stories?.[0]?.story?.id;
+    const postUrl = storyId
+      ? `https://www.snapchat.com/add/spotlight/${storyId}`
+      : undefined;
+
+    console.log("[Snapchat Publisher] Published! storyId:", storyId);
+    return { success: true, storyId, postUrl };
+  } catch (err: unknown) {
+    const msg = (err as Error)?.message || "Network error";
+    console.error("[Snapchat Publisher] Exception:", msg);
+    return { success: false, error: msg };
+  }
+}
+
+export { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest, publishToLinkedIn, publishToSnapchat };

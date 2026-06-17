@@ -5,7 +5,7 @@
 // DELETE /api/posts — Soft-delete a post
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest, publishToLinkedIn } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToDiscord, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToPinterest, publishToLinkedIn, publishToSnapchat } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -463,6 +463,53 @@ export async function POST(request: NextRequest) {
                   },
                 });
                 publishResults.push({ platform: "linkedin", success: result.success, error: result.error });
+              }
+            } else if (task.platform === "snapchat") {
+              if (!task.accessToken) {
+                publishResults.push({ platform: "snapchat", success: false, error: "No access token. Please reconnect Snapchat." });
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: { status: "failed", errorMessage: "No access token" },
+                });
+              } else if (!task.platformAccountId) {
+                publishResults.push({ platform: "snapchat", success: false, error: "No Public Profile connected." });
+                await prisma.postPlatform.update({
+                  where: { id: task.id },
+                  data: { status: "failed", errorMessage: "No Public Profile connected" },
+                });
+              } else {
+                const snapMediaArr = (Array.isArray(postMediaItems) ? postMediaItems : []) as Array<{ type: string; url: string }>;
+                const snapMedia = snapMediaArr.find(
+                  (m: { type: string; url: string }) =>
+                    m.type === "image" || m.type === "video" ||
+                    /\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i.test(m.url),
+                );
+                if (!snapMedia) {
+                  publishResults.push({ platform: "snapchat", success: false, error: "Snapchat requires an image or video." });
+                  await prisma.postPlatform.update({
+                    where: { id: task.id },
+                    data: { status: "failed", errorMessage: "No media attached" },
+                  });
+                } else {
+                  console.log("[Snapchat Publisher] Publishing story...");
+                  const result = await publishToSnapchat(
+                    task.accessToken,
+                    task.platformAccountId,
+                    snapMedia.url,
+                    text,
+                  );
+                  console.log("[Snapchat Publisher] Result:", JSON.stringify(result));
+                  await prisma.postPlatform.update({
+                    where: { id: task.id },
+                    data: {
+                      status: result.success ? "published" : "failed",
+                      publishedUrl: result.postUrl || "https://www.snapchat.com",
+                      publishedAt: result.success ? new Date() : null,
+                      errorMessage: result.error || null,
+                    },
+                  });
+                  publishResults.push({ platform: "snapchat", success: result.success, error: result.error });
+                }
               }
             } else {
               // Platform publisher not implemented yet — mark as published (placeholder)

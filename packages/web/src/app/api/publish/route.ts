@@ -2,7 +2,7 @@
 // POST /api/publish — Publish a post to selected platforms
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, prisma } from "@/lib/supabase-admin";
-import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToDiscord, publishToPinterest, publishToLinkedIn } from "@/lib/publishers";
+import { publishToTwitter, publishToTikTok, publishToTelegram, publishToYouTube, refreshGoogleToken, publishToDiscord, publishToPinterest, publishToLinkedIn, publishToSnapchat } from "@/lib/publishers";
 
 export const dynamic = "force-dynamic";
 
@@ -332,6 +332,63 @@ export async function POST(request: NextRequest) {
               data: { status: "failed", errorMessage: result.error },
             });
             results.push({ platform: "linkedin", success: false, error: result.error });
+          }
+        } else if (platform.platform === "snapchat") {
+          if (!platform.account.accessToken) {
+            results.push({ platform: "snapchat", success: false, error: "No access token. Please reconnect Snapchat." });
+            continue;
+          }
+          if (!platform.account.platformAccountId) {
+            results.push({
+              platform: "snapchat",
+              success: false,
+              error: "No Public Profile connected. Create a Public Profile in Snapchat Business Manager and reconnect.",
+            });
+            continue;
+          }
+
+          // Snapchat requires image or video
+          const snapMediaItems = (post.mediaItems || []) as Array<{ type: string; url: string }>;
+          const snapMedia = snapMediaItems.find(
+            (m) =>
+              m.type === "image" ||
+              m.type === "video" ||
+              /\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i.test(m.url),
+          );
+
+          if (!snapMedia) {
+            results.push({
+              platform: "snapchat",
+              success: false,
+              error: "Snapchat requires an image or video. Please attach media to your post.",
+            });
+            continue;
+          }
+
+          console.log("[Publish] Snapchat: Publishing story...");
+          const result = await publishToSnapchat(
+            platform.account.accessToken,
+            platform.account.platformAccountId,
+            snapMedia.url,
+            text,
+          );
+
+          if (result.success) {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: "published",
+                publishedUrl: result.postUrl || "https://www.snapchat.com",
+                publishedAt: new Date(),
+              },
+            });
+            results.push({ platform: "snapchat", success: true });
+          } else {
+            await prisma.postPlatform.update({
+              where: { id: platform.id },
+              data: { status: "failed", errorMessage: result.error },
+            });
+            results.push({ platform: "snapchat", success: false, error: result.error });
           }
         } else {
           // Platform not yet supported
