@@ -479,13 +479,27 @@ register({
     // Decode it to get user's display name, without needing to call any API.
     console.log("[Snapchat OAuth] tokenResponse keys:", tokenResponse ? Object.keys(tokenResponse) : "(none)");
     const idToken = tokenResponse?.id_token as string | undefined;
-    console.log("[Snapchat OAuth] id_token present:", !!idToken, "| length:", idToken?.length);
+    console.log("[Snapchat OAuth] id_token present:", !!idToken, "| length:", idToken?.length, "| type:", typeof idToken);
+    // id_token may be nested inside token_responses array
+    console.log("[Snapchat OAuth] token_responses:", JSON.stringify(tokenResponse?.token_responses).slice(0, 300));
 
-    if (idToken) {
+    // Try to find id_token inside token_responses if the top-level one is empty
+    let effectiveIdToken = idToken;
+    if (!effectiveIdToken && Array.isArray(tokenResponse?.token_responses)) {
+      for (const tr of tokenResponse.token_responses as Array<Record<string, unknown>>) {
+        if (tr.id_token) {
+          effectiveIdToken = tr.id_token as string;
+          console.log("[Snapchat OAuth] Found id_token inside token_responses, length:", effectiveIdToken.length);
+          break;
+        }
+      }
+    }
+
+    if (effectiveIdToken) {
       try {
         // JWT payload is the second segment (base64url-encoded JSON)
         // Use atob() instead of Buffer for Edge runtime compatibility
-        const payloadBase64 = idToken.split(".")[1];
+        const payloadBase64 = effectiveIdToken.split(".")[1];
         if (payloadBase64) {
           // Convert base64url to standard base64 (replace - → +, _ → /, add padding)
           let base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
