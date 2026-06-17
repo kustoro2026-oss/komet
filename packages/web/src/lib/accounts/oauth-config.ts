@@ -477,7 +477,9 @@ register({
   fetchProfile: async (accessToken, tokenResponse) => {
     // Snapchat Marketing API returns an id_token (JWT) with OpenID Connect user claims.
     // Decode it to get user's display name, without needing to call any API.
+    console.log("[Snapchat OAuth] tokenResponse keys:", tokenResponse ? Object.keys(tokenResponse) : "(none)");
     const idToken = tokenResponse?.id_token as string | undefined;
+    console.log("[Snapchat OAuth] id_token present:", !!idToken, "| length:", idToken?.length);
 
     if (idToken) {
       try {
