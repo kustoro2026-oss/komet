@@ -9,8 +9,20 @@ interface TikTokSuggestion {
 }
 
 /**
+ * Extracts text between two strings — safer than regex for giant JSON payloads.
+ */
+function extractBetween(html: string, startMarker: string, endMarker: string): string | null {
+  const startIdx = html.indexOf(startMarker);
+  if (startIdx === -1) return null;
+  const contentStart = startIdx + startMarker.length;
+  const endIdx = html.indexOf(endMarker, contentStart);
+  if (endIdx === -1) return null;
+  return html.slice(contentStart, endIdx);
+}
+
+/**
  * Fetches similar TikTok usernames by scraping the TikTok search results page.
- * Parses the __UNIVERSAL_DATA_FOR_REHYDRATION__ JSON to extract user suggestions.
+ * Uses multiple extraction strategies for reliability.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -44,60 +56,126 @@ export async function GET(request: NextRequest) {
     }
 
     const html = await response.text();
-
-    // Try to extract the hydration JSON that contains search results
-    const jsonMatch = html.match(
-      /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([^<]+)<\/script>/
-    );
-
     const suggestions: TikTokSuggestion[] = [];
     const seenUsernames = new Set<string>();
 
-    if (jsonMatch && jsonMatch[1]) {
+    // ── Strategy 1: Extract hydration JSON using indexOf (handles < in JSON) ──
+    const jsonStr = extractBetween(
+      html,
+      '<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"',
+      "</script>"
+    );
+
+    if (jsonStr) {
+      // Find the actual JSON start (after the > of the script tag)
+      const jsonStart = jsonStr.indexOf(">");
+      const rawJson = jsonStart !== -1 ? jsonStr.slice(jsonStart + 1) : jsonStr;
+
       try {
-        const data = JSON.parse(jsonMatch[1]);
+        const data = JSON.parse(rawJson);
 
-        // Navigate to find user cards in search results
-        const userModules =
-          data?.__DEFAULT_SCOPE__?.["webapp.search-video"]?.userList ||
-          data?.__DEFAULT_SCOPE__?.["webapp.search-video"]?.itemList ||
-          [];
+        // Navigate TikTok's data structure to find users
+        const defaultScope = data?.__DEFAULT_SCOPE__ || {};
 
-        // Also check alternative paths
-        const altModules =
-          data?.__DEFAULT_SCOPE__?.["webapp.search-video"]?.userCardList ||
-          [];
+        // Try multiple known paths for search results
+        const searchPaths = [
+          "webapp.search-video",
+          "webapp.search-general",
+          "webapp.search-top",
+        ];
 
-        const allModules = [...userModules, ...altModules];
+        for (const path of searchPaths) {
+          const searchData = defaultScope[path];
+          if (!searchData) continue;
 
-        for (const mod of allModules) {
-          if (!mod) continue;
+          // Try different user list locations
+          const userLists = [
+            searchData.userList,
+            searchData.userCardList,
+            searchData.itemList,
+            searchData.user_list,
+          ];
 
-          // Extract user info from the module
-          const userInfo = mod.userInfo || mod.user || mod;
-          const uniqueId = userInfo?.uniqueId || userInfo?.unique_id || "";
+          for (const userList of userLists) {
+            if (!Array.isArray(userList)) continue;
 
-          if (uniqueId && !seenUsernames.has(uniqueId)) {
-            seenUsernames.add(uniqueId);
-            suggestions.push({
-              username: uniqueId,
-              displayName: userInfo?.nickname || userInfo?.displayName || uniqueId,
-              verified: userInfo?.verified || false,
-            });
+            for (const item of userList) {
+              if (!item) continue;
+              const userInfo =
+                item.userInfo || item.user || item.user_info || item;
+
+              const uniqueId =
+                userInfo?.uniqueId ||
+                userInfo?.unique_id ||
+                userInfo?.uid ||
+                "";
+
+              if (uniqueId && !seenUsernames.has(uniqueId) && uniqueId.length >= 2) {
+                seenUsernames.add(uniqueId);
+                suggestions.push({
+                  username: uniqueId,
+                  displayName:
+                    userInfo?.nickname ||
+                    userInfo?.displayName ||
+                    userInfo?.display_name ||
+                    uniqueId,
+                  verified: userInfo?.verified || userInfo?.isVerified || false,
+                });
+              }
+            }
           }
         }
       } catch {
-        // JSON parse failed — try regex fallback below
+        // JSON parse failed — continue to fallback strategies
       }
     }
 
-    // Fallback: extract uniqueId patterns directly from HTML
+    // ── Strategy 2: Regex extract uniqueId from HTML ──
     if (suggestions.length === 0) {
-      const uniqueIdRegex = /"uniqueId"\s*:\s*"([^"]+)"/g;
+      const patterns = [
+        /"uniqueId"\s*:\s*"([^"]+)"/g,
+        /"unique_id"\s*:\s*"([^"]+)"/g,
+        /\\"uniqueId\\"\s*:\s*\\"([^\\]+)\\"/g,
+      ];
+
+      for (const pattern of patterns) {
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(html)) !== null) {
+          const uid = match[1].toLowerCase();
+          if (
+            uid &&
+            uid.length >= 2 &&
+            uid.length <= 30 &&
+            /^[a-z0-9._]+$/.test(uid) &&
+            !seenUsernames.has(uid) &&
+            uid !== cleanQuery
+          ) {
+            seenUsernames.add(uid);
+            suggestions.push({
+              username: uid,
+              displayName: uid,
+              verified: false,
+            });
+          }
+          if (suggestions.length >= 10) break;
+        }
+        if (suggestions.length >= 10) break;
+      }
+    }
+
+    // ── Strategy 3: Extract from TikTok card links in HTML ──
+    if (suggestions.length === 0) {
+      // Look for @username patterns in href attributes
+      const hrefPattern = /href="https?:\/\/www\.tiktok\.com\/@([a-zA-Z0-9._]+)"/g;
       let match: RegExpExecArray | null;
-      while ((match = uniqueIdRegex.exec(html)) !== null) {
-        const uid = match[1];
-        if (uid && uid.length >= 2 && !seenUsernames.has(uid)) {
+      while ((match = hrefPattern.exec(html)) !== null) {
+        const uid = match[1].toLowerCase();
+        if (
+          uid &&
+          uid.length >= 2 &&
+          uid !== cleanQuery &&
+          !seenUsernames.has(uid)
+        ) {
           seenUsernames.add(uid);
           suggestions.push({
             username: uid,
@@ -109,7 +187,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Limit to 10 suggestions
     return NextResponse.json({
       suggestions: suggestions.slice(0, 10),
     });
@@ -117,3 +194,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ suggestions: [] });
   }
 }
+
