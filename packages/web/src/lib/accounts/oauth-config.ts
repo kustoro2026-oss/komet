@@ -474,17 +474,17 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken) => {
-    const res = await fetch("https://kit.snapchat.com/v1/me", {
+    // Snap Kit Login Kit uses a GraphQL query parameter — without it, the API returns no fields.
+    // Uses camelCase field names: externalId, displayName, bitmoji.avatar
+    // Ref: https://github.com/SocialiteProviders/Snapchat/blob/master/Provider.php
+    const query = "{me{externalId displayName bitmoji{avatar}}}";
+    const url = `https://kit.snapchat.com/v1/me?query=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const data = (await res.json()) as {
       data?: {
         me?: {
-          // snake_case (REST API)
-          external_id?: string;
-          display_name?: string;
-          bitmoji_avatar_url?: string;
-          // camelCase (JS SDK normalized)
           externalId?: string;
           displayName?: string;
           bitmoji?: { avatar?: string };
@@ -492,11 +492,9 @@ register({
       };
     };
     const me = data?.data?.me || {};
-
-    // Handle both snake_case and camelCase response formats
-    const displayName = me.display_name || me.displayName || "";
-    const externalId = me.external_id || me.externalId || "";
-    const avatarUrl = me.bitmoji_avatar_url || me.bitmoji?.avatar || undefined;
+    const externalId = me.externalId || "";
+    const displayName = me.displayName || "";
+    const avatarUrl = me.bitmoji?.avatar || undefined;
 
     return {
       platformAccountId: externalId,
