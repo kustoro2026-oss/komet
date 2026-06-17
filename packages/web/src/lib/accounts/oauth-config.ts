@@ -474,75 +474,71 @@ register({
     refreshToken: raw.refresh_token as string | undefined,
     expiresIn: raw.expires_in as number | undefined,
   }),
-  fetchProfile: async (accessToken) => {
-    // Step 1: Try to get organization info from adsapi
-    // The Marketing API token is tied to an organization (ad account).
-    // We need the org/ad-account context to list public profiles.
-    let orgId = "";
-    let orgName = "";
+  fetchProfile: async (accessToken, tokenResponse) => {
+    // Snapchat Marketing API returns an id_token (JWT) with OpenID Connect user claims.
+    // Decode it to get user's display name, without needing to call any API.
+    const idToken = tokenResponse?.id_token as string | undefined;
 
-    try {
-      const meRes = await fetch("https://adsapi.snapchat.com/v1/me", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      console.log("[Snapchat OAuth] adsapi /v1/me status:", meRes.status);
-      if (meRes.ok) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const meData = await meRes.json() as any;
-        console.log("[Snapchat OAuth] adsapi /v1/me response:", JSON.stringify(meData).slice(0, 500));
-        orgId = meData?.me?.organization_id || meData?.organization_id || "";
-        orgName = meData?.me?.organization_name || meData?.organization_name || "";
+    if (idToken) {
+      try {
+        // JWT payload is the second segment (base64-url encoded JSON)
+        const payloadBase64 = idToken.split(".")[1];
+        if (payloadBase64) {
+          const payloadJson = Buffer.from(payloadBase64, "base64url").toString("utf-8");
+          const claims = JSON.parse(payloadJson) as {
+            sub?: string;
+            name?: string;
+            nickname?: string;
+            preferred_username?: string;
+            picture?: string;
+            email?: string;
+          };
+          console.log("[Snapchat OAuth] id_token claims:", JSON.stringify(claims).slice(0, 400));
+
+          const sub = claims.sub || "";
+          const displayName = claims.name || claims.nickname || "";
+          const avatarUrl = claims.picture;
+
+          if (displayName || sub) {
+            return {
+              platformAccountId: sub,
+              username: displayName.toLowerCase().replace(/\s+/g, "_") || sub || "snapchat_user",
+              displayName: displayName || "Snapchat User",
+              avatarUrl: avatarUrl || undefined,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("[Snapchat OAuth] Failed to decode id_token:", (e as Error)?.message);
       }
-    } catch (e) {
-      console.warn("[Snapchat OAuth] adsapi /v1/me failed:", (e as Error)?.message);
     }
 
-    // Step 2: Try to list public profiles
+    // Fallback: try Business API (may not work before app review)
+    // Once the app is approved by Snapchat, the API endpoints will become accessible.
     try {
-      // If we have an org ID, use the org-scoped endpoint
-      const profilesUrl = orgId
-        ? `https://businessapi.snapchat.com/v1/organizations/${orgId}/public_profiles`
-        : "https://businessapi.snapchat.com/v1/public_profiles";
-
-      console.log("[Snapchat OAuth] Fetching profiles from:", profilesUrl);
-      const res = await fetch(profilesUrl, {
+      const res = await fetch("https://businessapi.snapchat.com/v1/public_profiles", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("[Snapchat OAuth] Profiles status:", res.status);
-
+      console.log("[Snapchat OAuth] Profiles API status:", res.status);
       if (res.ok) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = await res.json() as any;
-        console.log("[Snapchat OAuth] Profiles response:", JSON.stringify(data).slice(0, 800));
         const profiles: Array<Record<string, unknown>> = data?.public_profiles || data?.profiles || data?.items || [];
         if (profiles.length > 0) {
           const p = profiles[0];
           return {
             platformAccountId: (p.id || p.profile_id || "") as string,
             username: ((p.username || (p.display_name as string)?.toLowerCase().replace(/\s+/g, "_")) || "snapchat_profile") as string,
-            displayName: ((p.display_name || p.name) || orgName || "Snapchat Public Profile") as string,
+            displayName: ((p.display_name || p.name) || "Snapchat Public Profile") as string,
             avatarUrl: p.avatar_url as string | undefined,
           };
         }
-      } else {
-        const errText = await res.text().catch(() => "");
-        console.warn("[Snapchat OAuth] Profiles error:", res.status, errText.slice(0, 500));
       }
     } catch (e) {
-      console.warn("[Snapchat OAuth] Could not fetch public profiles:", (e as Error)?.message);
+      console.warn("[Snapchat OAuth] API fetch failed:", (e as Error)?.message);
     }
 
-    // Fallback: If we got org info, use it for display
-    if (orgName) {
-      return {
-        platformAccountId: orgId,
-        username: orgName.toLowerCase().replace(/\s+/g, "_") || "snapchat_user",
-        displayName: orgName || "Snapchat (Public Profile needed)",
-        avatarUrl: undefined,
-      };
-    }
-
-    // Ultimate fallback: no Public Profile found yet.
+    // Ultimate fallback: no usable data
     return {
       platformAccountId: "",
       username: "snapchat_user",
