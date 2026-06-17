@@ -96,6 +96,7 @@
     "footerLegal": "Legal",
     "footerFeatures": "Features",
     "footerPricing": "Pricing",
+    "footerTools": "Free Tools",
     "footerIntegrations": "Integrations",
     "footerChangelog": "Changelog",
     "footerDocumentation": "Documentation",
@@ -1313,5 +1314,30 @@
     "epDeletePost": "Delete a scheduled or draft post",
     "epGetAnalytics": "Get aggregated analytics across platforms",
     "epGetPlatformAnalytics": "Get per-platform analytics data"
+  },
+  "tools": {
+    "sectionLabel": "Free Tools",
+    "title": "Free Online Tools",
+    "subtitle": "Handy tools to help you with your social media and content needs. All free, no sign-up required.",
+    "navLabel": "Tools",
+    "backToHome": "Back to Home",
+    "copyright": "All rights reserved.",
+    "noToolsYet": "More tools coming soon",
+    "noToolsDesc": "We're building more tools. Check back soon!",
+    "tiktokCheckerTitle": "TikTok Username Checker",
+    "tiktokCheckerDesc": "Check if a TikTok username is available or already taken. Fast and free.",
+    "tiktokCheckerPlaceholder": "Enter username...",
+    "tiktokCheckerTipsTitle": "Tips for choosing a TikTok username",
+    "tiktokCheckerTip1": "Keep it short and memorable (2-24 characters)",
+    "tiktokCheckerTip2": "Use only letters, numbers, underscores, and periods",
+    "tiktokCheckerTip3": "Avoid special characters, spaces, or symbols",
+    "tiktokCheckerTip4": "Pick something that reflects your brand or content niche",
+    "checkError": "Check Error",
+    "usernameAvailable": "Username is available!",
+    "usernameTaken": "Username is already taken",
+    "copyUsername": "Copy username",
+    "copied": "Copied!",
+    "viewProfile": "View profile on TikTok",
+    "networkError": "Network error. Please check your connection and try again."
   }
 }

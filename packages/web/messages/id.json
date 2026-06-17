@@ -143,6 +143,7 @@
     "footerProduct": "Produk",
     "footerFeatures": "Fitur",
     "footerPricing": "Harga",
+    "footerTools": "Alat Gratis",
     "footerIntegrations": "Integrasi",
     "footerChangelog": "Changelog",
     "footerResources": "Sumber Daya",
@@ -1313,5 +1314,30 @@
     "epDeletePost": "Hapus postingan terjadwal atau draft",
     "epGetAnalytics": "Dapatkan analitik gabungan di semua platform",
     "epGetPlatformAnalytics": "Dapatkan data analitik per platform"
+  },
+  "tools": {
+    "sectionLabel": "Alat Gratis",
+    "title": "Alat Online Gratis",
+    "subtitle": "Alat praktis untuk membantu kebutuhan media sosial dan konten Anda. Semua gratis, tanpa perlu daftar.",
+    "navLabel": "Alat",
+    "backToHome": "Kembali ke Beranda",
+    "copyright": "Hak cipta dilindungi.",
+    "noToolsYet": "Alat lainnya segera hadir",
+    "noToolsDesc": "Kami sedang membangun lebih banyak alat. Periksa kembali nanti!",
+    "tiktokCheckerTitle": "Pemeriksa Nama Pengguna TikTok",
+    "tiktokCheckerDesc": "Cek apakah nama pengguna TikTok tersedia atau sudah dipakai. Cepat dan gratis.",
+    "tiktokCheckerPlaceholder": "Masukkan nama pengguna...",
+    "tiktokCheckerTipsTitle": "Tips memilih nama pengguna TikTok",
+    "tiktokCheckerTip1": "Buat singkat dan mudah diingat (2-24 karakter)",
+    "tiktokCheckerTip2": "Gunakan hanya huruf, angka, garis bawah, dan titik",
+    "tiktokCheckerTip3": "Hindari karakter khusus, spasi, atau simbol",
+    "tiktokCheckerTip4": "Pilih sesuatu yang mencerminkan brand atau niche konten Anda",
+    "checkError": "Kesalahan Pemeriksaan",
+    "usernameAvailable": "Nama pengguna tersedia!",
+    "usernameTaken": "Nama pengguna sudah dipakai",
+    "copyUsername": "Salin nama pengguna",
+    "copied": "Tersalin!",
+    "viewProfile": "Lihat profil di TikTok",
+    "networkError": "Kesalahan jaringan. Periksa koneksi Anda dan coba lagi."
   }
 }

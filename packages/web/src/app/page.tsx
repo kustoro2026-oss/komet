@@ -551,6 +551,7 @@ export default function LandingPage() {
               <ul className="space-y-2.5">
                 <li><a href="#features" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerFeatures")}</a></li>
                 <li><a href="#pricing" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerPricing")}</a></li>
+                <li><Link href="/tool" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerTools")}</Link></li>
                 <li><Link href="/integrations" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerIntegrations")}</Link></li>
                 <li><Link href="/changelog" className="text-sm text-[var(--color-on-dark-soft)] hover:text-[var(--color-on-dark)] transition-colors">{t("footerChangelog")}</Link></li>
               </ul>
