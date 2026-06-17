@@ -447,7 +447,8 @@ register({
 });
 
 // ──────────────────────────────────────────
-// 11. Snapchat — OAuth 2.0 (Snap Kit)
+// 11. Snapchat — OAuth 2.0 (Snap Kit Login Kit)
+// Docs: https://developers.snap.com/snap-kit/login-kit/Tutorials/web
 // ──────────────────────────────────────────
 register({
   platform: "snapchat",
@@ -455,7 +456,11 @@ register({
   authorizeUrl: "https://accounts.snapchat.com/accounts/oauth2/auth",
   tokenUrl: "https://accounts.snapchat.com/accounts/oauth2/token",
   profileUrl: "https://kit.snapchat.com/v1/me",
-  scopes: ["https://auth.snapchat.com/oauth2/api/user.display_name", "https://auth.snapchat.com/oauth2/api/user.bitmoji.avatar"],
+  scopes: [
+    "https://auth.snapchat.com/oauth2/api/user.display_name",
+    "https://auth.snapchat.com/oauth2/api/user.bitmoji.avatar",
+    "https://auth.snapchat.com/oauth2/api/user.external_id",
+  ],
   tokenAuth: "body",
   clientIdEnv: "SNAPCHAT_CLIENT_ID",
   clientSecretEnv: "SNAPCHAT_CLIENT_SECRET",
@@ -473,14 +478,31 @@ register({
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const data = (await res.json()) as {
-      data?: { me?: { external_id?: string; display_name?: string; bitmoji_avatar_url?: string } };
+      data?: {
+        me?: {
+          // snake_case (REST API)
+          external_id?: string;
+          display_name?: string;
+          bitmoji_avatar_url?: string;
+          // camelCase (JS SDK normalized)
+          externalId?: string;
+          displayName?: string;
+          bitmoji?: { avatar?: string };
+        };
+      };
     };
     const me = data?.data?.me || {};
+
+    // Handle both snake_case and camelCase response formats
+    const displayName = me.display_name || me.displayName || "";
+    const externalId = me.external_id || me.externalId || "";
+    const avatarUrl = me.bitmoji_avatar_url || me.bitmoji?.avatar || undefined;
+
     return {
-      platformAccountId: me.external_id || "",
-      username: me.display_name?.toLowerCase().replace(/\s+/g, "_") || "",
-      displayName: me.display_name || "",
-      avatarUrl: me.bitmoji_avatar_url,
+      platformAccountId: externalId,
+      username: displayName.toLowerCase().replace(/\s+/g, "_") || externalId || "snapchat_user",
+      displayName: displayName || "Snapchat User",
+      avatarUrl,
     };
   },
 });
