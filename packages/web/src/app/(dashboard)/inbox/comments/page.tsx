@@ -20,9 +20,15 @@ const MOCK_COMMENTS: CommentItem[] = [
   { id: "c1", platform: "instagram", from: "Sarah Johnson", content: "Love this post! 🔥 When can we expect more content like this?", timestamp: "2 min ago", isRead: false, postContent: "Excited to announce our new feature!" },
   { id: "c2", platform: "twitter", from: "@tech_guy", content: "Great thread on productivity tools! I'd add Notion to the list.", timestamp: "15 min ago", isRead: false, postContent: "Weekly thread: Productivity tools" },
   { id: "c3", platform: "facebook", from: "Mike Peters", content: "When is the next webinar? I missed the last one 😢", timestamp: "3 hours ago", isRead: true, postContent: "Join our webinar next week!" },
-  { id: "c4", platform: "youtube", from: "Anna W.", content: "Great tutorial! Very well explained step by step. I finally understand how to set up my social media strategy thanks to this.", timestamp: "5 hours ago", isRead: true, postContent: "Complete guide to social media" },
+  { id: "c4", platform: "youtube", from: "Anna W.", content: "Great tutorial! Very well explained step by step.", timestamp: "5 hours ago", isRead: true, postContent: "Complete guide to social media" },
   { id: "c5", platform: "tiktok", from: "@creator_girl", content: "This trend is amazing! Trying it out today 🎵", timestamp: "1 day ago", isRead: true, postContent: "TikTok trend compilation" },
   { id: "c6", platform: "linkedin", from: "John Smith", content: "Interesting insights on industry trends. Would love to connect!", timestamp: "2 days ago", isRead: true, postContent: "Industry trends 2026" },
+  { id: "c7", platform: "pinterest", from: "Emily Chen", content: "Beautiful board! Saving this for my design inspo ✨", timestamp: "3 hours ago", isRead: false, postContent: "Design moodboard 2026" },
+  { id: "c8", platform: "discord", from: "DevGamer42", content: "The new update is awesome! When's the next community event?", timestamp: "6 hours ago", isRead: false, postContent: "Community update announcement" },
+  { id: "c9", platform: "telegram", from: "Alex R.", content: "Thx for sharing! Can I repost this on my channel?", timestamp: "8 hours ago", isRead: true, postContent: "Telegram channel post" },
+  { id: "c10", platform: "reddit", from: "u/reddit_user", content: "Underrated post. This deserves way more upvotes.", timestamp: "12 hours ago", isRead: true, postContent: "Reddit discussion thread" },
+  { id: "c11", platform: "threads", from: "@threads_user", content: "This is exactly what I needed to read today 🙌", timestamp: "1 day ago", isRead: true, postContent: "Threads update" },
+  { id: "c12", platform: "bluesky", from: "@bsky.social", content: "Bluesky community is growing! Great content.", timestamp: "2 days ago", isRead: true, postContent: "Bluesky post" },
 ];
 
 export default function CommentsPage() {

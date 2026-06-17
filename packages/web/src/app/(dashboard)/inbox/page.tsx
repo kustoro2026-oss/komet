@@ -28,13 +28,17 @@ import type { CommentedPost } from "@/lib/inbox/hooks";
 import { useCommentedPosts, usePostComments, useReplyToComment, useDeleteComment } from "@/lib/inbox/hooks";
 
 // ---- types ----
-interface TelegramContact {
+interface UnifiedContact {
   id: string;
   name: string;
+  platform: string;
   lastMessage: string;
   timestamp: string;
   unread: boolean;
+  kind: "message" | "comment";
   type?: string;
+  accountId?: string;
+  accountUsername?: string;
 }
 
 interface ChatMessage {
@@ -87,12 +91,14 @@ export default function InboxPage() {
   const [replyText, setReplyText] = useState("");
   const [deletingTarget, setDeletingTarget] = useState<{ postId: string; accountId: string; commentId: string } | null>(null);
 
-  // ---- messages state (new) ----
-  const [telegramContacts, setTelegramContacts] = useState<TelegramContact[]>([]);
-  const [telegramLoading, setTelegramLoading] = useState(false);
+  // ---- messages state ----
+  const [conversations, setConversations] = useState<UnifiedContact[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeChatPlatform, setActiveChatPlatform] = useState<string>("");
   const [activeChatName, setActiveChatName] = useState("");
   const [activeChatType, setActiveChatType] = useState("");
+  const [activeChatAccountId, setActiveChatAccountId] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState("");
@@ -111,36 +117,35 @@ export default function InboxPage() {
   const replyMutation = useReplyToComment();
   const deleteMutation = useDeleteComment();
 
-  // ---- fetch Telegram conversations ----
+  // ---- fetch unified conversations ----
   const contactsFingerprintRef = useRef("");
 
-  const fetchTelegram = useCallback(async () => {
-    setTelegramLoading(true);
+  const fetchConversations = useCallback(async () => {
+    setConversationsLoading(true);
     setMsgError("");
     try {
-      const res = await fetch("/api/inbox/telegram");
-      if (!res.ok) throw new Error("Failed to fetch Telegram conversations");
+      const res = await fetch("/api/inbox/conversations");
+      if (!res.ok) throw new Error("Failed to fetch conversations");
       const data = await res.json();
-      setTelegramContacts(data.conversations || []);
+      setConversations(data.conversations || []);
     } catch (err) {
-      setMsgError(err instanceof Error ? err.message : "Failed to load Telegram");
+      setMsgError(err instanceof Error ? err.message : "Failed to load conversations");
     } finally {
-      setTelegramLoading(false);
+      setConversationsLoading(false);
     }
   }, []);
 
-  // Silent poll for conversation list — no spinner, only updates if data changed
+  // Silent poll for conversation list
   const pollConversations = useCallback(async () => {
     try {
-      const res = await fetch("/api/inbox/telegram");
+      const res = await fetch("/api/inbox/conversations");
       if (!res.ok) return;
       const data = await res.json();
-      const conversations: TelegramContact[] = data.conversations || [];
-      // Only update if something actually changed
-      const fingerprint = JSON.stringify(conversations.map((c) => `${c.id}:${c.unread}:${c.lastMessage}`));
+      const convs: UnifiedContact[] = data.conversations || [];
+      const fingerprint = JSON.stringify(convs.map((c) => `${c.id}:${c.unread}:${c.lastMessage}`));
       if (fingerprint !== contactsFingerprintRef.current) {
         contactsFingerprintRef.current = fingerprint;
-        setTelegramContacts(conversations);
+        setConversations(convs);
       }
     } catch {
       // silently ignore
@@ -151,34 +156,24 @@ export default function InboxPage() {
   const pollingRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchMessages = useCallback(async (chatId: string) => {
-    setMessagesLoading(true);
-    try {
-      const res = await fetch(`/api/inbox/telegram/${chatId}/messages?limit=30`);
-      if (!res.ok) throw new Error("Failed to fetch messages");
-      const data = await res.json();
-      setMessages(data.messages || []);
-    } catch {
-      setMessages([]);
-    } finally {
-      setMessagesLoading(false);
-    }
-  }, []);
-
   // Silent poll — merges new messages without showing loading spinner
-  const pollMessages = useCallback(async (chatId: string) => {
+  const pollMessages = useCallback(async (chatId: string, platform?: string, accountId?: string) => {
     if (pollingRef.current) return;
     pollingRef.current = true;
     try {
-      const res = await fetch(`/api/inbox/telegram/${chatId}/messages?limit=30`);
+      let url: string;
+      if (!platform || platform === "telegram") {
+        url = `/api/inbox/telegram/${chatId}/messages?limit=30`;
+      } else {
+        url = `/api/inbox/messages/${platform}/${chatId}?limit=30`;
+        if (accountId) url += `&accountId=${accountId}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) return;
       const data = await res.json();
       const incoming: ChatMessage[] = data.messages || [];
       setMessages((prev) => {
         if (prev.length === 0) return incoming;
-        // Merge: keep existing messages, append new ones.
-        // But first, remove optimistic temp messages whose content already
-        // appears as a confirmed isMine message in the server response.
         const confirmedContents = new Set(
           incoming.filter((m) => m.isMine).map((m) => m.content),
         );
@@ -188,7 +183,6 @@ export default function InboxPage() {
         const existingIds = new Set(cleaned.map((m) => m.id));
         const newMsgs = incoming.filter((m) => !existingIds.has(m.id));
         if (newMsgs.length === 0) {
-          // If we removed temps but have no new messages, just return cleaned
           return cleaned.length !== prev.length ? cleaned : prev;
         }
         return [...cleaned, ...newMsgs];
@@ -206,27 +200,19 @@ export default function InboxPage() {
   }, [messages]);
 
   useEffect(() => {
-    fetchTelegram();
-  }, [fetchTelegram]);
-
-  useEffect(() => {
-    if (activeChatId) {
-      fetchMessages(activeChatId);
-    } else {
-      setMessages([]);
-    }
-  }, [activeChatId, fetchMessages]);
+    fetchConversations();
+  }, [fetchConversations]);
 
   // Live polling every 5 seconds while a chat is open
   useEffect(() => {
     if (!activeChatId) return;
     const interval = setInterval(() => {
-      pollMessages(activeChatId);
+      pollMessages(activeChatId, activeChatPlatform, activeChatAccountId);
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeChatId, pollMessages]);
+  }, [activeChatId, activeChatPlatform, activeChatAccountId, pollMessages]);
 
-  // Refresh conversation list every 30 seconds (silent — no spinner)
+  // Refresh conversation list every 30 seconds (silent)
   useEffect(() => {
     const interval = setInterval(() => {
       pollConversations();
@@ -234,21 +220,48 @@ export default function InboxPage() {
     return () => clearInterval(interval);
   }, [pollConversations]);
 
-  // ---- select a Telegram chat ----
-  const selectChat = useCallback((chatId: string, name: string, type?: string) => {
+  // ---- select a chat ----
+  const selectChat = useCallback((chatId: string, name: string, type?: string, platform?: string, accountId?: string) => {
     setActiveChatId(chatId);
+    setActiveChatPlatform(platform || "");
     setActiveChatName(name);
     setActiveChatType(type || "");
+    setActiveChatAccountId(accountId || "");
     setMsgError("");
     // Mark as read and update unread state locally
-    setTelegramContacts((prev) =>
+    setConversations((prev) =>
       prev.map((c) => (c.id === chatId ? { ...c, unread: false } : c))
     );
-    // Fire-and-forget: mark as read on Telegram
-    fetch(`/api/inbox/telegram/${chatId}/read`, { method: "POST" }).catch(() => {});
+    // Fire-and-forget: mark as read on platform
+    const readUrl = platform === "telegram"
+      ? `/api/inbox/telegram/${chatId}/read`
+      : `/api/inbox/messages/${platform}/${chatId}`;
+    fetch(readUrl, { method: platform === "telegram" ? "POST" : "PUT" }).catch(() => {});
   }, []);
 
-  // ---- send message (optimistic) ----
+  // ---- fetch messages for active chat (supports multiple platforms) ----
+  const fetchMessages = useCallback(async (chatId: string, platform?: string, accountId?: string) => {
+    setMessagesLoading(true);
+    try {
+      let url: string;
+      if (!platform || platform === "telegram") {
+        url = `/api/inbox/telegram/${chatId}/messages?limit=30`;
+      } else {
+        url = `/api/inbox/messages/${platform}/${chatId}?limit=30`;
+        if (accountId) url += `&accountId=${accountId}`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch messages");
+      const data = await res.json();
+      setMessages(data.messages || []);
+    } catch {
+      setMessages([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  // ---- send message (multi-platform) ----
   const handleSend = async () => {
     const text = messageInput.trim();
     if (!text || !activeChatId) return;
@@ -261,30 +274,30 @@ export default function InboxPage() {
     ]);
     setMessageInput("");
 
-    // Fire API in background
+    // Fire API in background (use platform-specific endpoint)
     try {
-      const res = await fetch("/api/inbox/telegram", {
+      const sendUrl = activeChatPlatform === "telegram" || !activeChatPlatform
+        ? "/api/inbox/telegram"
+        : `/api/inbox/messages/${activeChatPlatform}`;
+      const res = await fetch(sendUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId: activeChatId, message: text }),
+        body: JSON.stringify({
+          chatId: activeChatId,
+          message: text,
+          accountId: activeChatAccountId || undefined,
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Failed to send");
       }
-      // Poll will replace temp message with real one
     } catch (err) {
       setMsgError(err instanceof Error ? err.message : "Failed to send message");
     }
   };
 
-  // ---- filter helpers ----
-  const filteredTelegram = useMemo(() => {
-    if (!search) return telegramContacts;
-    const q = search.toLowerCase();
-    return telegramContacts.filter((c) => c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q));
-  }, [telegramContacts, search]);
-
+  // ---- filter helpers (posts) ----
   const filteredPosts = useMemo(() => {
     if (!search) return posts as CommentedPost[];
     const q = search.toLowerCase();
@@ -323,21 +336,29 @@ export default function InboxPage() {
 
   const handleRefresh = () => {
     setMsgError("");
-    fetchTelegram();
+    fetchConversations();
     refetch();
   };
 
+  // ---- filter helpers ----
+  const filteredConversations = useMemo(() => {
+    if (!search) return conversations;
+    const q = search.toLowerCase();
+    return conversations.filter((c) => c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q));
+  }, [conversations, search]);
+
   // ---- merged All list ----
   const allItems = useMemo(() => {
-    const tgItems = filteredTelegram.map((c) => ({
+    const convItems = filteredConversations.map((c) => ({
       id: c.id,
-      kind: "message" as const,
+      kind: c.kind,
       name: c.name,
-      platform: "telegram" as string,
+      platform: c.platform,
       snippet: c.lastMessage,
       timestamp: c.timestamp,
       unread: c.unread,
       type: c.type,
+      accountId: c.accountId,
     }));
     const postItems = filteredPosts.map((p) => ({
       id: p.id,
@@ -348,19 +369,31 @@ export default function InboxPage() {
       timestamp: p.createdTime,
       unread: false,
       type: undefined as string | undefined,
+      accountId: undefined as string | undefined,
     }));
-    const merged = [...tgItems, ...postItems];
+    const merged = [...convItems, ...postItems];
     merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return merged;
-  }, [filteredTelegram, filteredPosts]);
+  }, [filteredConversations, filteredPosts]);
+
+  // ---- fetch messages when active chat changes ----
+  useEffect(() => {
+    if (activeChatId) {
+      fetchMessages(activeChatId, activeChatPlatform, activeChatAccountId);
+    } else {
+      setMessages([]);
+    }
+  }, [activeChatId, activeChatPlatform, activeChatAccountId, fetchMessages]);
 
   // ---- tab change resets ----
   const handleTabChange = (tab: TabKey) => {
     setActiveTab(tab);
     setSearch("");
     setActiveChatId(null);
+    setActiveChatPlatform("");
     setActiveChatName("");
     setActiveChatType("");
+    setActiveChatAccountId("");
     setMessages([]);
     setExpandedPostId(null);
     setReplyingTo(null);
@@ -377,10 +410,10 @@ export default function InboxPage() {
         </div>
         <button
           onClick={handleRefresh}
-          disabled={isLoading || telegramLoading}
+          disabled={isLoading || conversationsLoading}
           className="rounded-lg border border-[var(--color-ink-muted)] px-3 py-2 text-button-sm text-[var(--color-on-dark)] hover:bg-[var(--color-surface-dark-raised)] disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading || telegramLoading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`h-4 w-4 ${isLoading || conversationsLoading ? "animate-spin" : ""}`} />
         </button>
       </div>
 
@@ -426,23 +459,23 @@ export default function InboxPage() {
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Conversation list - full width on mobile, sidebar on desktop */}
             <div className={`w-full lg:w-72 shrink-0 ${activeChatId ? 'hidden lg:block' : ''}`}>
-              {telegramLoading ? (
+              {conversationsLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-[var(--color-on-dark-muted)]" />
                 </div>
-              ) : filteredTelegram.length === 0 ? (
+              ) : filteredConversations.length === 0 ? (
                 <div className="rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] p-6 text-center">
                   <MessageSquare className="mx-auto h-8 w-8 text-[var(--color-on-dark-muted)]" />
                   <p className="mt-2 text-body-sm text-[var(--color-on-dark-muted)]">
-                    {telegramContacts.length === 0 ? "No conversations yet. Connect Telegram." : "No matching conversations"}
+                    {conversations.length === 0 ? "No conversations yet. Connect your platforms." : "No matching conversations"}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-1 max-h-[500px] overflow-y-auto">
-                  {filteredTelegram.map((contact) => (
+                  {filteredConversations.map((contact) => (
                     <button
-                      key={contact.id}
-                      onClick={() => selectChat(contact.id, contact.name, contact.type)}
+                      key={`${contact.platform}-${contact.id}`}
+                      onClick={() => selectChat(contact.id, contact.name, contact.type, contact.platform, contact.accountId)}
                       className={`w-full rounded-lg p-3 text-left transition-colors ${
                         activeChatId === contact.id
                           ? "bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30"
@@ -458,8 +491,8 @@ export default function InboxPage() {
                       </div>
                       <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] truncate">{contact.lastMessage}</p>
                       <span className="flex items-center gap-1 mt-1 text-micro text-[var(--color-primary-light)]">
-                        <PlatformIcon platform="telegram" className="h-3 w-3" />
-                        {contact.type === "group" ? "Group" : contact.type === "channel" ? "Channel" : "Chat"}
+                        <PlatformIcon platform={contact.platform as Platform} className="h-3 w-3" />
+                        {contact.type === "group" ? "Group" : contact.type === "channel" ? "Channel" : contact.type || "Chat"}
                       </span>
                     </button>
                   ))}
@@ -474,13 +507,13 @@ export default function InboxPage() {
                   <div className="border-b border-[var(--color-ink-muted)] px-5 py-4 flex items-center gap-3">
                     {/* Back button - mobile only */}
                     <button
-                      onClick={() => { setActiveChatId(null); setActiveChatName(""); setActiveChatType(""); setMessages([]); }}
+                      onClick={() => { setActiveChatId(null); setActiveChatPlatform(""); setActiveChatName(""); setActiveChatType(""); setActiveChatAccountId(""); setMessages([]); }}
                       className="lg:hidden rounded-lg p-1.5 -ml-1.5 text-[var(--color-on-dark-muted)] hover:bg-[var(--color-surface-dark-raised)] hover:text-[var(--color-on-dark)] transition-colors"
                       aria-label="Back to conversations"
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </button>
-                    <PlatformIcon platform="telegram" className="h-5 w-5" />
+                    <PlatformIcon platform={(activeChatPlatform || "telegram") as Platform} className="h-5 w-5" />
                     <div>
                       <h3 className="font-display text-heading-sm font-semibold text-[var(--color-on-dark)]">{activeChatName}</h3>
                       {activeChatType && <p className="text-caption text-[var(--color-on-dark-muted)] capitalize">{activeChatType}</p>}
@@ -866,7 +899,7 @@ export default function InboxPage() {
             </div>
           )}
 
-          {(telegramLoading || isLoading) ? (
+          {(conversationsLoading || isLoading) ? (
             <div className="flex items-center justify-center py-24">
               <Loader2 className="h-8 w-8 animate-spin text-[var(--color-on-dark-muted)]" />
             </div>
@@ -888,7 +921,7 @@ export default function InboxPage() {
                   onClick={() => {
                     if (item.kind === "message") {
                       handleTabChange("messages");
-                      setTimeout(() => selectChat(item.id, item.name, item.type), 0);
+                      setTimeout(() => selectChat(item.id, item.name, item.type, item.platform, (item as { accountId?: string }).accountId), 0);
                     } else {
                       handleTabChange("comments");
                       setTimeout(() => toggleExpand(item.id), 0);
@@ -898,7 +931,7 @@ export default function InboxPage() {
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)]/20 to-[var(--color-accent)]/20">
                       {item.kind === "message" ? (
-                        <PlatformIcon platform="telegram" className="h-4 w-4" />
+                        <PlatformIcon platform={(item.platform || "telegram") as Platform} className="h-4 w-4" />
                       ) : (
                         <PlatformIcon platform={item.platform as Platform} className="h-4 w-4" />
                       )}

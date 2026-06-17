@@ -73,69 +73,49 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
-  // ---- fetch Telegram conversations ----
-  const fetchTelegram = useCallback(async () => {
+  // ---- fetch unified conversations ----
+  const fetchConversations = useCallback(async () => {
     setContactsLoading(true);
     try {
-      const res = await fetch("/api/inbox/telegram");
-      if (!res.ok) throw new Error("Failed to fetch Telegram conversations");
+      const res = await fetch("/api/inbox/conversations");
+      if (!res.ok) throw new Error("Failed to fetch conversations");
       const data = await res.json();
-      const convs: UnifiedContact[] = (data.conversations || []).map(
-        (c: { id: string; name: string; lastMessage: string; timestamp: string; unread: boolean; type?: string }) => ({
+      const all: UnifiedContact[] = (data.conversations || []).map(
+        (c: { id: string; name: string; platform: string; lastMessage: string; timestamp: string; unread: boolean; kind: string; type?: string; accountId?: string; accountUsername?: string }) => ({
           id: c.id,
           name: c.name,
-          platform: "telegram",
+          platform: c.platform,
           lastMessage: c.lastMessage || "",
           timestamp: c.timestamp || new Date().toISOString(),
           unread: c.unread || false,
-          kind: "message" as const,
+          kind: (c.kind as "message" | "comment") || "message",
           type: c.type,
+          commentCount: 0,
+          likeCount: 0,
         }),
       );
-      setTelegramContacts(convs);
+      setTelegramContacts(all.filter((c) => c.kind === "message"));
+      setCommentContacts(all.filter((c) => c.kind === "comment"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load Telegram");
+      setError(err instanceof Error ? err.message : "Failed to load conversations");
     } finally {
       setContactsLoading(false);
-    }
-  }, []);
-
-  // ---- fetch comments/posts ----
-  const fetchComments = useCallback(async () => {
-    setCommentsLoading(true);
-    try {
-      const res = await fetch("/api/inbox/comments");
-      if (!res.ok) throw new Error("Failed to fetch comments");
-      const data = await res.json();
-      const posts: UnifiedContact[] = (data.posts || data.data || []).map(
-        (p: { id: string; platform: string; content: string; createdTime: string; permalink?: string; commentCount?: number; likeCount?: number }) => ({
-          id: p.id,
-          name: p.content ? p.content.slice(0, 40).replace(/\n/g, " ") + (p.content.length > 40 ? "…" : "") : "Untitled Post",
-          platform: p.platform || "twitter",
-          lastMessage: "",
-          timestamp: p.createdTime || new Date().toISOString(),
-          unread: false,
-          kind: "comment" as const,
-          content: p.content,
-          permalink: p.permalink,
-          commentCount: p.commentCount || 0,
-          likeCount: p.likeCount || 0,
-        }),
-      );
-      setCommentContacts(posts);
-    } catch {
-      // Silently fail – comments may not be available
-      setCommentContacts([]);
-    } finally {
       setCommentsLoading(false);
     }
   }, []);
 
-  // ---- fetch messages for active Telegram contact ----
-  const fetchMessages = useCallback(async (chatId: string) => {
+  // ---- fetch messages for active contact (multi-platform) ----
+  const fetchMessages = useCallback(async (chatId: string, platform?: string, accountId?: string) => {
     setMessagesLoading(true);
     try {
-      const res = await fetch(`/api/inbox/telegram/${chatId}/messages?limit=30`);
+      let url: string;
+      if (!platform || platform === "telegram") {
+        url = `/api/inbox/telegram/${chatId}/messages?limit=30`;
+      } else {
+        url = `/api/inbox/messages/${platform}/${chatId}?limit=30`;
+        if (accountId) url += `&accountId=${accountId}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch messages");
       const data = await res.json();
       setMessages(data.messages || []);
@@ -146,7 +126,7 @@ export default function MessagesPage() {
     }
   }, []);
 
-  useEffect(() => { fetchTelegram(); fetchComments(); }, [fetchTelegram, fetchComments]);
+  useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
   useEffect(() => {
     if (activeContactId && activeContactKind === "message") {
@@ -179,15 +159,24 @@ export default function MessagesPage() {
 
   const activeContactData = unifiedContacts.find((c) => c.id === activeContactId);
 
-  // ---- send message ----
+  // ---- send message (multi-platform) ----
   const handleSend = async () => {
     if (!messageInput.trim() || !activeContactId || sending || activeContactKind !== "message") return;
     setSending(true);
+    const contactData = activeContactData;
+    const platform = contactData?.platform || "";
     try {
-      const res = await fetch("/api/inbox/telegram", {
+      const sendUrl = platform === "telegram" || !platform
+        ? "/api/inbox/telegram"
+        : `/api/inbox/messages/${platform}`;
+      const res = await fetch(sendUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId: activeContactId, message: messageInput.trim() }),
+        body: JSON.stringify({
+          chatId: activeContactId,
+          message: messageInput.trim(),
+          accountId: (contactData as { accountId?: string })?.accountId || undefined,
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -208,8 +197,7 @@ export default function MessagesPage() {
 
   const handleRefresh = () => {
     setError("");
-    fetchTelegram();
-    fetchComments();
+    fetchConversations();
   };
 
   const handleSelect = (id: string, kind: "message" | "comment") => {
