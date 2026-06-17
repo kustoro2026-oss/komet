@@ -474,67 +474,10 @@ register({
     refreshToken: raw.refresh_token as string | undefined,
     expiresIn: raw.expires_in as number | undefined,
   }),
-  fetchProfile: async (accessToken, tokenResponse) => {
-    // Snapchat Marketing API returns an id_token (JWT) with OpenID Connect user claims.
-    // Decode it to get user's display name, without needing to call any API.
-    console.log("[Snapchat OAuth] tokenResponse keys:", tokenResponse ? Object.keys(tokenResponse) : "(none)");
-    const idToken = tokenResponse?.id_token as string | undefined;
-    console.log("[Snapchat OAuth] id_token present:", !!idToken, "| length:", idToken?.length, "| type:", typeof idToken);
-    // id_token may be nested inside token_responses array
-    console.log("[Snapchat OAuth] token_responses:", JSON.stringify(tokenResponse?.token_responses).slice(0, 300));
-
-    // Try to find id_token inside token_responses if the top-level one is empty
-    let effectiveIdToken = idToken;
-    if (!effectiveIdToken && Array.isArray(tokenResponse?.token_responses)) {
-      for (const tr of tokenResponse.token_responses as Array<Record<string, unknown>>) {
-        if (tr.id_token) {
-          effectiveIdToken = tr.id_token as string;
-          console.log("[Snapchat OAuth] Found id_token inside token_responses, length:", effectiveIdToken.length);
-          break;
-        }
-      }
-    }
-
-    if (effectiveIdToken) {
-      try {
-        // JWT payload is the second segment (base64url-encoded JSON)
-        // Use atob() instead of Buffer for Edge runtime compatibility
-        const payloadBase64 = effectiveIdToken.split(".")[1];
-        if (payloadBase64) {
-          // Convert base64url to standard base64 (replace - → +, _ → /, add padding)
-          let base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
-          while (base64.length % 4) base64 += "=";
-          const payloadJson = atob(base64);
-          const claims = JSON.parse(payloadJson) as {
-            sub?: string;
-            name?: string;
-            nickname?: string;
-            preferred_username?: string;
-            picture?: string;
-            email?: string;
-          };
-          console.log("[Snapchat OAuth] id_token claims:", JSON.stringify(claims).slice(0, 400));
-
-          const sub = claims.sub || "";
-          const displayName = claims.name || claims.nickname || "";
-          const avatarUrl = claims.picture;
-
-          if (displayName || sub) {
-            return {
-              platformAccountId: sub,
-              username: displayName.toLowerCase().replace(/\s+/g, "_") || sub || "snapchat_user",
-              displayName: displayName || "Snapchat User",
-              avatarUrl: avatarUrl || undefined,
-            };
-          }
-        }
-      } catch (e) {
-        console.warn("[Snapchat OAuth] Failed to decode id_token:", (e as Error)?.message);
-      }
-    }
-
-    // Fallback: try Business API (may not work before app review)
-    // Once the app is approved by Snapchat, the API endpoints will become accessible.
+  fetchProfile: async (accessToken) => {
+    // Try Business API to get Public Profile details.
+    // NOTE: API returns 404 until the OAuth App is approved by Snapchat.
+    // Once approved, this will return the user's Public Profile with correct display name.
     try {
       const res = await fetch("https://businessapi.snapchat.com/v1/public_profiles", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -558,11 +501,12 @@ register({
       console.warn("[Snapchat OAuth] API fetch failed:", (e as Error)?.message);
     }
 
-    // Ultimate fallback: no usable data
+    // Placeholder until Snapchat approves the OAuth App.
+    // After approval, the Business API will return the real Public Profile data.
     return {
       platformAccountId: "",
       username: "snapchat_user",
-      displayName: "Snapchat (Public Profile needed)",
+      displayName: "Snapchat (pending app review)",
       avatarUrl: undefined,
     };
   },
