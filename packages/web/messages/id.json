@@ -1333,11 +1333,14 @@
     "tiktokCheckerTip3": "Hindari karakter khusus, spasi, atau simbol",
     "tiktokCheckerTip4": "Pilih sesuatu yang mencerminkan brand atau niche konten Anda",
     "checkError": "Kesalahan Pemeriksaan",
-    "usernameAvailable": "Nama pengguna tersedia!",
-    "usernameTaken": "Nama pengguna sudah dipakai",
+    "usernameAvailable": "Kabar baik — nama pengguna ini tersedia!",
+    "usernameTaken": "Nama pengguna ini sudah terdaftar",
+    "usernameAvailableDesc": "Nama pengguna ini bebas untuk diklaim di TikTok. Ambil sebelum orang lain mengambilnya!",
     "copyUsername": "Salin nama pengguna",
     "copied": "Tersalin!",
     "viewProfile": "Lihat profil di TikTok",
-    "networkError": "Kesalahan jaringan. Periksa koneksi Anda dan coba lagi."
+    "networkError": "Kesalahan jaringan. Periksa koneksi Anda dan coba lagi.",
+    "available": "Tersedia",
+    "taken": "Terpakai"
   }
 }

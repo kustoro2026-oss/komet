@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   CheckCircle,
-  XCircle,
   AlertTriangle,
   Loader2,
   Copy,
   ExternalLink,
+  User,
+  Sparkles,
 } from "lucide-react";
 
 interface CheckResult {
@@ -127,70 +128,123 @@ export default function TikTokUsernameCheckerPage() {
             {result && (
               <motion.div
                 key={result.username + result.available}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
+                initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="mt-6"
               >
                 {result.error && !result.available ? (
-                  /* Error state */
-                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-5">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 shrink-0 text-amber-400 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-amber-300 text-sm">
+                  /* ── Error state ── */
+                  <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.08] to-amber-600/[0.03] p-6 shadow-lg shadow-amber-500/5">
+                    <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-500/10 blur-2xl" />
+                    <div className="relative flex items-start gap-4">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 ring-1 ring-amber-500/20">
+                        <AlertTriangle className="h-5 w-5 text-amber-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-amber-200 text-sm tracking-tight">
                           {t("checkError")}
-                        </p>
-                        <p className="mt-1 text-sm text-amber-200/70">
+                        </h3>
+                        <p className="mt-1.5 text-sm text-amber-300/60 leading-relaxed">
                           {result.error}
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : result.available ? (
-                  /* Available */
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-5">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 shrink-0 text-emerald-400 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-emerald-300 text-sm">
-                          {t("usernameAvailable")}
-                        </p>
-                        <p className="mt-1 text-sm text-emerald-200/70 break-all">
+                  /* ── Available state ── */
+                  <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.08] to-emerald-600/[0.03] p-6 shadow-lg shadow-emerald-500/5">
+                    <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-emerald-500/10 blur-2xl" />
+                    <div className="absolute right-4 top-4">
+                      <Sparkles className="h-4 w-4 text-emerald-400/40" />
+                    </div>
+                    <div className="relative flex items-start gap-4">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/20">
+                        <CheckCircle className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                            {t("available")}
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-emerald-200 text-base tracking-tight">
                           @{result.username}
+                        </h3>
+                        <p className="mt-1.5 text-sm text-emerald-300/60 leading-relaxed">
+                          {t("usernameAvailableDesc")}
                         </p>
-                        <button
-                          onClick={() => handleCopy(result.username)}
-                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300 hover:text-emerald-200 transition-colors"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                          {copied ? t("copied") : t("copyUsername")}
-                        </button>
+                        <div className="mt-4 flex flex-wrap gap-2.5">
+                          <button
+                            onClick={() => handleCopy(result.username)}
+                            className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-500/30 active:scale-[0.97] transition-all ring-1 ring-emerald-500/25"
+                          >
+                            <Copy className="h-4 w-4" />
+                            {copied ? t("copied") : t("copyUsername")}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  /* Taken */
-                  <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-5">
-                    <div className="flex items-start gap-3">
-                      <XCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-red-300 text-sm">
-                          {t("usernameTaken")}
-                        </p>
-                        <p className="mt-1 text-sm text-red-200/70 break-all">
-                          @{result.username}
-                        </p>
+                  /* ── Taken state ── */
+                  <div className="relative overflow-hidden rounded-2xl border border-red-500/15 bg-gradient-to-br from-red-500/[0.06] to-red-600/[0.02] p-6 shadow-lg shadow-red-500/5">
+                    {/* Background glow */}
+                    <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-red-500/8 blur-2xl" />
+                    <div className="absolute -left-4 -bottom-4 h-20 w-20 rounded-full bg-rose-500/6 blur-2xl" />
+
+                    <div className="relative">
+                      {/* Header row: status badge */}
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/12 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-red-300 ring-1 ring-red-500/15">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                          {t("taken")}
+                        </span>
+                      </div>
+
+                      {/* Profile-like card */}
+                      <div className="flex items-center gap-4">
+                        {/* Avatar placeholder */}
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-500/20 to-rose-500/15 ring-2 ring-red-500/20">
+                          <span className="text-lg font-bold text-red-300 uppercase">
+                            {result.username.charAt(0)}
+                          </span>
+                        </div>
+
+                        {/* Username & details */}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-base text-red-100 tracking-tight truncate">
+                            @{result.username}
+                          </h3>
+                          <p className="mt-0.5 text-sm text-red-300/50 flex items-center gap-1.5">
+                            <User className="h-3.5 w-3.5" />
+                            {t("usernameTaken")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="my-4 h-px bg-gradient-to-r from-red-500/10 via-red-500/15 to-transparent" />
+
+                      {/* Action buttons */}
+                      <div className="flex flex-wrap gap-2.5">
                         <a
                           href={`https://www.tiktok.com/@${result.username}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-red-300 hover:text-red-200 transition-colors"
+                          className="inline-flex items-center gap-2 rounded-lg bg-white/[0.04] px-4 py-2 text-sm font-medium text-red-200 hover:bg-white/[0.08] active:scale-[0.97] transition-all ring-1 ring-white/[0.06]"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
+                          <ExternalLink className="h-4 w-4" />
                           {t("viewProfile")}
                         </a>
+                        <button
+                          onClick={() => handleCopy(result.username)}
+                          className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-500/25 active:scale-[0.97] transition-all ring-1 ring-red-500/20"
+                        >
+                          <Copy className="h-4 w-4" />
+                          {copied ? t("copied") : t("copyUsername")}
+                        </button>
                       </div>
                     </div>
                   </div>

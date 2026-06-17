@@ -1333,11 +1333,14 @@
     "tiktokCheckerTip3": "Avoid special characters, spaces, or symbols",
     "tiktokCheckerTip4": "Pick something that reflects your brand or content niche",
     "checkError": "Check Error",
-    "usernameAvailable": "Username is available!",
-    "usernameTaken": "Username is already taken",
+    "usernameAvailable": "Great news — this username is available!",
+    "usernameTaken": "This username is already registered",
+    "usernameAvailableDesc": "This username is free to claim on TikTok. Grab it before someone else does!",
     "copyUsername": "Copy username",
     "copied": "Copied!",
     "viewProfile": "View profile on TikTok",
-    "networkError": "Network error. Please check your connection and try again."
+    "networkError": "Network error. Please check your connection and try again.",
+    "available": "Available",
+    "taken": "Taken"
   }
 }
