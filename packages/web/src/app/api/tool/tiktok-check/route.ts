@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         available: false,
         error:
           "Invalid username format. TikTok usernames can only contain letters, numbers, underscores, and periods (2-24 characters).",
-      } satisfies TikTokCheckResponse,
+      } as TikTokCheckResponse,
       { status: 200 }
     );
   }
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
           username: cleanUsername,
           available: false,
           error: "Too many requests. Please try again in a moment.",
-        } satisfies TikTokCheckResponse,
+        } as TikTokCheckResponse,
         { status: 200 }
       );
     }
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
           username: cleanUsername,
           available: false,
           error: `Unable to verify (HTTP ${response.status}). Please try again.`,
-        } satisfies TikTokCheckResponse,
+        } as TikTokCheckResponse,
         { status: 200 }
       );
     }
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
         available: false,
         error:
           "Could not reliably determine if this username exists. TikTok may have changed their page structure.",
-      } satisfies TikTokCheckResponse,
+      } as TikTokCheckResponse,
       { status: 200 }
     );
   } catch (error) {
@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
         username: cleanUsername,
         available: false,
         error: "Network error. Please check your connection and try again.",
-      } satisfies TikTokCheckResponse,
+      } as TikTokCheckResponse,
       { status: 200 }
     );
   }
