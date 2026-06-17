@@ -11,6 +11,7 @@ import {
   AlertCircle,
   X,
   ChevronRight,
+  ChevronDown,
   MessageSquare,
   EyeOff,
   Heart,
@@ -84,6 +85,9 @@ export default function InboxPage() {
 
   // ---- search ----
   const [search, setSearch] = useState("");
+
+  // ---- platform filter ----
+  const [platformFilter, setPlatformFilter] = useState(""); // empty = all platforms
 
   // ---- comments state (existing) ----
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
@@ -299,12 +303,18 @@ export default function InboxPage() {
 
   // ---- filter helpers (posts) ----
   const filteredPosts = useMemo(() => {
-    if (!search) return posts as CommentedPost[];
-    const q = search.toLowerCase();
-    return (posts as CommentedPost[]).filter(
-      (p) => p.content.toLowerCase().includes(q) || p.accountUsername.toLowerCase().includes(q)
-    );
-  }, [posts, search]);
+    let result = posts as CommentedPost[];
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (p) => p.content.toLowerCase().includes(q) || p.accountUsername.toLowerCase().includes(q)
+      );
+    }
+    if (platformFilter) {
+      result = result.filter((p) => p.platform === platformFilter);
+    }
+    return result;
+  }, [posts, search, platformFilter]);
 
   // ---- comment handlers ----
   const handleReply = async (postId: string, commentId: string) => {
@@ -342,10 +352,16 @@ export default function InboxPage() {
 
   // ---- filter helpers ----
   const filteredConversations = useMemo(() => {
-    if (!search) return conversations;
-    const q = search.toLowerCase();
-    return conversations.filter((c) => c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q));
-  }, [conversations, search]);
+    let result = conversations;
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((c) => c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q));
+    }
+    if (platformFilter) {
+      result = result.filter((c) => c.platform === platformFilter);
+    }
+    return result;
+  }, [conversations, search, platformFilter]);
 
   // ---- merged All list ----
   const allItems = useMemo(() => {
@@ -389,6 +405,7 @@ export default function InboxPage() {
   const handleTabChange = (tab: TabKey) => {
     setActiveTab(tab);
     setSearch("");
+    setPlatformFilter("");
     setActiveChatId(null);
     setActiveChatPlatform("");
     setActiveChatName("");
@@ -438,16 +455,31 @@ export default function InboxPage() {
       {/* ---- Messages Tab ---- */}
       {activeTab === "messages" && (
         <div className="space-y-4">
-          {/* Search */}
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search conversations..."
-              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            />
+          {/* Search + Filter */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search conversations..."
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div className="relative w-full max-w-[180px]">
+              <select
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] appearance-none pr-8"
+              >
+                <option value="">All Platforms</option>
+                {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)] pointer-events-none" />
+            </div>
           </div>
 
           {msgError && (
@@ -635,16 +667,31 @@ export default function InboxPage() {
       {/* ---- Comments Tab ---- */}
       {activeTab === "comments" && (
         <div className="space-y-6">
-          {/* Search */}
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            />
+          {/* Search + Filter */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("searchPlaceholder")}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div className="relative w-full max-w-[180px]">
+              <select
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] appearance-none pr-8"
+              >
+                <option value="">All Platforms</option>
+                {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)] pointer-events-none" />
+            </div>
           </div>
 
           {/* Loading */}
@@ -881,16 +928,31 @@ export default function InboxPage() {
       {/* ---- All Tab: Merged list ---- */}
       {activeTab === "all" && (
         <div className="space-y-4">
-          {/* Search */}
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search all conversations..."
-              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            />
+          {/* Search + Filter */}
+          <div className="flex items-center gap-3">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search all conversations..."
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] placeholder:text-[var(--color-on-dark-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div className="relative w-full max-w-[180px]">
+              <select
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] appearance-none pr-8"
+              >
+                <option value="">All Platforms</option>
+                {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)] pointer-events-none" />
+            </div>
           </div>
 
           {msgError && (

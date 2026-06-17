@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { PlatformIcon } from "@/components/ui/platform-icon";
-import { Search, MessageSquare, MessageCircle, Send, Loader2, RefreshCw, ExternalLink } from "lucide-react";
+import { Search, MessageSquare, MessageCircle, Send, Loader2, RefreshCw, ExternalLink, ChevronDown } from "lucide-react";
 import type { Platform } from "@komet/shared";
+import { PLATFORM_LABELS } from "@komet/shared";
 
 // ---- unified contact interface ----
 interface UnifiedContact {
@@ -54,6 +55,7 @@ function formatTime(iso: string): string {
 
 export default function MessagesPage() {
   const [search, setSearch] = useState("");
+  const [platformFilter, setPlatformFilter] = useState(""); // empty = all
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [activeContactKind, setActiveContactKind] = useState<"message" | "comment" | null>(null);
   const [messageInput, setMessageInput] = useState("");
@@ -153,9 +155,11 @@ export default function MessagesPage() {
     }
   })();
 
-  const filteredContacts = unifiedContacts.filter((c) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredContacts = unifiedContacts.filter((c) => {
+    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (platformFilter && c.platform !== platformFilter) return false;
+    return true;
+  });
 
   const activeContactData = unifiedContacts.find((c) => c.id === activeContactId);
 
@@ -237,6 +241,7 @@ export default function MessagesPage() {
               setActiveContactKind(null);
               setMessages([]);
               setSearch("");
+              setPlatformFilter("");
             }}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-button-sm font-medium transition-all ${
               activeTab === tab.key
@@ -259,15 +264,30 @@ export default function MessagesPage() {
       <div className="flex flex-col lg:flex-row gap-4">
         {/* contacts sidebar */}
         <div className="w-full lg:w-80 shrink-0">
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search ${activeTab === "comments" ? "posts" : activeTab === "messages" ? "messages" : "conversations"}...`}
-              className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            />
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-on-dark-muted)]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search ${activeTab === "comments" ? "posts" : activeTab === "messages" ? "messages" : "conversations"}...`}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] pl-9 pr-3 py-2 text-body-sm text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              />
+            </div>
+            <div className="relative w-[130px] shrink-0">
+              <select
+                value={platformFilter}
+                onChange={(e) => setPlatformFilter(e.target.value)}
+                className="w-full rounded-lg border border-[var(--color-ink-muted)] bg-[var(--color-surface-dark)] px-2 py-2 text-caption text-[var(--color-on-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] appearance-none pr-7"
+              >
+                <option value="">All</option>
+                {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-on-dark-muted)] pointer-events-none" />
+            </div>
           </div>
 
           {contactsLoading && activeTab !== "comments" ? (
