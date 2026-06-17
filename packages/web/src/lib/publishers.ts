@@ -978,6 +978,9 @@ async function publishToSnapchat(
     // Step 2: Create story
     const publishUrl = `https://businessapi.snapchat.com/v1/public_profiles/${profileId}/stories`;
     const publishBody: Record<string, unknown> = { media_id: mediaId };
+    if (caption) {
+      publishBody.caption = caption;
+    }
 
     console.log("[Snapchat Publisher] Creating story...");
     const publishRes = await fetch(publishUrl, {
