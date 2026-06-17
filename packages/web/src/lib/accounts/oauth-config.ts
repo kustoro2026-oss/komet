@@ -461,7 +461,7 @@ register({
   authorizeUrl: "https://accounts.snapchat.com/login/oauth2/authorize",
   tokenUrl: "https://accounts.snapchat.com/login/oauth2/access_token",
   profileUrl: "https://businessapi.snapchat.com/v1/public_profiles",
-  scopes: ["snapchat-profile-api"],
+  scopes: ["snapchat-marketing-api", "snapchat-profile-api"],
   tokenAuth: "body",
   clientIdEnv: "SNAPCHAT_CLIENT_ID",
   clientSecretEnv: "SNAPCHAT_CLIENT_SECRET",
@@ -475,9 +475,34 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken) => {
-    // Try Business API to get Public Profile details.
-    // NOTE: API returns 404 until the OAuth App is approved by Snapchat.
-    // Once approved, this will return the user's Public Profile with correct display name.
+    // Step 1: Try Marketing API (open to all, no allowlist needed)
+    // Returns org info via adsapi.snapchat.com/v1/me
+    try {
+      const meRes = await fetch("https://adsapi.snapchat.com/v1/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      console.log("[Snapchat OAuth] adsapi /v1/me status:", meRes.status);
+      if (meRes.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const meData = await meRes.json() as any;
+        console.log("[Snapchat OAuth] /v1/me response:", JSON.stringify(meData).slice(0, 500));
+        const org = meData?.me || meData || {};
+        const orgId = org.organization_id as string || "";
+        const orgName = org.organization_name as string || org.display_name as string || "";
+        if (orgId || orgName) {
+          return {
+            platformAccountId: orgId,
+            username: (orgName || "snapchat_user").toLowerCase().replace(/\s+/g, "_"),
+            displayName: orgName || "Snapchat Business",
+            avatarUrl: undefined,
+          };
+        }
+      }
+    } catch (e) {
+      console.warn("[Snapchat OAuth] Marketing API failed:", (e as Error)?.message);
+    }
+
+    // Step 2: Try Public Profile API (requires allowlist — may return 404)
     try {
       const res = await fetch("https://businessapi.snapchat.com/v1/public_profiles", {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -498,11 +523,10 @@ register({
         }
       }
     } catch (e) {
-      console.warn("[Snapchat OAuth] API fetch failed:", (e as Error)?.message);
+      console.warn("[Snapchat OAuth] Public Profile API failed:", (e as Error)?.message);
     }
 
-    // Placeholder until Snapchat approves the OAuth App.
-    // After approval, the Business API will return the real Public Profile data.
+    // Fallback
     return {
       platformAccountId: "",
       username: "snapchat_user",
