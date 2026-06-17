@@ -900,9 +900,14 @@ export default function InboxPage() {
                               })}
                             </div>
                           ) : (
-                            <div className="flex flex-col items-center justify-center py-12">
-                              <MessageCircle className="h-6 w-6 text-[var(--color-on-dark-muted)] mb-2" />
-                              <p className="text-body-sm text-[var(--color-on-dark-muted)]">No comments on this post</p>
+                            <div className="flex flex-col items-center justify-center py-12 px-4">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface-dark)]">
+                                <MessageCircle className="h-6 w-6 text-[var(--color-on-dark-muted)]" />
+                              </div>
+                              <p className="mt-3 text-body-sm font-medium text-[var(--color-on-dark)]">No comments yet</p>
+                              <p className="mt-1 text-caption text-[var(--color-on-dark-muted)] text-center max-w-xs">
+                                Live comments require platform API access. Comments will appear here once your audience engages with your post.
+                              </p>
                             </div>
                           )}
                         </div>
