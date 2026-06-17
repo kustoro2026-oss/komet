@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,6 +12,9 @@ import {
   ExternalLink,
   User,
   Sparkles,
+  Users,
+  BadgeCheck,
+  ArrowUpRight,
 } from "lucide-react";
 
 interface CheckResult {
@@ -20,13 +23,50 @@ interface CheckResult {
   error?: string;
 }
 
+interface Suggestion {
+  username: string;
+  displayName: string;
+  verified: boolean;
+}
+
 export default function TikTokUsernameCheckerPage() {
   const t = useTranslations("tools");
   const [username, setUsername] = useState("");
   const [result, setResult] = useState<CheckResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch suggestions when result is available or error
+  useEffect(() => {
+    if (!result) {
+      setSuggestions([]);
+      return;
+    }
+
+    const shouldFetch = result.available || !!result.error;
+
+    if (shouldFetch && result.username) {
+      setSuggestionsLoading(true);
+      fetch(
+        `/api/tool/tiktok-suggestions?q=${encodeURIComponent(result.username)}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          setSuggestions(data.suggestions || []);
+        })
+        .catch(() => {
+          setSuggestions([]);
+        })
+        .finally(() => {
+          setSuggestionsLoading(false);
+        });
+    } else {
+      setSuggestions([]);
+    }
+  }, [result]);
 
   const checkUsername = useCallback(async () => {
     const trimmed = username.replace(/^@/, "").trim();
@@ -34,6 +74,7 @@ export default function TikTokUsernameCheckerPage() {
 
     setLoading(true);
     setResult(null);
+    setSuggestions([]);
 
     try {
       const res = await fetch(
@@ -227,28 +268,114 @@ export default function TikTokUsernameCheckerPage() {
                       {/* Divider */}
                       <div className="my-4 h-px bg-gradient-to-r from-red-500/10 via-red-500/15 to-transparent" />
 
-                      {/* Action buttons */}
+                      {/* Action button */}
                       <div className="flex flex-wrap gap-2.5">
                         <a
                           href={`https://www.tiktok.com/@${result.username}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg bg-white/[0.04] px-4 py-2 text-sm font-medium text-red-200 hover:bg-white/[0.08] active:scale-[0.97] transition-all ring-1 ring-white/[0.06]"
+                          className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-500/25 active:scale-[0.97] transition-all ring-1 ring-red-500/20"
                         >
                           <ExternalLink className="h-4 w-4" />
                           {t("viewProfile")}
                         </a>
-                        <button
-                          onClick={() => handleCopy(result.username)}
-                          className="inline-flex items-center gap-2 rounded-lg bg-red-500/15 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-500/25 active:scale-[0.97] transition-all ring-1 ring-red-500/20"
-                        >
-                          <Copy className="h-4 w-4" />
-                          {copied ? t("copied") : t("copyUsername")}
-                        </button>
                       </div>
                     </div>
                   </div>
                 )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Suggestions ── */}
+          <AnimatePresence>
+            {suggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="mt-6"
+              >
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04]">
+                      <Users className="h-4 w-4 text-[var(--color-on-dark-soft)]" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-[var(--color-on-dark)] text-sm">
+                        {t("suggestionsTitle")}
+                      </h3>
+                      <p className="text-xs text-[var(--color-on-dark-muted)]">
+                        {t("suggestionsSubtitle")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {suggestions.map((s, i) => (
+                      <motion.a
+                        key={s.username}
+                        href={`https://www.tiktok.com/@${s.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, delay: i * 0.04 }}
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-white/[0.04] transition-colors group"
+                      >
+                        {/* Avatar */}
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-primary)]/20 to-purple-500/15 ring-1 ring-white/[0.06] text-xs font-bold text-[var(--color-on-dark-soft)] uppercase">
+                          {s.username.charAt(0)}
+                        </div>
+
+                        {/* Info */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-sm text-[var(--color-on-dark)] truncate group-hover:text-[var(--color-primary)] transition-colors">
+                              @{s.username}
+                            </span>
+                            {s.verified && (
+                              <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+                            )}
+                          </div>
+                          <p className="text-xs text-[var(--color-on-dark-muted)] truncate">
+                            {s.displayName !== s.username ? s.displayName : ""}
+                          </p>
+                        </div>
+
+                        {/* Arrow */}
+                        <ArrowUpRight className="h-4 w-4 shrink-0 text-[var(--color-on-dark-muted)] group-hover:text-[var(--color-on-dark-soft)] transition-colors" />
+                      </motion.a>
+                    ))}
+                  </div>
+
+                  {/* Search more link */}
+                  <div className="mt-4 pt-3 border-t border-white/[0.04]">
+                    <a
+                      href={`https://www.tiktok.com/search?q=${encodeURIComponent(result?.username || "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-[var(--color-on-dark-muted)] hover:text-[var(--color-on-dark-soft)] transition-colors"
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                      {t("searchMoreOnTikTok")}
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {suggestionsLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-6 flex items-center justify-center gap-2 py-6"
+              >
+                <Loader2 className="h-4 w-4 animate-spin text-[var(--color-on-dark-muted)]" />
+                <span className="text-xs text-[var(--color-on-dark-muted)]">
+                  {t("loadingSuggestions")}
+                </span>
               </motion.div>
             )}
           </AnimatePresence>
