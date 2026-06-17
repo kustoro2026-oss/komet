@@ -214,7 +214,9 @@ async function fetchLinkedInConversations(userId: string): Promise<Conversation[
   }));
 }
 
-// --- Discord Integration ---
+// --- Discord Integration (API v10, 2025-2026) ---
+// Discord bot can list all DM channels it's part of via GET /users/@me/channels
+// Limitation: Bot only sees DMs sent TO the bot, not all user DMs (unlike Telegram)
 async function fetchDiscordConversations(userId: string): Promise<Conversation[]> {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const accounts = await prisma.socialAccount.findMany({
@@ -223,22 +225,135 @@ async function fetchDiscordConversations(userId: string): Promise<Conversation[]
       isActive: true,
       profile: { workspace: { ownerId: userId } },
     } as any,
-    select: { id: true, username: true, displayName: true },
+    select: { id: true, username: true, displayName: true, accessToken: true },
   });
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
-  return accounts.map((account) => ({
-    id: `discord-${account.id}`,
-    name: account.displayName || account.username || "Discord Account",
-    platform: "discord",
-    lastMessage: "Discord messages connected — messages will appear here",
-    timestamp: new Date().toISOString(),
-    unread: false,
-    kind: "message" as const,
-    type: "dm",
-    accountId: account.id,
-    accountUsername: account.username || "",
-  }));
+  if (accounts.length === 0) return [];
+
+  const conversations: Conversation[] = [];
+
+  for (const account of accounts) {
+    const botToken = account.accessToken;
+    if (!botToken) {
+      // No bot token — show placeholder
+      conversations.push({
+        id: `discord-${account.id}`,
+        name: account.displayName || account.username || "Discord Account",
+        platform: "discord",
+        lastMessage: "Discord connected — add bot token for live DMs",
+        timestamp: new Date().toISOString(),
+        unread: false,
+        kind: "message" as const,
+        type: "dm",
+        accountId: account.id,
+        accountUsername: account.username || "",
+      });
+      continue;
+    }
+
+    // Fetch all DM channels the bot can see
+    try {
+      const channelsRes = await fetch("https://discord.com/api/v10/users/@me/channels", {
+        headers: { Authorization: `Bot ${botToken}` },
+      });
+
+      if (!channelsRes.ok) {
+        // Bot token may be invalid or missing scope
+        conversations.push({
+          id: `discord-${account.id}`,
+          name: account.displayName || account.username || "Discord Account",
+          platform: "discord",
+          lastMessage: `Discord connected — bot token issue (HTTP ${channelsRes.status})`,
+          timestamp: new Date().toISOString(),
+          unread: false,
+          kind: "message" as const,
+          type: "dm",
+          accountId: account.id,
+          accountUsername: account.username || "",
+        });
+        continue;
+      }
+
+      const channels: any[] = await channelsRes.json();
+
+      if (channels.length === 0) {
+        conversations.push({
+          id: `discord-${account.id}`,
+          name: account.displayName || account.username || "Discord Bot",
+          platform: "discord",
+          lastMessage: "Discord connected — no DMs yet. Users can message your bot to start.",
+          timestamp: new Date().toISOString(),
+          unread: false,
+          kind: "message" as const,
+          type: "dm",
+          accountId: account.id,
+          accountUsername: account.username || "",
+        });
+        continue;
+      }
+
+      // Process each DM channel
+      for (const channel of channels) {
+        // Only include DM channels (type 1) and Group DMs (type 3)
+        if (channel.type !== 1 && channel.type !== 3) continue;
+
+        // Get recipient name(s)
+        const recipients: any[] = channel.recipients || [];
+        const recipientNames = recipients
+          .map((r: any) => r.global_name || r.username || "Unknown")
+          .filter(Boolean);
+        const channelName = channel.name || recipientNames.join(", ") || "Discord DM";
+
+        // Fetch last message
+        let lastMessageText = "";
+        let lastMessageTime = new Date().toISOString();
+        try {
+          const msgsRes = await fetch(
+            `https://discord.com/api/v10/channels/${channel.id}/messages?limit=1`,
+            { headers: { Authorization: `Bot ${botToken}` } }
+          );
+          if (msgsRes.ok) {
+            const msgs: any[] = await msgsRes.json();
+            if (msgs.length > 0) {
+              lastMessageText = msgs[0].content || "[attachment]";
+              lastMessageTime = msgs[0].timestamp || new Date().toISOString();
+            }
+          }
+        } catch {
+          // No last message available
+        }
+
+        conversations.push({
+          id: channel.id, // Discord channel ID
+          name: channelName,
+          platform: "discord",
+          lastMessage: lastMessageText || "No messages yet",
+          timestamp: lastMessageTime,
+          unread: false,
+          kind: "message" as const,
+          type: channel.type === 3 ? "group" : "dm",
+          accountId: account.id,
+          accountUsername: account.username || "",
+        });
+      }
+    } catch {
+      conversations.push({
+        id: `discord-${account.id}`,
+        name: account.displayName || account.username || "Discord Account",
+        platform: "discord",
+        lastMessage: "Discord connected — failed to fetch DMs",
+        timestamp: new Date().toISOString(),
+        unread: false,
+        kind: "message" as const,
+        type: "dm",
+        accountId: account.id,
+        accountUsername: account.username || "",
+      });
+    }
+  }
+
+  return conversations;
 }
 
 // --- YouTube Integration ---
