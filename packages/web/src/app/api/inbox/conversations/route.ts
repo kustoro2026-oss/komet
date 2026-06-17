@@ -275,6 +275,7 @@ async function fetchDiscordConversations(userId: string): Promise<Conversation[]
         continue;
       }
 
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
       const channels: any[] = await channelsRes.json();
 
       if (channels.length === 0) {
@@ -294,6 +295,7 @@ async function fetchDiscordConversations(userId: string): Promise<Conversation[]
       }
 
       // Process each DM channel
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       for (const channel of channels) {
         // Only include DM channels (type 1) and Group DMs (type 3)
         if (channel.type !== 1 && channel.type !== 3) continue;
@@ -323,6 +325,7 @@ async function fetchDiscordConversations(userId: string): Promise<Conversation[]
         } catch {
           // No last message available
         }
+        /* eslint-enable @typescript-eslint/no-explicit-any */
 
         conversations.push({
           id: channel.id, // Discord channel ID
