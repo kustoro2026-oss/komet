@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { ArrowLeft, Wrench } from "lucide-react";
-import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { KometLogo } from "@/components/ui/komet-logo";
