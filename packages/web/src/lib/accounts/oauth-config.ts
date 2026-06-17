@@ -481,10 +481,14 @@ register({
 
     if (idToken) {
       try {
-        // JWT payload is the second segment (base64-url encoded JSON)
+        // JWT payload is the second segment (base64url-encoded JSON)
+        // Use atob() instead of Buffer for Edge runtime compatibility
         const payloadBase64 = idToken.split(".")[1];
         if (payloadBase64) {
-          const payloadJson = Buffer.from(payloadBase64, "base64url").toString("utf-8");
+          // Convert base64url to standard base64 (replace - → +, _ → /, add padding)
+          let base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+          while (base64.length % 4) base64 += "=";
+          const payloadJson = atob(base64);
           const claims = JSON.parse(payloadJson) as {
             sub?: string;
             name?: string;
