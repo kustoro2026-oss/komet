@@ -1339,6 +1339,7 @@
     "copyUsername": "Copy username",
     "copied": "Copied!",
     "viewProfile": "View profile on TikTok",
+        "viewOnTikTok": "View on TikTok",
     "networkError": "Network error. Please check your connection and try again.",
     "available": "Available",
     "taken": "Taken",

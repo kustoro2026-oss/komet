@@ -8,7 +8,6 @@ import {
   CheckCircle,
   AlertTriangle,
   Loader2,
-  Copy,
   ExternalLink,
   User,
   Sparkles,
@@ -34,7 +33,6 @@ export default function TikTokUsernameCheckerPage() {
   const [username, setUsername] = useState("");
   const [result, setResult] = useState<CheckResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -97,12 +95,6 @@ export default function TikTokUsernameCheckerPage() {
     if (e.key === "Enter") {
       checkUsername();
     }
-  };
-
-  const handleCopy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -217,13 +209,15 @@ export default function TikTokUsernameCheckerPage() {
                           {t("usernameAvailableDesc")}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2.5">
-                          <button
-                            onClick={() => handleCopy(result.username)}
+                          <a
+                            href={`https://www.tiktok.com/@${result.username}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-200 hover:bg-emerald-500/30 active:scale-[0.97] transition-all ring-1 ring-emerald-500/25"
                           >
-                            <Copy className="h-4 w-4" />
-                            {copied ? t("copied") : t("copyUsername")}
-                          </button>
+                            <ExternalLink className="h-4 w-4" />
+                            {t("viewOnTikTok")}
+                          </a>
                         </div>
                       </div>
                     </div>
