@@ -475,32 +475,74 @@ register({
     expiresIn: raw.expires_in as number | undefined,
   }),
   fetchProfile: async (accessToken) => {
-    // Try to list public profiles for the authenticated organization.
-    // A Public Profile is REQUIRED for publishing Stories/Spotlight.
+    // Step 1: Try to get organization info from adsapi
+    // The Marketing API token is tied to an organization (ad account).
+    // We need the org/ad-account context to list public profiles.
+    let orgId = "";
+    let orgName = "";
+
     try {
-      const res = await fetch("https://businessapi.snapchat.com/v1/public_profiles", {
+      const meRes = await fetch("https://adsapi.snapchat.com/v1/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
+      console.log("[Snapchat OAuth] adsapi /v1/me status:", meRes.status);
+      if (meRes.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const meData = await meRes.json() as any;
+        console.log("[Snapchat OAuth] adsapi /v1/me response:", JSON.stringify(meData).slice(0, 500));
+        orgId = meData?.me?.organization_id || meData?.organization_id || "";
+        orgName = meData?.me?.organization_name || meData?.organization_name || "";
+      }
+    } catch (e) {
+      console.warn("[Snapchat OAuth] adsapi /v1/me failed:", (e as Error)?.message);
+    }
+
+    // Step 2: Try to list public profiles
+    try {
+      // If we have an org ID, use the org-scoped endpoint
+      const profilesUrl = orgId
+        ? `https://businessapi.snapchat.com/v1/organizations/${orgId}/public_profiles`
+        : "https://businessapi.snapchat.com/v1/public_profiles";
+
+      console.log("[Snapchat OAuth] Fetching profiles from:", profilesUrl);
+      const res = await fetch(profilesUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      console.log("[Snapchat OAuth] Profiles status:", res.status);
+
       if (res.ok) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = await res.json() as any;
-        const profiles: Array<Record<string, unknown>> = data?.public_profiles || data?.profiles || [];
+        console.log("[Snapchat OAuth] Profiles response:", JSON.stringify(data).slice(0, 800));
+        const profiles: Array<Record<string, unknown>> = data?.public_profiles || data?.profiles || data?.items || [];
         if (profiles.length > 0) {
           const p = profiles[0];
           return {
             platformAccountId: (p.id || p.profile_id || "") as string,
             username: ((p.username || (p.display_name as string)?.toLowerCase().replace(/\s+/g, "_")) || "snapchat_profile") as string,
-            displayName: ((p.display_name || p.name) || "Snapchat Public Profile") as string,
+            displayName: ((p.display_name || p.name) || orgName || "Snapchat Public Profile") as string,
             avatarUrl: p.avatar_url as string | undefined,
           };
         }
+      } else {
+        const errText = await res.text().catch(() => "");
+        console.warn("[Snapchat OAuth] Profiles error:", res.status, errText.slice(0, 500));
       }
-    } catch {
-      console.warn("[Snapchat OAuth] Could not fetch public profiles");
+    } catch (e) {
+      console.warn("[Snapchat OAuth] Could not fetch public profiles:", (e as Error)?.message);
     }
 
-    // Fallback: no Public Profile found yet.
-    // User must create a Public Profile in Snapchat Business Manager before publishing.
+    // Fallback: If we got org info, use it for display
+    if (orgName) {
+      return {
+        platformAccountId: orgId,
+        username: orgName.toLowerCase().replace(/\s+/g, "_") || "snapchat_user",
+        displayName: orgName || "Snapchat (Public Profile needed)",
+        avatarUrl: undefined,
+      };
+    }
+
+    // Ultimate fallback: no Public Profile found yet.
     return {
       platformAccountId: "",
       username: "snapchat_user",
