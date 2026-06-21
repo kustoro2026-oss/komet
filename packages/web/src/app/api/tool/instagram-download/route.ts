@@ -18,13 +18,44 @@ interface InstagramDownloadResponse {
   };
 }
 
-/** Extracts Instagram post shortcode from URL formats */
-function extractShortcode(url: string): string | null {
-  const trimmed = url.trim().replace(/\/$/, "");
-  const match = trimmed.match(
-    /(?:instagram\.com|instagr\.am)\/(?:p|reel|reels)\/([a-zA-Z0-9_-]+)/,
-  );
-  return match ? match[1] : null;
+/** Extracts Instagram post shortcode from various URL formats */
+function extractShortcode(raw: string): string | null {
+  // Normalize: decode, strip protocols, strip query/fragment
+  let url = raw.trim();
+  try {
+    url = decodeURIComponent(url);
+  } catch {
+    // Already decoded or invalid encoding
+  }
+
+  // Handle standalone shortcode (11 chars, alphanumeric + _ -)
+  const standalone = url.match(/^([a-zA-Z0-9_-]{11})$/);
+  if (standalone) return standalone[1];
+
+  // Strip protocol and query/fragment for cleaner matching
+  const cleaned = url.replace(/^https?:\/\//i, "").replace(/[?#].*$/, "");
+
+  // Known Instagram hostnames
+  const hostPattern = "(?:www\\.|m\\.|l\\.|web\\.)?instagram\\.com|instagr\\.am";
+
+  // Path patterns — ordered from most specific to least
+  const patterns: RegExp[] = [
+    // /p/SHORTCODE, /reel/SHORTCODE, /reels/SHORTCODE, /tv/SHORTCODE
+    new RegExp(`${hostPattern}\\/(?:p|reel|reels|tv)\\/([a-zA-Z0-9_-]{11})`),
+    // /share/p/SHORTCODE, /share/reel/SHORTCODE
+    new RegExp(`${hostPattern}\/share\/(?:p|reel|reels)\/([a-zA-Z0-9_-]{11})`),
+    // /share/SHORTCODE (direct share)
+    new RegExp(`${hostPattern}\/share\/([a-zA-Z0-9_-]{11})(?:\/|$)`),
+    // Fallback: any 11-char slug after instagram domain in URL path
+    new RegExp(`${hostPattern}\/(?:[a-z]+\/)*([a-zA-Z0-9_-]{11})(?:\/|$)`),
+  ];
+
+  for (const pattern of patterns) {
+    const m = cleaned.match(pattern);
+    if (m) return m[1];
+  }
+
+  return null;
 }
 
 /**
