@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Search, UserCheck, ArrowRight, Wrench, Download, Image as ImageIcon } from "lucide-react";
+import { Search, UserCheck, ArrowRight, Wrench, Download, Image as ImageIcon, Video } from "lucide-react";
 
 interface ToolItem {
   id: string;
@@ -40,6 +40,14 @@ export default function ToolsPage() {
       titleKey: "youtubeThumbnailTitle",
       descKey: "youtubeThumbnailDesc",
       href: "/tool/youtube-thumbnail-downloader",
+      available: true,
+    },
+    {
+      id: "instagram-downloader",
+      icon: Video,
+      titleKey: "instagramDownloaderTitle",
+      descKey: "instagramDownloaderDesc",
+      href: "/tool/instagram-downloader",
       available: true,
     },
   ];

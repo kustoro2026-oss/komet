@@ -1380,6 +1380,26 @@
     "youtubeThumbnailTip1": "youtube.com/watch?v=VIDEO_ID — standard watch link",
     "youtubeThumbnailTip2": "youtu.be/VIDEO_ID — short share link",
     "youtubeThumbnailTip3": "youtube.com/shorts/VIDEO_ID — YouTube Shorts",
-    "youtubeThumbnailTip4": "You can also paste just the 11-character video ID directly"
+    "youtubeThumbnailTip4": "You can also paste just the 11-character video ID directly",
+    "instagramDownloaderTitle": "Instagram Video & Reel Downloader",
+    "instagramDownloaderDesc": "Download Instagram Reels and videos in HD quality. Fast and free.",
+    "instagramDownloaderPlaceholder": "Paste Instagram post or reel URL...",
+    "instagramDownloaderLoading": "Fetching media...",
+    "instagramDownloaderReel": "Reel / Video",
+    "instagramDownloaderPhoto": "Photo",
+    "instagramDownloaderDownloadVideo": "Download Video",
+    "instagramDownloaderBestQuality": "Best quality, direct CDN link",
+    "instagramDownloaderDownloadPhoto": "Download Image",
+    "instagramDownloaderFullResolution": "Full resolution photo",
+    "instagramDownloaderDownloadThumbnail": "Download Thumbnail",
+    "instagramDownloaderThumbnailDesc": "Cover image from the video",
+    "instagramDownloaderCopyLink": "Copy Media Link",
+    "instagramDownloaderCopyLinkDesc": "Copy direct URL to clipboard",
+    "instagramDownloaderViewOnInstagram": "View on Instagram",
+    "instagramDownloaderTipsTitle": "How to use",
+    "instagramDownloaderTip1": "Open Instagram app, tap Share → Copy Link on any reel or post",
+    "instagramDownloaderTip2": "Paste the link above, or click Paste to auto-fetch from clipboard",
+    "instagramDownloaderTip3": "Click Download Video for reels/videos, or Download Image for photos",
+    "instagramDownloaderTip4": "Only public posts can be downloaded. Private accounts are not supported."
   }
 }

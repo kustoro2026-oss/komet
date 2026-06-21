@@ -1380,6 +1380,26 @@
     "youtubeThumbnailTip1": "youtube.com/watch?v=VIDEO_ID — tautan tontonan standar",
     "youtubeThumbnailTip2": "youtu.be/VIDEO_ID — tautan bagikan pendek",
     "youtubeThumbnailTip3": "youtube.com/shorts/VIDEO_ID — YouTube Shorts",
-    "youtubeThumbnailTip4": "Anda juga bisa menempelkan ID video 11 karakter langsung"
+    "youtubeThumbnailTip4": "Anda juga bisa menempelkan ID video 11 karakter langsung",
+    "instagramDownloaderTitle": "Pengunduh Video & Reel Instagram",
+    "instagramDownloaderDesc": "Unduh Reels dan video Instagram dalam kualitas HD. Cepat dan gratis.",
+    "instagramDownloaderPlaceholder": "Tempel URL postingan atau reel Instagram...",
+    "instagramDownloaderLoading": "Mengambil media...",
+    "instagramDownloaderReel": "Reel / Video",
+    "instagramDownloaderPhoto": "Foto",
+    "instagramDownloaderDownloadVideo": "Unduh Video",
+    "instagramDownloaderBestQuality": "Kualitas terbaik, tautan CDN langsung",
+    "instagramDownloaderDownloadPhoto": "Unduh Gambar",
+    "instagramDownloaderFullResolution": "Foto resolusi penuh",
+    "instagramDownloaderDownloadThumbnail": "Unduh Thumbnail",
+    "instagramDownloaderThumbnailDesc": "Gambar sampul dari video",
+    "instagramDownloaderCopyLink": "Salin Tautan Media",
+    "instagramDownloaderCopyLinkDesc": "Salin URL langsung ke clipboard",
+    "instagramDownloaderViewOnInstagram": "Lihat di Instagram",
+    "instagramDownloaderTipsTitle": "Cara penggunaan",
+    "instagramDownloaderTip1": "Buka aplikasi Instagram, ketuk Bagikan → Salin Tautan di reel atau postingan apa pun",
+    "instagramDownloaderTip2": "Tempel tautan di atas, atau klik Tempel untuk otomatis ambil dari clipboard",
+    "instagramDownloaderTip3": "Klik Unduh Video untuk reel/video, atau Unduh Gambar untuk foto",
+    "instagramDownloaderTip4": "Hanya postingan publik yang bisa diunduh. Akun privat tidak didukung."
   }
 }
