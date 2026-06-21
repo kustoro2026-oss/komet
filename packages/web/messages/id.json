@@ -1366,6 +1366,20 @@
     "tiktokDownloaderTip4": "Video privat atau yang sudah dihapus mungkin tidak bisa diunduh",
     "download": "Unduh",
     "downloadError": "Gagal Mengunduh",
-    "paste": "Tempel"
+    "paste": "Tempel",
+    "youtubeThumbnailTitle": "Pengunduh Thumbnail YouTube",
+    "youtubeThumbnailDesc": "Unduh thumbnail video YouTube dalam kualitas penuh. HD, SD, dan lainnya.",
+    "youtubeThumbnailPlaceholder": "Tempel URL video YouTube atau ID video...",
+    "youtubeThumbnailFetch": "Dapatkan Thumbnail",
+    "youtubeThumbnailErrorEmpty": "Silakan tempel URL video YouTube.",
+    "youtubeThumbnailErrorInvalid": "URL YouTube tidak valid. Tempel tautan seperti youtube.com/watch?v=... atau youtu.be/...",
+    "youtubeThumbnailViewOnYouTube": "Lihat di YouTube",
+    "youtubeThumbnailChooseQuality": "Pilih Kualitas",
+    "youtubeThumbnailCopyLink": "Salin tautan gambar",
+    "youtubeThumbnailTipsTitle": "Format URL yang didukung",
+    "youtubeThumbnailTip1": "youtube.com/watch?v=VIDEO_ID — tautan tontonan standar",
+    "youtubeThumbnailTip2": "youtu.be/VIDEO_ID — tautan bagikan pendek",
+    "youtubeThumbnailTip3": "youtube.com/shorts/VIDEO_ID — YouTube Shorts",
+    "youtubeThumbnailTip4": "Anda juga bisa menempelkan ID video 11 karakter langsung"
   }
 }

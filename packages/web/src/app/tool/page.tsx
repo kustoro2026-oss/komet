@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Search, UserCheck, ArrowRight, Wrench, Download } from "lucide-react";
+import { Search, UserCheck, ArrowRight, Wrench, Download, Image as ImageIcon } from "lucide-react";
 
 interface ToolItem {
   id: string;
@@ -32,6 +32,14 @@ export default function ToolsPage() {
       titleKey: "tiktokDownloaderTitle",
       descKey: "tiktokDownloaderDesc",
       href: "/tool/tiktok-downloader",
+      available: true,
+    },
+    {
+      id: "youtube-thumbnail-downloader",
+      icon: ImageIcon,
+      titleKey: "youtubeThumbnailTitle",
+      descKey: "youtubeThumbnailDesc",
+      href: "/tool/youtube-thumbnail-downloader",
       available: true,
     },
   ];
