@@ -123,7 +123,6 @@ export async function GET(request: NextRequest) {
     const ogVideo = extractMeta(html, "og:video");
     const ogVideoWidth = extractMeta(html, "og:video:width");
     const ogVideoHeight = extractMeta(html, "og:video:height");
-    const ogType = extractMeta(html, "og:type");
 
     // Parse author from title (format: "Author Name on Instagram: ...")
     let author = "Unknown";

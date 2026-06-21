@@ -8,7 +8,6 @@ import {
   Download,
   Image as ImageIcon,
   Video,
-  Music,
   AlertTriangle,
   Loader2,
   ExternalLink,
