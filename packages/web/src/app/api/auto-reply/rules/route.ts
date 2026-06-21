@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { getUserFromRequest } from "@/lib/supabase-admin";
 
 // Force dynamic — Vercel static routes reject PUT
 // Also use /tmp for Vercel serverless (only /tmp is writable)
@@ -22,10 +23,19 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { rules } = body as { rules: unknown[] };
+    const { rules } = body as { rules: unknown[]; userId?: string };
 
     if (!Array.isArray(rules)) {
       return NextResponse.json({ error: "Rules must be an array" }, { status: 400 });
+    }
+
+    // Get userId from auth session (frontend sync) or from body (cron/admin)
+    let userId = "";
+    const { user } = await getUserFromRequest(request);
+    if (user?.id) {
+      userId = user.id;
+    } else if (body && typeof body === "object" && "userId" in body) {
+      userId = (body as { userId: string }).userId;
     }
 
     // Only keep server-relevant fields
@@ -49,6 +59,7 @@ export async function PUT(request: NextRequest) {
       source: r.source,
       isActive: r.isActive,
       createdAt: r.createdAt,
+      userId: userId || "",
     }));
 
     await fs.writeFile(RULES_FILE, JSON.stringify(serverRules, null, 2), "utf-8");

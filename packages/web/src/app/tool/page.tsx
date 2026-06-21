@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Search, UserCheck, ArrowRight, Wrench } from "lucide-react";
+import { Search, UserCheck, ArrowRight, Wrench, Download } from "lucide-react";
 
 interface ToolItem {
   id: string;
@@ -24,6 +24,14 @@ export default function ToolsPage() {
       titleKey: "tiktokCheckerTitle",
       descKey: "tiktokCheckerDesc",
       href: "/tool/tiktok-username-checker",
+      available: true,
+    },
+    {
+      id: "tiktok-downloader",
+      icon: Download,
+      titleKey: "tiktokDownloaderTitle",
+      descKey: "tiktokDownloaderDesc",
+      href: "/tool/tiktok-downloader",
       available: true,
     },
   ];

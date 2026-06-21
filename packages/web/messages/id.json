@@ -1346,6 +1346,26 @@
     "suggestionsTitle": "Nama serupa di TikTok",
     "suggestionsSubtitle": "Akun yang mungkin kamu cari",
     "loadingSuggestions": "Mencari nama serupa...",
-    "searchMoreOnTikTok": "Lihat lebih banyak di TikTok"
+    "searchMoreOnTikTok": "Lihat lebih banyak di TikTok",
+    "tiktokDownloaderTitle": "Pengunduh Video TikTok",
+    "tiktokDownloaderDesc": "Unduh video TikTok tanpa watermark. Cepat, gratis, tanpa login.",
+    "tiktokDownloaderPlaceholder": "Tempel URL video TikTok...",
+    "tiktokDownloaderLoading": "Mengambil video...",
+    "tiktokDownloaderNoWatermark": "Unduh (Tanpa Watermark)",
+    "tiktokDownloaderBestQuality": "Kualitas terbaik, video bersih",
+    "tiktokDownloaderHD": "Unduh HD",
+    "tiktokDownloaderHDDesc": "HD dengan watermark",
+    "tiktokDownloaderAudio": "Unduh Audio Saja",
+    "tiktokDownloaderAudioDesc": "MP3 musik dari video",
+    "tiktokDownloaderCopyLink": "Salin Link Video",
+    "tiktokDownloaderCopyLinkDesc": "Salin ke clipboard untuk dibagikan",
+    "tiktokDownloaderTipsTitle": "Cara penggunaan",
+    "tiktokDownloaderTip1": "Buka aplikasi TikTok, ketuk Bagikan → Salin Tautan di video apa pun",
+    "tiktokDownloaderTip2": "Tempel tautan di atas, atau klik Tempel untuk otomatis ambil dari clipboard",
+    "tiktokDownloaderTip3": "Pilih format unduhan — tanpa watermark untuk video bersih, atau audio saja untuk musik",
+    "tiktokDownloaderTip4": "Video privat atau yang sudah dihapus mungkin tidak bisa diunduh",
+    "download": "Unduh",
+    "downloadError": "Gagal Mengunduh",
+    "paste": "Tempel"
   }
 }

@@ -1346,6 +1346,26 @@
     "suggestionsTitle": "Similar usernames on TikTok",
     "suggestionsSubtitle": "Accounts that might be what you're looking for",
     "loadingSuggestions": "Finding similar usernames...",
-    "searchMoreOnTikTok": "See more results on TikTok"
+    "searchMoreOnTikTok": "See more results on TikTok",
+    "tiktokDownloaderTitle": "TikTok Video Downloader",
+    "tiktokDownloaderDesc": "Download TikTok videos without watermark. Fast, free, no login required.",
+    "tiktokDownloaderPlaceholder": "Paste TikTok video URL...",
+    "tiktokDownloaderLoading": "Fetching video...",
+    "tiktokDownloaderNoWatermark": "Download (No Watermark)",
+    "tiktokDownloaderBestQuality": "Best quality, clean video",
+    "tiktokDownloaderHD": "Download HD",
+    "tiktokDownloaderHDDesc": "High definition with watermark",
+    "tiktokDownloaderAudio": "Download Audio Only",
+    "tiktokDownloaderAudioDesc": "MP3 music from the video",
+    "tiktokDownloaderCopyLink": "Copy Video Link",
+    "tiktokDownloaderCopyLinkDesc": "Copy to clipboard to share",
+    "tiktokDownloaderTipsTitle": "How to use",
+    "tiktokDownloaderTip1": "Open TikTok app, tap Share → Copy Link on any video",
+    "tiktokDownloaderTip2": "Paste the link above, or click Paste to auto-fetch from clipboard",
+    "tiktokDownloaderTip3": "Choose your download format — no watermark for clean videos, or audio-only for music",
+    "tiktokDownloaderTip4": "Private or deleted videos may not be downloadable",
+    "download": "Download",
+    "downloadError": "Download Error",
+    "paste": "Paste"
   }
 }
