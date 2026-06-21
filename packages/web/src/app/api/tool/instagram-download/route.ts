@@ -28,14 +28,6 @@ function extractShortcode(url: string): string | null {
 }
 
 /**
- * Extracts the first capturing group from a regex match on the given text.
- */
-function regexExtract(pattern: RegExp, text: string): string {
-  const m = text.match(pattern);
-  return m ? m[1] : "";
-}
-
-/**
  * Unescape HTML entities and JSON escape sequences commonly found in
  * Instagram's embedded <script> tags.
  */
