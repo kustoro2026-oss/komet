@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Download,
@@ -9,7 +10,6 @@ import {
   AlertTriangle,
   Video,
   Music,
-  Image,
   User,
   Clock,
   ExternalLink,
@@ -39,15 +39,6 @@ function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-function formatFileSize(bytes: string | number): string {
-  if (!bytes) return "";
-  const size = typeof bytes === "string" ? parseInt(bytes, 10) : bytes;
-  if (isNaN(size)) return "";
-  if (size > 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-  if (size > 1024) return `${(size / 1024).toFixed(0)} KB`;
-  return `${size} B`;
 }
 
 async function downloadFile(url: string, filename: string) {
@@ -249,10 +240,12 @@ export default function TikTokDownloaderPage() {
                       {/* Thumbnail */}
                       <div className="relative aspect-video bg-black/40">
                         {result.video.cover ? (
-                          <img
+                          <Image
                             src={result.video.cover}
                             alt={result.video.title}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center">
@@ -273,10 +266,13 @@ export default function TikTokDownloaderPage() {
                         {/* Author */}
                         <div className="flex items-center gap-3 mb-3">
                           {result.video.author.avatar ? (
-                            <img
+                            <Image
                               src={result.video.author.avatar}
                               alt=""
-                              className="h-10 w-10 rounded-full ring-1 ring-white/10"
+                              width={40}
+                              height={40}
+                              className="rounded-full ring-1 ring-white/10"
+                              unoptimized
                             />
                           ) : (
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.04]">

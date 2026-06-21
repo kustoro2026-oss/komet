@@ -481,9 +481,12 @@ export async function replyToTikTokComment(
  * This function always returns an empty array with a log message.
  */
 export function fetchTikTokComments(
-  _accessToken: string,
-  _videoId: string,
+  accessToken: string,
+  videoId: string,
 ): Promise<CommentResult[]> {
+  // TikTok Business API does NOT support fetching comments from own videos.
+  // Only the Research API (gated, for academics/non-profits) can read comments.
+  void accessToken; void videoId;
   console.log("[TikTok FetchComments] Not available via TikTok Business API. Use Research API or webhooks for comment IDs.");
   return Promise.resolve([]);
 }
