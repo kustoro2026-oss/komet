@@ -45,6 +45,54 @@ function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9\u4e00-\u9fff_-]/g, "_").slice(0, 80);
 }
 
+/**
+ * Client-side: extract video URL from Instagram page HTML.
+ * Works because the user's browser uses their real IP (not datacenter).
+ */
+async function extractVideoUrlClient(shortcode: string): Promise<string | null> {
+  const postUrl = `https://www.instagram.com/p/${shortcode}/`;
+
+  // Try a few CORS proxies to fetch the Instagram page from the browser
+  const proxyUrls = [
+    `https://corsproxy.io/?${encodeURIComponent(postUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(postUrl)}`,
+  ];
+
+  for (const proxyUrl of proxyUrls) {
+    try {
+      const res = await fetch(proxyUrl);
+      if (!res.ok) continue;
+      const html = await res.text();
+
+      // Strategy 1: video_url in embedded JSON
+      const videoMatch = html.match(/"video_url"\s*:\s*"([^"]+)"/);
+      if (videoMatch) {
+        const url = videoMatch[1]
+          .replace(/\\u0026/g, "&")
+          .replace(/\\\//g, "/")
+          .replace(/^\/\//, "https://");
+        if (url.startsWith("http")) return url;
+      }
+
+      // Strategy 2: og:video meta tag
+      const ogMatch = html.match(
+        /<meta[^>]+property=["']og:video["'][^>]+content=["']([^"']+)["']/i,
+      );
+      if (ogMatch?.[1]) return ogMatch[1];
+
+      // Strategy 3: og:video:secure_url
+      const secureMatch = html.match(
+        /<meta[^>]+property=["']og:video:secure_url["'][^>]+content=["']([^"']+)["']/i,
+      );
+      if (secureMatch?.[1]) return secureMatch[1];
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 async function downloadFile(url: string, filename: string) {
   const trimmed = url.trim();
   if (!trimmed) return;
@@ -73,6 +121,7 @@ export default function InstagramDownloaderPage() {
   const [result, setResult] = useState<DownloadResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [clientVideoLoading, setClientVideoLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFetch = useCallback(async () => {
@@ -81,6 +130,7 @@ export default function InstagramDownloaderPage() {
 
     setLoading(true);
     setResult(null);
+    setClientVideoLoading(false);
 
     try {
       const res = await fetch(
@@ -88,6 +138,23 @@ export default function InstagramDownloaderPage() {
       );
       const data: DownloadResult = await res.json();
       setResult(data);
+
+      // If server returned video type but no videoUrl, try client-side extraction
+      if (data.success && data.media?.type === "video" && !data.media.videoUrl) {
+        setClientVideoLoading(true);
+        const clientVideoUrl = await extractVideoUrlClient(data.media.shortcode);
+        if (clientVideoUrl) {
+          setResult((prev: DownloadResult | null) =>
+            prev
+              ? {
+                  ...prev,
+                  media: prev.media ? { ...prev.media, videoUrl: clientVideoUrl } : prev.media,
+                }
+              : prev,
+          );
+        }
+        setClientVideoLoading(false);
+      }
     } catch {
       setResult({
         success: false,
@@ -109,12 +176,27 @@ export default function InstagramDownloaderPage() {
         setUrl(text);
         setLoading(true);
         setResult(null);
+        setClientVideoLoading(false);
         try {
           const res = await fetch(
             `/api/tool/instagram-download?url=${encodeURIComponent(text.trim())}`,
           );
           const data: DownloadResult = await res.json();
           setResult(data);
+
+          // Client-side fallback for video URL
+          if (data.success && data.media?.type === "video" && !data.media.videoUrl) {
+            setClientVideoLoading(true);
+            const clientVideoUrl = await extractVideoUrlClient(data.media.shortcode);
+            if (clientVideoUrl) {
+              setResult((prev: DownloadResult | null) =>
+                prev
+                  ? { ...prev, media: prev.media ? { ...prev.media, videoUrl: clientVideoUrl } : prev.media }
+                  : prev,
+              );
+            }
+            setClientVideoLoading(false);
+          }
         } catch {
           setResult({ success: false, error: t("networkError") });
         } finally {
@@ -394,6 +476,41 @@ export default function InstagramDownloaderPage() {
                           </div>
                           <Download className="h-5 w-5 text-[var(--color-primary)] group-hover:scale-110 transition-transform" />
                         </button>
+                      )}
+
+                      {/* Client-side video extraction loading */}
+                      {isVideo && !result.media.videoUrl && clientVideoLoading && (
+                        <div className="flex w-full items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-5 py-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-primary)]/10">
+                            <Loader2 className="h-5 w-5 animate-spin text-[var(--color-primary)]" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="font-semibold text-sm text-[var(--color-on-dark)]">
+                              Mencari URL video...
+                            </p>
+                            <p className="text-xs text-[var(--color-on-dark-muted)]">
+                              Mengekstrak dari browser (IP asli)
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fallback: video post but no URL found */}
+                      {isVideo && !result.media.videoUrl && !clientVideoLoading && !loading && (
+                        <div className="flex w-full items-center gap-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/10 px-5 py-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+                            <AlertTriangle className="h-5 w-5 text-amber-400" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="font-semibold text-sm text-amber-200">
+                              URL video tidak tersedia
+                            </p>
+                            <p className="text-xs text-amber-300/60">
+                              Download thumbnail saja atau buka di Instagram untuk menonton video.
+                              Butuh Meta Access Token untuk download video langsung.
+                            </p>
+                          </div>
+                        </div>
                       )}
 
                       {/* Image / Thumbnail download */}
