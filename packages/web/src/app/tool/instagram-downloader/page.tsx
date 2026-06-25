@@ -46,10 +46,13 @@ function sanitizeFilename(name: string): string {
 }
 
 async function downloadFile(url: string, filename: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return;
   try {
-    const res = await fetch(url);
+    const res = await fetch(trimmed);
     if (!res.ok) throw new Error("Download failed");
     const blob = await res.blob();
+    if (!blob || blob.size === 0) throw new Error("Empty response");
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
@@ -59,7 +62,8 @@ async function downloadFile(url: string, filename: string) {
     document.body.removeChild(a);
     URL.revokeObjectURL(objectUrl);
   } catch {
-    window.open(url, "_blank");
+    // Fallback: open URL in new tab for direct view
+    if (trimmed) window.open(trimmed, "_blank");
   }
 }
 
@@ -392,12 +396,12 @@ export default function InstagramDownloaderPage() {
                         </button>
                       )}
 
-                      {/* Image download */}
-                      {(isImage || result.media.thumbnailUrl) && (
+                      {/* Image / Thumbnail download */}
+                      {result.media.thumbnailUrl && (
                         <button
                           onClick={() =>
                             downloadFile(
-                              isImage ? result.media!.thumbnailUrl : result.media!.thumbnailUrl,
+                              result.media!.thumbnailUrl,
                               `instagram-${sanitizeFilename(result.media!.author)}-${result.media!.shortcode}.jpg`,
                             )
                           }

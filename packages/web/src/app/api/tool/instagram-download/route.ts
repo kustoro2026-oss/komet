@@ -168,7 +168,7 @@ async function fetchWithTimeout(
 
 /**
  * Use Meta's tokenless oEmbed API (announced June 15, 2026).
- * No auth required — works reliably from datacenter/Vercel IPs.
+ * Falls back to {APP_ID}|{APP_SECRET} token if tokenless fails.
  *
  * NOTE: author_name and thumbnail_url were deprecated Nov 2025.
  * We parse author from the title field ("username on Instagram: …") instead,
@@ -176,17 +176,37 @@ async function fetchWithTimeout(
  */
 async function tryOembed(
   postUrl: string,
+  shortcode: string,
 ): Promise<NextResponse | null> {
   try {
     const oembedUrl = new URL("https://graph.facebook.com/v25.0/instagram_oembed");
     oembedUrl.searchParams.set("url", postUrl);
 
-    const response = await fetchWithTimeout(oembedUrl.toString(), {
+    let response = await fetchWithTimeout(oembedUrl.toString(), {
       headers: {
         "User-Agent": BROWSER_HEADERS["User-Agent"],
         Accept: "application/json",
       },
     });
+
+    // If tokenless fails, try with META_ACCESS_TOKEN or INSTAGRAM_CLIENT_ID|INSTAGRAM_CLIENT_SECRET
+    if (!response.ok) {
+      console.warn(`oEmbed tokenless returned ${response.status}, trying with token...`);
+      const token = process.env.META_ACCESS_TOKEN ||
+        (process.env.INSTAGRAM_CLIENT_ID && process.env.INSTAGRAM_CLIENT_SECRET
+          ? `${process.env.INSTAGRAM_CLIENT_ID}|${process.env.INSTAGRAM_CLIENT_SECRET}`
+          : null);
+
+      if (token) {
+        oembedUrl.searchParams.set("access_token", token);
+        response = await fetchWithTimeout(oembedUrl.toString(), {
+          headers: {
+            "User-Agent": BROWSER_HEADERS["User-Agent"],
+            Accept: "application/json",
+          },
+        });
+      }
+    }
 
     if (!response.ok) {
       console.warn(`oEmbed returned ${response.status}`);
@@ -217,37 +237,36 @@ async function tryOembed(
     if (!author) author = "Unknown";
     if (!caption) caption = "Instagram Post";
 
-    // If oEmbed gave us thumbnail_url, use it; otherwise try og:tags from Instagram
+    // Detect if this is likely a video based on URL pattern (reel/reels/tv)
+    const isReelOrTv = /(?:reels?|tv)\//i.test(postUrl);
+
+    // Start constructing result — default to image for photo posts
     let finalThumbnail = thumbnailUrl;
-    let isVideo = type === "video";
+    let isVideo = type === "video" || isReelOrTv;
     let videoUrl: string | undefined;
 
-    if (!finalThumbnail || !isVideo) {
-      // Fetch og:meta tags from Instagram page (may fail on datacenter IPs)
-      // Wrap in own try-catch so a failure here doesn't kill the oEmbed response
-      try {
-        const ogData = await fetchOgTags(postUrl, 5000); // 5s timeout — don't block
-        if (ogData) {
-          if (!finalThumbnail) finalThumbnail = ogData.image || "";
-          if (ogData.video) {
-            isVideo = true;
-            videoUrl = ogData.video;
-          }
-          // og:title often has better info when oEmbed title is sparse
-          if (ogData.title && rawTitle.length < 5) {
-            const ogAuthorMatch = ogData.title.match(/^(.+?)\s+on\s+Instagram/i);
-            if (ogAuthorMatch && author === "Unknown") author = ogAuthorMatch[1];
-            if (ogData.title.length > caption.length) caption = ogData.title;
-          }
+    // Always fetch og:meta tags from Instagram page for better detection
+    // (don't only do this when thumbnail missing — video posts need og:video)
+    try {
+      const ogData = await fetchOgTags(postUrl, 6000);
+      if (ogData) {
+        if (!finalThumbnail) finalThumbnail = ogData.image || "";
+        if (ogData.video) {
+          isVideo = true;
+          videoUrl = ogData.video;
         }
-      } catch {
-        // og tag fetch failed — continue with oEmbed data alone
-        console.warn("fetchOgTags failed, using oEmbed data only");
+        // og:title often has better info when oEmbed title is sparse
+        if (ogData.title && rawTitle.length < 5) {
+          const ogAuthorMatch = ogData.title.match(/^(.+?)\s+on\s+Instagram/i);
+          if (ogAuthorMatch && author === "Unknown") author = ogAuthorMatch[1];
+          if (ogData.title.length > caption.length) caption = ogData.title;
+        }
       }
+    } catch {
+      console.warn("fetchOgTags failed, using oEmbed data only");
     }
 
     // Try to extract media URLs from the HTML embed code
-    // Instagram oEmbed returns a <blockquote> with data-instgrm-permalink, not an <img>
     if (html && !videoUrl) {
       const videoMatch = html.match(/video_url["']?\s*[:=]\s*["']([^"']+)["']/i);
       if (videoMatch) {
@@ -256,23 +275,23 @@ async function tryOembed(
       }
     }
     if (html && !finalThumbnail) {
-      // Try <img> tag (unlikely in Instagram embeds, but handle it)
       const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
       if (imgMatch) finalThumbnail = imgMatch[1];
     }
-    // If still no thumbnail, try fetching the Instagram embed page
-    if (!finalThumbnail && !videoUrl) {
+
+    // Always try embed page for video posts or when media missing
+    if (!finalThumbnail || !videoUrl || isReelOrTv) {
       const embedPermalink = html.match(
         /data-instgrm-permalink=["']([^"']+)["']/i,
       );
       const embedUrl = embedPermalink
         ? embedPermalink[1].replace(/\?.*$/, "") + "embed/captioned/"
-        : `${postUrl}embed/captioned/`;
+        : `https://www.instagram.com/p/${shortcode}/embed/captioned/`;
       try {
         const embedRes = await fetchWithTimeout(embedUrl, {
           headers: BROWSER_HEADERS,
           redirect: "follow",
-        }, 6000);
+        }, 8000);
         if (embedRes.ok) {
           const embedHtml = await embedRes.text();
           const embedOgImage = extractMeta(embedHtml, "og:image");
@@ -284,10 +303,16 @@ async function tryOembed(
           if (embedOgImage) finalThumbnail = embedOgImage;
         }
       } catch {
-        // Embed page fetch failed — continue w/o thumbnail
+        // Embed page fetch failed — continue
       }
     }
 
+    // Final thumbnail fallback: Instagram's /p/{shortcode}/media/ endpoint
+    if (!finalThumbnail) {
+      finalThumbnail = `https://www.instagram.com/p/${shortcode}/media/?size=l`;
+    }
+
+    // If still no usable data, return null
     if (!finalThumbnail && !videoUrl && !html) {
       console.warn("oEmbed returned no usable data");
       return null;
@@ -297,7 +322,7 @@ async function tryOembed(
       success: true,
       media: {
         type: isVideo ? "video" : "image",
-        shortcode: postUrl.split("/").filter(Boolean).pop() || "",
+        shortcode,
         title: caption,
         author,
         thumbnailUrl: finalThumbnail || videoUrl || "",
@@ -379,7 +404,7 @@ async function tryDdinstagramProxy(
 
       if (!imgMatch && !videoMatch) return null;
 
-      const thumbnailUrl = (imgMatch?.[1] || videoMatch?.[1] || "");
+      const thumbnailUrl = (imgMatch?.[1] || videoMatch?.[1] || `https://www.instagram.com/p/${shortcode}/media/?size=l`);
       const videoUrl = videoMatch?.[1];
       let author = "Unknown";
       if (ogTitle) {
@@ -413,7 +438,7 @@ async function tryDdinstagramProxy(
         shortcode,
         title: ogDescription || ogTitle || "Instagram Post",
         author,
-        thumbnailUrl: ogImage || ogVideo || "",
+        thumbnailUrl: ogImage || ogVideo || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
         videoUrl: ogVideo || undefined,
       },
     } satisfies InstagramDownloadResponse);
@@ -465,7 +490,7 @@ export async function GET(request: NextRequest) {
 
     // Strategy 4: Meta oEmbed API (tokenless — new as of June 15, 2026)
     // Returns embed HTML + thumbnail, works from datacenter IPs
-    const oembedResult = await tryOembed(postUrl);
+    const oembedResult = await tryOembed(postUrl, shortcode);
     if (oembedResult) return oembedResult;
 
     // Strategy 5: ddinstagram embed proxy (last resort)
@@ -708,7 +733,7 @@ function parseGraphQLResponse(
           shortcode: (child.shortcode as string) || shortcode,
           title: `${author} on Instagram`,
           author,
-          thumbnailUrl: displayUrl,
+          thumbnailUrl: displayUrl || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
           videoUrl: childIsVideo ? videoUrl : undefined,
           width: child.original_width as number | undefined,
           height: child.original_height as number | undefined,
@@ -744,7 +769,7 @@ function parseGraphQLResponse(
         shortcode,
         title,
         author,
-        thumbnailUrl: rawDisplayUrl || videoUrl || "",
+        thumbnailUrl: rawDisplayUrl || videoUrl || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
         videoUrl: isVideo ? videoUrl : undefined,
         width,
         height,
@@ -925,7 +950,7 @@ function parseJsonLdMedia(
         shortcode,
         title,
         author,
-        thumbnailUrl: thumbnailUrl || contentUrl || "",
+        thumbnailUrl: thumbnailUrl || contentUrl || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
         videoUrl: type === "VideoObject" ? contentUrl : undefined,
         width: width || undefined,
         height: height || undefined,
@@ -1035,7 +1060,7 @@ function extractEmbeddedMedia(
       shortcode,
       title,
       author,
-      thumbnailUrl: displayUrl || videoUrl,
+      thumbnailUrl: displayUrl || videoUrl || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
       videoUrl: videoUrl || undefined,
       width,
       height,
@@ -1070,7 +1095,7 @@ function parseGraphQLMediaObject(
       | Array<Record<string, unknown>>
       | undefined;
     const bestImage = displayResources?.[displayResources.length - 1]?.src as string;
-    const thumbnailUrl = bestImage || displayUrl || videoUrl || "";
+    const thumbnailUrl = bestImage || displayUrl || videoUrl || `https://www.instagram.com/p/${shortcode}/media/?size=l`;
 
     return NextResponse.json({
       success: true,
@@ -1123,7 +1148,7 @@ function extractOgMedia(
       shortcode,
       title,
       author,
-      thumbnailUrl: ogImage || "",
+      thumbnailUrl: ogImage || ogVideo || `https://www.instagram.com/p/${shortcode}/media/?size=l`,
       videoUrl: ogVideo || undefined,
       width: ogVideoWidth ? parseInt(ogVideoWidth, 10) : undefined,
       height: ogVideoHeight ? parseInt(ogVideoHeight, 10) : undefined,
