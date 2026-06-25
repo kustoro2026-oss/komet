@@ -46,6 +46,17 @@ function sanitizeFilename(name: string): string {
 }
 
 /**
+ * Route Instagram CDN images through our proxy to bypass 403 hotlink protection.
+ * Instagram blocks images when Referer header doesn't match instagram.com.
+ */
+function getProxiedImageUrl(originalUrl: string): string {
+  if (!originalUrl) return "";
+  // Already proxied or not an Instagram CDN URL
+  if (originalUrl.startsWith("/api/")) return originalUrl;
+  return `/api/tool/instagram-image?url=${encodeURIComponent(originalUrl)}`;
+}
+
+/**
  * Client-side: extract video URL from Instagram page HTML.
  * Works because the user's browser uses their real IP (not datacenter).
  */
@@ -336,7 +347,7 @@ export default function InstagramDownloaderPage() {
                       <div className="relative aspect-square sm:aspect-video bg-black/40">
                         {result.media.thumbnailUrl ? (
                           <Image
-                            src={result.media.thumbnailUrl}
+                            src={getProxiedImageUrl(result.media.thumbnailUrl)}
                             alt={result.media.title}
                             fill
                             className="object-cover"
@@ -420,7 +431,7 @@ export default function InstagramDownloaderPage() {
                             key={item.shortcode || idx}
                             onClick={() =>
                               downloadFile(
-                                item.videoUrl || item.thumbnailUrl,
+                                item.videoUrl || getProxiedImageUrl(item.thumbnailUrl),
                                 `instagram-${sanitizeFilename(item.author)}-${item.shortcode || idx}-${idx + 1}.${item.type === "video" ? "mp4" : "jpg"}`,
                               )
                             }
@@ -518,7 +529,7 @@ export default function InstagramDownloaderPage() {
                         <button
                           onClick={() =>
                             downloadFile(
-                              result.media!.thumbnailUrl,
+                              getProxiedImageUrl(result.media!.thumbnailUrl),
                               `instagram-${sanitizeFilename(result.media!.author)}-${result.media!.shortcode}.jpg`,
                             )
                           }
