@@ -2,20 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
 
+interface InstagramMedia {
+  type: "video" | "image";
+  shortcode: string;
+  title: string;
+  author: string;
+  thumbnailUrl: string;
+  /** Direct CDN video URL (only for video posts) */
+  videoUrl?: string;
+  width?: number;
+  height?: number;
+}
+
 interface InstagramDownloadResponse {
   success: boolean;
   error?: string;
-  media?: {
-    type: "video" | "image";
-    shortcode: string;
-    title: string;
-    author: string;
-    thumbnailUrl: string;
-    /** Direct CDN video URL (only for video posts) */
-    videoUrl?: string;
-    width?: number;
-    height?: number;
-  };
+  media?: InstagramMedia;
+  /** Multiple media items for carousel/album posts */
+  items?: InstagramMedia[];
 }
 
 /** Extracts Instagram post shortcode from various URL formats */
@@ -41,13 +45,13 @@ function extractShortcode(raw: string): string | null {
   // Path patterns — ordered from most specific to least
   const patterns: RegExp[] = [
     // /p/SHORTCODE, /reel/SHORTCODE, /reels/SHORTCODE, /tv/SHORTCODE
-    new RegExp(`${hostPattern}\\/(?:p|reel|reels|tv)\\/([a-zA-Z0-9_-]{11})`),
+    new RegExp(`(?:${hostPattern})\\/(?:p|reel|reels|tv)\\/([a-zA-Z0-9_-]{11})`),
     // /share/p/SHORTCODE, /share/reel/SHORTCODE
-    new RegExp(`${hostPattern}\/share\/(?:p|reel|reels)\/([a-zA-Z0-9_-]{11})`),
+    new RegExp(`(?:${hostPattern})\/share\/(?:p|reel|reels)\/([a-zA-Z0-9_-]{11})`),
     // /share/SHORTCODE (direct share)
-    new RegExp(`${hostPattern}\/share\/([a-zA-Z0-9_-]{11})(?:\/|$)`),
+    new RegExp(`(?:${hostPattern})\/share\/([a-zA-Z0-9_-]{11})(?:\/|$)`),
     // Fallback: any 11-char slug after instagram domain in URL path
-    new RegExp(`${hostPattern}\/(?:[a-z]+\/)*([a-zA-Z0-9_-]{11})(?:\/|$)`),
+    new RegExp(`(?:${hostPattern})\/(?:[a-z]+\/)*([a-zA-Z0-9_-]{11})(?:\/|$)`),
   ];
 
   for (const pattern of patterns) {
@@ -92,6 +96,53 @@ function extractMeta(html: string, property: string): string {
   return m ? m[1] : "";
 }
 
+/**
+ * Common browser-like headers used across all Instagram requests.
+ * Mimics a real Chrome browser to avoid being served a login page.
+ */
+const BROWSER_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+  "Sec-Ch-Ua":
+    '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+  "Sec-Ch-Ua-Mobile": "?0",
+  "Sec-Ch-Ua-Platform": '"Windows"',
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Sec-Fetch-User": "?1",
+  "Upgrade-Insecure-Requests": "1",
+};
+
+/** Instagram App ID used for GraphQL API requests */
+const IG_APP_ID = "936619743392459";
+
+/**
+ * Fetch with timeout helper.
+ */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = 12000,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ─── Main handler ────────────────────────────────────────────────────
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get("url");
@@ -115,42 +166,24 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const postUrl = `https://www.instagram.com/p/${shortcode}/`;
-
   try {
-    const html = await fetchInstagramHtml(postUrl);
+    // Strategy 1: Instagram GraphQL API (most reliable, returns structured JSON)
+    const graphqlResult = await tryGraphQL(shortcode);
+    if (graphqlResult) return graphqlResult;
 
-    if (!html) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Instagram returned an empty response. The post may be private or Instagram is rate-limiting.",
-        },
-        { status: 200 },
-      );
-    }
+    // Strategy 2: HTML scraping with desktop UA
+    const htmlResult = await tryHtmlScraping(shortcode);
+    if (htmlResult) return htmlResult;
 
-    // Strategy 1: Parse JSON-LD structured data (most reliable)
-    const jsonLd = extractJsonLd(html);
-    if (jsonLd) {
-      const result = parseJsonLdMedia(jsonLd, shortcode);
-      if (result) return result;
-    }
-
-    // Strategy 2: Extract from embedded window.__INITIAL_STATE__ or similar JS objects
-    const embeddedJson = extractEmbeddedMedia(html, shortcode);
-    if (embeddedJson) return embeddedJson;
-
-    // Strategy 3: Fall back to Open Graph meta tags
-    const ogResult = extractOgMedia(html, shortcode);
-    if (ogResult) return ogResult;
+    // Strategy 3: HTML scraping with mobile UA (different page structure)
+    const mobileResult = await tryMobileScraping(shortcode);
+    if (mobileResult) return mobileResult;
 
     return NextResponse.json(
       {
         success: false,
         error:
-          "Could not extract media from this post. It may be private, deleted, or Instagram changed their page format.",
+          "Could not extract media from this post. It may be private, deleted, or Instagram is rate-limiting. Try again in a few minutes.",
       },
       { status: 200 },
     );
@@ -166,48 +199,255 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** Fetch Instagram HTML with proper browser headers */
-async function fetchInstagramHtml(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-      Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Cache-Control": "no-cache",
-      Pragma: "no-cache",
-    },
-    redirect: "follow",
-  });
+// ─── Strategy 1: Instagram GraphQL API ──────────────────────────────
 
-  if (response.status === 429 || response.status === 503) {
-    console.warn(`Instagram rate limited: ${response.status}`);
+/**
+ * Try Instagram's internal GraphQL API.
+ * Returns structured JSON with post metadata and media URLs.
+ */
+async function tryGraphQL(
+  shortcode: string,
+): Promise<NextResponse | null> {
+  try {
+    // Instagram's web GraphQL endpoint
+    const formBody = new URLSearchParams({
+      variables: JSON.stringify({
+        shortcode,
+        fetch_comment_count: 0,
+        child_comment_count: 0,
+        parent_comment_count: 0,
+      }),
+      doc_id: "8845758582189845",
+    });
+
+    const response = await fetchWithTimeout(
+      "https://www.instagram.com/api/graphql",
+      {
+        method: "POST",
+        headers: {
+          ...BROWSER_HEADERS,
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-IG-App-ID": IG_APP_ID,
+          "X-ASBD-ID": "198387",
+          "X-IG-WWW-Claim": "0",
+          "X-Requested-With": "XMLHttpRequest",
+          Origin: "https://www.instagram.com",
+          Referer: `https://www.instagram.com/p/${shortcode}/`,
+        },
+        body: formBody.toString(),
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(`GraphQL returned ${response.status}`);
+      return null;
+    }
+
+    const json = await response.json();
+    return parseGraphQLResponse(json, shortcode);
+  } catch (error) {
+    console.warn("GraphQL fetch failed:", error);
+    return null;
+  }
+}
+
+/** Parse Instagram GraphQL response */
+function parseGraphQLResponse(
+  json: Record<string, unknown>,
+  shortcode: string,
+): NextResponse | null {
+  try {
+    const data = (json as Record<string, unknown>).data as
+      | Record<string, unknown>
+      | undefined;
+    if (!data?.xdt_shortcode_media) return null;
+    const media = data.xdt_shortcode_media as Record<string, unknown>;
+
+    const isVideo = media.is_video === true;
+    const owner = media.owner as Record<string, unknown> | undefined;
+    const author = (owner?.username as string) ||
+      (owner?.full_name as string) || "Unknown";
+    const caption = media.caption as Record<string, unknown> | undefined;
+    const title = (caption?.text as string) || "Instagram Post";
+
+    // Dimensions
+    const dimensions = media.dimensions as
+      | Record<string, number>
+      | undefined;
+    const width = dimensions?.width;
+    const height = dimensions?.height;
+
+    // Handle carousel (album) posts — extract child media items
+    const carouselMedia = media.carousel_media as
+      | Array<Record<string, unknown>>
+      | undefined;
+    const sidecarChildren = media.sidecar_children as
+      | Array<Record<string, unknown>>
+      | undefined;
+    const children = carouselMedia || sidecarChildren;
+
+    if (children && children.length > 0) {
+      const items: InstagramMedia[] = [];
+      for (const child of children) {
+        const childIsVideo = child.is_video === true || child.media_type === 2;
+        const sources = child.video_versions as
+          | Array<Record<string, unknown>>
+          | undefined;
+        const imageVersions = child.image_versions2 as Record<string, unknown> | undefined;
+        const images = imageVersions?.candidates as
+          | Array<Record<string, unknown>>
+          | undefined;
+
+        const videoUrl = sources?.[0]?.url as string | undefined;
+        const imageUrl = images?.[0]?.url as string | undefined;
+        const displayUrl = (child.display_url as string) ||
+          imageUrl || videoUrl || "";
+
+        items.push({
+          type: childIsVideo ? "video" : "image",
+          shortcode: (child.shortcode as string) || shortcode,
+          title: `${author} on Instagram`,
+          author,
+          thumbnailUrl: displayUrl,
+          videoUrl: childIsVideo ? videoUrl : undefined,
+          width: child.original_width as number | undefined,
+          height: child.original_height as number | undefined,
+        });
+      }
+
+      // Return first item as media + all items
+      if (items.length === 0) return null;
+      return NextResponse.json({
+        success: true,
+        media: items[0],
+        items: items.length > 1 ? items : undefined,
+      } satisfies InstagramDownloadResponse);
+    }
+
+    // Single media post
+    const videoVersions = media.video_versions as
+      | Array<Record<string, unknown>>
+      | undefined;
+    const imageVersionsRaw = media.image_versions2 as Record<string, unknown> | undefined;
+    const imageVersions = imageVersionsRaw?.candidates as
+      | Array<Record<string, unknown>>
+      | undefined;
+
+    const videoUrl = videoVersions?.[0]?.url as string | undefined;
+    const imageUrl = imageVersions?.[0]?.url as string | undefined;
+    const rawDisplayUrl = (media.display_url as string) || imageUrl || "";
+
+    return NextResponse.json({
+      success: true,
+      media: {
+        type: isVideo ? "video" : "image",
+        shortcode,
+        title,
+        author,
+        thumbnailUrl: rawDisplayUrl || videoUrl || "",
+        videoUrl: isVideo ? videoUrl : undefined,
+        width,
+        height,
+      },
+    } satisfies InstagramDownloadResponse);
+  } catch (error) {
+    console.warn("GraphQL parse failed:", error);
+    return null;
+  }
+}
+
+// ─── Strategy 2: HTML scraping (desktop UA) ─────────────────────────
+
+async function tryHtmlScraping(
+  shortcode: string,
+): Promise<NextResponse | null> {
+  const postUrl = `https://www.instagram.com/p/${shortcode}/`;
+  const html = await fetchInstagramHtml(postUrl, BROWSER_HEADERS);
+  if (!html) return null;
+  return parseHtmlMedia(html, shortcode);
+}
+
+// ─── Strategy 3: HTML scraping (mobile UA) ──────────────────────────
+
+async function tryMobileScraping(
+  shortcode: string,
+): Promise<NextResponse | null> {
+  const postUrl = `https://www.instagram.com/p/${shortcode}/`;
+  const mobileHeaders: Record<string, string> = {
+    ...BROWSER_HEADERS,
+    "User-Agent":
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 " +
+      "(KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1",
+  };
+  const html = await fetchInstagramHtml(postUrl, mobileHeaders);
+  if (!html) return null;
+  return parseHtmlMedia(html, shortcode);
+}
+
+// ─── HTML fetch & parse utilities ───────────────────────────────────
+
+async function fetchInstagramHtml(
+  url: string,
+  headers: Record<string, string>,
+): Promise<string> {
+  try {
+    const response = await fetchWithTimeout(url, {
+      headers,
+      redirect: "follow",
+    });
+
+    if (response.status === 429 || response.status === 503) {
+      console.warn(`Instagram rate limited: ${response.status}`);
+      return "";
+    }
+
+    if (!response.ok) {
+      console.warn(`Instagram returned ${response.status}`);
+      return "";
+    }
+
+    const html = await response.text();
+
+    // Detect login page or too-small response
+    const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+    const pageTitle = titleMatch ? titleMatch[1].trim() : "";
+    const isLoginPage =
+      (pageTitle === "Login \u2022 Instagram" ||
+        pageTitle === "Instagram") &&
+      html.length < 100000; // Real post pages are typically 150k+ bytes
+
+    if (isLoginPage) {
+      console.warn(`Instagram returned login page (${html.length} bytes)`);
+      return "";
+    }
+
+    return html;
+  } catch {
     return "";
   }
+}
 
-  if (!response.ok) {
-    console.warn(`Instagram returned ${response.status}`);
-    return "";
+/** Parse HTML using all available extraction strategies */
+function parseHtmlMedia(
+  html: string,
+  shortcode: string,
+): NextResponse | null {
+  // Strategy A: JSON-LD structured data
+  const jsonLd = extractJsonLd(html);
+  if (jsonLd) {
+    const result = parseJsonLdMedia(jsonLd, shortcode);
+    if (result) return result;
   }
 
-  const html = await response.text();
+  // Strategy B: Embedded JS data (__INITIAL_STATE__, etc.)
+  const embeddedResult = extractEmbeddedMedia(html, shortcode);
+  if (embeddedResult) return embeddedResult;
 
-  // Detect real login page: title is literally "Login • Instagram" and
-  // the page is very small (no post content).
-  const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
-  const pageTitle = titleMatch ? titleMatch[1].trim() : "";
-  const isLoginPage =
-    (pageTitle === "Login • Instagram" || pageTitle === "Instagram") &&
-    html.length < 80000; // Real post pages are 150k+ bytes
+  // Strategy C: Open Graph meta tags
+  const ogResult = extractOgMedia(html, shortcode);
+  if (ogResult) return ogResult;
 
-  if (isLoginPage) {
-    console.warn("Instagram returned login page");
-    return "";
-  }
-
-  return html;
+  return null;
 }
 
 /** Extract JSON-LD structured data (`<script type="application/ld+json">`) */

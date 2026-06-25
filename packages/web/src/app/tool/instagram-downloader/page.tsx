@@ -14,6 +14,7 @@ import {
   Copy,
   Check,
   User,
+  Layers,
 } from "lucide-react";
 
 interface MediaData {
@@ -31,6 +32,13 @@ interface DownloadResult {
   success: boolean;
   error?: string;
   media?: MediaData;
+  /** Multiple media items for carousel/album posts */
+  items?: MediaData[];
+}
+
+/** Returns true if post has multiple media items (carousel) */
+function isCarousel(result: DownloadResult): boolean {
+  return (result.items?.length ?? 0) > 1;
 }
 
 function sanitizeFilename(name: string): string {
@@ -285,6 +293,14 @@ export default function InstagramDownloaderPage() {
                             {result.media.width}×{result.media.height}
                           </span>
                         )}
+
+                        {/* Carousel indicator */}
+                        {isCarousel(result) && (
+                          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1 text-xs text-white/80 backdrop-blur-sm">
+                            <Layers className="h-3 w-3" />
+                            {result.items!.length} items
+                          </span>
+                        )}
                       </div>
 
                       {/* Info */}
@@ -306,6 +322,47 @@ export default function InstagramDownloaderPage() {
                         )}
                       </div>
                     </div>
+
+                    {/* Carousel items download */}
+                    {isCarousel(result) && (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-xs font-medium text-[var(--color-on-dark-muted)] mb-2">
+                          Download all {result.items!.length} items:
+                        </p>
+                        {result.items!.map((item, idx) => (
+                          <button
+                            key={item.shortcode || idx}
+                            onClick={() =>
+                              downloadFile(
+                                item.videoUrl || item.thumbnailUrl,
+                                `instagram-${sanitizeFilename(item.author)}-${item.shortcode || idx}-${idx + 1}.${item.type === "video" ? "mp4" : "jpg"}`,
+                              )
+                            }
+                            className="flex w-full items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 hover:bg-white/[0.06] transition-all group"
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04]">
+                              {item.type === "video" ? (
+                                <Video className="h-4 w-4 text-purple-400" />
+                              ) : (
+                                <ImageIcon className="h-4 w-4 text-sky-400" />
+                              )}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="font-medium text-xs text-[var(--color-on-dark)]">
+                                Item {idx + 1}
+                                {item.type === "video" ? " (Video)" : " (Photo)"}
+                              </p>
+                              <p className="text-xs text-[var(--color-on-dark-muted)]">
+                                {item.width && item.height
+                                  ? `${item.width}×${item.height}`
+                                  : "Original quality"}
+                              </p>
+                            </div>
+                            <Download className="h-4 w-4 text-[var(--color-on-dark-soft)] group-hover:scale-110 transition-transform" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Download buttons */}
                     <div className="mt-4 space-y-2">
