@@ -24,40 +24,63 @@ interface InstagramDownloadResponse {
 
 /** Extracts Instagram post shortcode from various URL formats */
 function extractShortcode(raw: string): string | null {
-  // Normalize: decode, strip protocols, strip query/fragment
-  let url = raw.trim();
-  try {
-    url = decodeURIComponent(url);
-  } catch {
-    // Already decoded or invalid encoding
+  const url = raw.trim();
+  if (!url) return null;
+
+  // Handle standalone shortcode (typically 11 chars, but be flexible)
+  const standalone = url.match(/^([a-zA-Z0-9_-]{8,20})$/);
+  if (standalone && !url.includes("/") && !url.includes(".")) {
+    return standalone[1];
   }
 
-  // Handle standalone shortcode (11 chars, alphanumeric + _ -)
-  const standalone = url.match(/^([a-zA-Z0-9_-]{11})$/);
-  if (standalone) return standalone[1];
+  // Decode only AFTER standalone check to avoid corrupting pure shortcodes
+  let decoded = url;
+  try {
+    decoded = decodeURIComponent(url);
+  } catch {
+    decoded = url;
+  }
 
   // Strip protocol and query/fragment for cleaner matching
-  const cleaned = url.replace(/^https?:\/\//i, "").replace(/[?#].*$/, "");
+  const cleaned = decoded.replace(/^https?:\/\//i, "").replace(/[?#].*$/, "");
 
-  // Known Instagram hostnames
-  const hostPattern = "(?:www\\.|m\\.|l\\.|web\\.)?instagram\\.com|instagr\\.am";
+  // Instagram hostnames (including subdomain variants and short URLs)
+  const hostRE = /(?:www\.|m\.|l\.|web\.)?instagram\.com|instagr\.am|ig\.me/i;
 
-  // Path patterns — ordered from most specific to least
-  const patterns: RegExp[] = [
-    // /p/SHORTCODE, /reel/SHORTCODE, /reels/SHORTCODE, /tv/SHORTCODE
-    new RegExp(`(?:${hostPattern})\\/(?:p|reel|reels|tv)\\/([a-zA-Z0-9_-]{11})`),
-    // /share/p/SHORTCODE, /share/reel/SHORTCODE
-    new RegExp(`(?:${hostPattern})\/share\/(?:p|reel|reels)\/([a-zA-Z0-9_-]{11})`),
-    // /share/SHORTCODE (direct share)
-    new RegExp(`(?:${hostPattern})\/share\/([a-zA-Z0-9_-]{11})(?:\/|$)`),
-    // Fallback: any 11-char slug after instagram domain in URL path
-    new RegExp(`(?:${hostPattern})\/(?:[a-z]+\/)*([a-zA-Z0-9_-]{11})(?:\/|$)`),
-  ];
+  // Strategy 1: Standard paths — /p/, /reel/, /reels/, /tv/, /stories/
+  // Uses variable-length shortcode matching (Instagram shortcodes are typically 8-20 chars)
+  let m = cleaned.match(
+    new RegExp(
+      `(?:${hostRE.source})\\/(?:p|reels?|tv|stories(?:\\/[^\\/]+)?)\\/([a-zA-Z0-9_-]{8,20})`,
+      "i",
+    ),
+  );
+  if (m) return m[1];
 
-  for (const pattern of patterns) {
-    const m = cleaned.match(pattern);
-    if (m) return m[1];
-  }
+  // Strategy 2: /share/ paths — /share/p/SHORTCODE, /share/reel/SHORTCODE, /share/SHORTCODE
+  m = cleaned.match(
+    new RegExp(
+      `(?:${hostRE.source})\\/share\\/(?:(?:p|reels?)\\/)?([a-zA-Z0-9_-]{8,20})`,
+      "i",
+    ),
+  );
+  if (m) return m[1];
+
+  // Strategy 3: Fallback — any shortcode-looking slug after Instagram domain
+  m = cleaned.match(
+    new RegExp(
+      `(?:${hostRE.source})\\/(?:[a-z0-9_.]+\\/)*([a-zA-Z0-9_-]{8,20})(?:\\/|$)`,
+      "i",
+    ),
+  );
+  if (m) return m[1];
+
+  // Strategy 4: Handle ddinstagram / embed proxy URLs
+  // e.g., ddinstagram.com/p/SHORTCODE, d.ddinstagram.com/p/SHORTCODE
+  m = cleaned.match(
+    /(?:ddinstagram\.com|d\.ddinstagram\.com)\/(?:p|reels?)\/([a-zA-Z0-9_-]{8,20})/i,
+  );
+  if (m) return m[1];
 
   return null;
 }
@@ -103,7 +126,7 @@ function extractMeta(html: string, property: string): string {
 const BROWSER_HEADERS: Record<string, string> = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "(KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
   Accept:
     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9",
@@ -111,7 +134,7 @@ const BROWSER_HEADERS: Record<string, string> = {
   "Cache-Control": "no-cache",
   Pragma: "no-cache",
   "Sec-Ch-Ua":
-    '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    '"Google Chrome";v="133", "Chromium";v="133", "Not_A Brand";v="24"',
   "Sec-Ch-Ua-Mobile": "?0",
   "Sec-Ch-Ua-Platform": '"Windows"',
   "Sec-Fetch-Dest": "document",
@@ -141,6 +164,157 @@ async function fetchWithTimeout(
   }
 }
 
+// ─── Strategy 4: Meta oEmbed API (Tokenless) ────────────────────────
+
+/**
+ * Use Meta's tokenless oEmbed API (announced June 15, 2026).
+ * No auth required — works reliably from datacenter/Vercel IPs.
+ * Returns thumbnail URL, author info, and embed HTML.
+ */
+async function tryOembed(
+  postUrl: string,
+): Promise<NextResponse | null> {
+  try {
+    const oembedUrl = new URL("https://graph.facebook.com/v25.0/instagram_oembed");
+    oembedUrl.searchParams.set("url", postUrl);
+
+    const response = await fetchWithTimeout(oembedUrl.toString(), {
+      headers: {
+        "User-Agent": BROWSER_HEADERS["User-Agent"],
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.warn(`oEmbed returned ${response.status}`);
+      return null;
+    }
+
+    const json = await response.json() as Record<string, unknown>;
+
+    // oEmbed returns: html, thumbnail_url, author_name, title, provider_name, type, version
+    const thumbnailUrl = (json.thumbnail_url as string) || "";
+    const author = (json.author_name as string) || "Unknown";
+    const title = (json.title as string) || "Instagram Post";
+    const type = (json.type as string) || ""; // "rich" or "video"
+    const html = (json.html as string) || "";
+
+    if (!thumbnailUrl && !html) {
+      console.warn("oEmbed returned no usable data");
+      return null;
+    }
+
+    // Try to extract media URL from the HTML embed code
+    let videoUrl: string | undefined;
+    if (html) {
+      // Look for video URL in the embed HTML
+      const videoMatch = html.match(/video_url["']?\s*[:=]\s*["']([^"']+)["']/i);
+      if (videoMatch) videoUrl = videoMatch[1];
+      // Try to extract image URL from embed HTML's og:image or similar
+      if (!thumbnailUrl) {
+        const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (imgMatch) videoUrl = imgMatch[1]; // Overloaded — this is actually image
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      media: {
+        type: type === "video" || videoUrl ? "video" : "image",
+        shortcode: postUrl.split("/").filter(Boolean).pop() || "",
+        title,
+        author,
+        thumbnailUrl: thumbnailUrl || videoUrl || "",
+        videoUrl: type === "video" ? videoUrl : undefined,
+      },
+    } satisfies InstagramDownloadResponse);
+  } catch (error) {
+    console.warn("oEmbed fetch failed:", error);
+    return null;
+  }
+}
+
+// ─── Strategy 5: ddinstagram Proxy ──────────────────────────────────
+
+/**
+ * Try fetching media via ddinstagram.com embed proxy.
+ * ddinstagram rewrites Instagram URLs to serve direct media embeds.
+ * e.g., ddinstagram.com/p/SHORTCODE → returns HTML page with direct media URLs
+ */
+async function tryDdinstagramProxy(
+  shortcode: string,
+): Promise<NextResponse | null> {
+  try {
+    const proxyUrl = `https://ddinstagram.com/p/${shortcode}/`;
+    const response = await fetchWithTimeout(proxyUrl, {
+      headers: BROWSER_HEADERS,
+    });
+
+    if (!response.ok) {
+      console.warn(`ddinstagram proxy returned ${response.status}`);
+      return null;
+    }
+
+    const html = await response.text();
+
+    // ddinstagram serves a simple HTML page with og: meta tags for embeds
+    const ogImage = extractMeta(html, "og:image");
+    const ogVideo = extractMeta(html, "og:video");
+    const ogTitle = extractMeta(html, "og:title");
+    const ogDescription = extractMeta(html, "og:description");
+
+    if (!ogImage && !ogVideo) {
+      // Try finding media URLs directly in the HTML
+      const videoMatch = html.match(/property=["']og:video["'][^>]+content=["']([^"']+)["']/i)
+        || html.match(/property=["']og:video:secure_url["'][^>]+content=["']([^"']+)["']/i);
+      const imgMatch = html.match(/property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+
+      if (!imgMatch && !videoMatch) return null;
+
+      const thumbnailUrl = (imgMatch?.[1] || videoMatch?.[1] || "");
+      const videoUrl = videoMatch?.[1];
+      let author = "Unknown";
+      if (ogTitle) {
+        const m = ogTitle.match(/^(.+?)\s+on\s+Instagram/i);
+        if (m) author = m[1];
+      }
+
+      return NextResponse.json({
+        success: true,
+        media: {
+          type: videoUrl ? "video" : "image",
+          shortcode,
+          title: ogDescription || ogTitle || "Instagram Post",
+          author,
+          thumbnailUrl,
+          videoUrl,
+        },
+      } satisfies InstagramDownloadResponse);
+    }
+
+    let author = "Unknown";
+    if (ogTitle) {
+      const m = ogTitle.match(/^(.+?)\s+on\s+Instagram/i);
+      if (m) author = m[1];
+    }
+
+    return NextResponse.json({
+      success: true,
+      media: {
+        type: ogVideo ? "video" : "image",
+        shortcode,
+        title: ogDescription || ogTitle || "Instagram Post",
+        author,
+        thumbnailUrl: ogImage || ogVideo || "",
+        videoUrl: ogVideo || undefined,
+      },
+    } satisfies InstagramDownloadResponse);
+  } catch (error) {
+    console.warn("ddinstagram proxy failed:", error);
+    return null;
+  }
+}
+
 // ─── Main handler ────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -167,7 +341,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Strategy 1: Instagram GraphQL API (most reliable, returns structured JSON)
+    const postUrl = `https://www.instagram.com/p/${shortcode}/`;
+
+    // Strategy 1: Instagram GraphQL API (returns structured JSON w/ media URLs)
     const graphqlResult = await tryGraphQL(shortcode);
     if (graphqlResult) return graphqlResult;
 
@@ -178,6 +354,16 @@ export async function GET(request: NextRequest) {
     // Strategy 3: HTML scraping with mobile UA (different page structure)
     const mobileResult = await tryMobileScraping(shortcode);
     if (mobileResult) return mobileResult;
+
+    // Strategy 4: Meta oEmbed API (tokenless — new as of June 15, 2026)
+    // Returns embed HTML + thumbnail, works from datacenter IPs
+    const oembedResult = await tryOembed(postUrl);
+    if (oembedResult) return oembedResult;
+
+    // Strategy 5: ddinstagram embed proxy (last resort)
+    // Rewrites instagram.com → ddinstagram.com to bypass blocks
+    const proxyResult = await tryDdinstagramProxy(shortcode);
+    if (proxyResult) return proxyResult;
 
     return NextResponse.json(
       {
@@ -201,6 +387,16 @@ export async function GET(request: NextRequest) {
 
 // ─── Strategy 1: Instagram GraphQL API ──────────────────────────────
 
+/** doc_id values — Instagram rotates these every 2-4 weeks. Multiple attempts. */
+const GRAPHQL_DOC_IDS = [
+  "8845758582119845",  // ScrapFly June 2026
+  "10015901848480474", // Instagram Media Scraper (api/graphql GET)
+  "9310670392322965",  // Profile posts doc_id (fallback)
+];
+
+/** LSD token for X-FB-LSD header (rotates less frequently than doc_id) */
+const IG_LSD_TOKEN = "AVqbxe3J_YA";
+
 /**
  * Try Instagram's internal GraphQL API.
  * Returns structured JSON with post metadata and media URLs.
@@ -208,47 +404,143 @@ export async function GET(request: NextRequest) {
 async function tryGraphQL(
   shortcode: string,
 ): Promise<NextResponse | null> {
-  try {
-    // Instagram's web GraphQL endpoint
-    const formBody = new URLSearchParams({
-      variables: JSON.stringify({
+  // Attempt 1: POST to /api/graphql (most common working approach)
+  for (const docId of GRAPHQL_DOC_IDS) {
+    try {
+      const variables = JSON.stringify({
         shortcode,
         fetch_comment_count: 0,
         child_comment_count: 0,
         parent_comment_count: 0,
-      }),
-      doc_id: "8845758582189845",
-    });
+        fetch_tagged_user_count: null,
+        hoisted_comment_id: null,
+        hoisted_reply_id: null,
+      });
 
-    const response = await fetchWithTimeout(
-      "https://www.instagram.com/api/graphql",
-      {
-        method: "POST",
+      const formBody = new URLSearchParams({
+        variables,
+        doc_id: docId,
+      });
+
+      const response = await fetchWithTimeout(
+        "https://www.instagram.com/api/graphql",
+        {
+          method: "POST",
+          headers: {
+            ...BROWSER_HEADERS,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-IG-App-ID": IG_APP_ID,
+            "X-ASBD-ID": "129477",
+            "X-FB-LSD": IG_LSD_TOKEN,
+            "X-IG-WWW-Claim": "0",
+            "X-Requested-With": "XMLHttpRequest",
+            Origin: "https://www.instagram.com",
+            Referer: `https://www.instagram.com/p/${shortcode}/`,
+            "Sec-Fetch-Site": "same-origin",
+          },
+          body: formBody.toString(),
+        },
+      );
+
+      if (!response.ok) {
+        console.warn(`GraphQL POST /api/graphql returned ${response.status} (doc_id=${docId})`);
+        continue;
+      }
+
+      const json = await response.json();
+      const result = parseGraphQLResponse(json, shortcode);
+      if (result) return result;
+    } catch (error) {
+      console.warn(`GraphQL POST /api/graphql failed (doc_id=${docId}):`, error);
+    }
+  }
+
+  // Attempt 2: GET to /api/graphql (alternative approach with query params)
+  for (const docId of GRAPHQL_DOC_IDS) {
+    try {
+      const graphqlUrl = new URL("https://www.instagram.com/api/graphql");
+      graphqlUrl.searchParams.set(
+        "variables",
+        JSON.stringify({ shortcode }),
+      );
+      graphqlUrl.searchParams.set("doc_id", docId);
+      graphqlUrl.searchParams.set("lsd", IG_LSD_TOKEN);
+
+      const response = await fetchWithTimeout(graphqlUrl.toString(), {
+        method: "GET",
         headers: {
           ...BROWSER_HEADERS,
-          "Content-Type": "application/x-www-form-urlencoded",
           "X-IG-App-ID": IG_APP_ID,
-          "X-ASBD-ID": "198387",
-          "X-IG-WWW-Claim": "0",
+          "X-FB-LSD": IG_LSD_TOKEN,
+          "X-ASBD-ID": "129477",
           "X-Requested-With": "XMLHttpRequest",
           Origin: "https://www.instagram.com",
           Referer: `https://www.instagram.com/p/${shortcode}/`,
+          "Sec-Fetch-Site": "same-origin",
         },
-        body: formBody.toString(),
-      },
-    );
+      });
 
-    if (!response.ok) {
-      console.warn(`GraphQL returned ${response.status}`);
-      return null;
+      if (!response.ok) {
+        console.warn(`GraphQL GET /api/graphql returned ${response.status} (doc_id=${docId})`);
+        continue;
+      }
+
+      const json = await response.json();
+      const result = parseGraphQLResponse(json, shortcode);
+      if (result) return result;
+    } catch (error) {
+      console.warn(`GraphQL GET /api/graphql failed (doc_id=${docId}):`, error);
     }
-
-    const json = await response.json();
-    return parseGraphQLResponse(json, shortcode);
-  } catch (error) {
-    console.warn("GraphQL fetch failed:", error);
-    return null;
   }
+
+  // Attempt 3: POST to /graphql/query (older endpoint, still works for some)
+  for (const docId of GRAPHQL_DOC_IDS) {
+    try {
+      const variables = JSON.stringify({
+        shortcode,
+        fetch_comment_count: 0,
+        child_comment_count: 0,
+        parent_comment_count: 0,
+        fetch_tagged_user_count: null,
+        hoisted_comment_id: null,
+        hoisted_reply_id: null,
+      });
+
+      const body = `variables=${encodeURIComponent(variables)}&doc_id=${docId}`;
+
+      const response = await fetchWithTimeout(
+        "https://www.instagram.com/graphql/query",
+        {
+          method: "POST",
+          headers: {
+            ...BROWSER_HEADERS,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-IG-App-ID": IG_APP_ID,
+            "X-FB-LSD": IG_LSD_TOKEN,
+            "X-ASBD-ID": "129477",
+            "X-Requested-With": "XMLHttpRequest",
+            Origin: "https://www.instagram.com",
+            Referer: `https://www.instagram.com/p/${shortcode}/`,
+            "Sec-Fetch-Site": "same-origin",
+          },
+          body,
+        },
+      );
+
+      if (!response.ok) {
+        console.warn(`GraphQL POST /graphql/query returned ${response.status} (doc_id=${docId})`);
+        continue;
+      }
+
+      const json = await response.json();
+      const result = parseGraphQLResponse(json, shortcode);
+      if (result) return result;
+    } catch (error) {
+      console.warn(`GraphQL POST /graphql/query failed (doc_id=${docId}):`, error);
+    }
+  }
+
+  return null;
 }
 
 /** Parse Instagram GraphQL response */
@@ -408,16 +700,21 @@ async function fetchInstagramHtml(
 
     const html = await response.text();
 
-    // Detect login page or too-small response
+    // Detect login page, rate limit, or too-small response
     const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
     const pageTitle = titleMatch ? titleMatch[1].trim() : "";
-    const isLoginPage =
-      (pageTitle === "Login \u2022 Instagram" ||
-        pageTitle === "Instagram") &&
-      html.length < 100000; // Real post pages are typically 150k+ bytes
 
-    if (isLoginPage) {
-      console.warn(`Instagram returned login page (${html.length} bytes)`);
+    // Real Instagram post pages are typically 150k+ bytes
+    const isTooSmall = html.length < 80000;
+    const isLoginPage =
+      pageTitle === "Login \u2022 Instagram" ||
+      pageTitle === "Instagram" ||
+      html.includes('"native_client_side_nav_react"') === false;
+
+    if (isLoginPage || isTooSmall) {
+      console.warn(
+        `Instagram returned login/block page (${html.length} bytes, title="${pageTitle}")`,
+      );
       return "";
     }
 
@@ -532,14 +829,54 @@ function parseJsonLdMedia(
 }
 
 /**
- * Strategy 2: Extract media from embedded JavaScript objects.
- * Instagram embeds video_url / display_url in various <script> tags.
+ * Extract media from embedded JavaScript objects.
+ * Instagram embeds video_url / display_url in various <script> tags,
+ * and full GraphQL responses in __INITIAL_STATE__ or similar globals.
  */
 function extractEmbeddedMedia(
   html: string,
   shortcode: string,
 ): NextResponse | null {
-  // Try to find "video_url" or "display_url" in JSON-like structures within scripts
+  // Strategy A: Try extracting full GraphQL response embedded in the page
+  // Instagram pages embed a full xdt_shortcode_media JSON blob
+  const graphqlEmbedMatch = html.match(
+    /"xdt_shortcode_media"\s*:\s*(\{[\s\S]*?"shortcode"\s*:\s*"[^"]+")/,
+  );
+  if (graphqlEmbedMatch) {
+    try {
+      // Try to extract the full object by finding its boundaries
+      const startIdx = html.indexOf('"xdt_shortcode_media"');
+      if (startIdx > 0) {
+        // Find the matching closing brace
+        let braceCount = 0;
+        let inString = false;
+        let escapeNext = false;
+        let endIdx = html.indexOf("{", startIdx);
+        if (endIdx > 0) {
+          for (let i = endIdx; i < html.length; i++) {
+            const ch = html[i];
+            if (escapeNext) { escapeNext = false; continue; }
+            if (ch === "\\") { escapeNext = true; continue; }
+            if (ch === '"') { inString = !inString; continue; }
+            if (inString) continue;
+            if (ch === "{") braceCount++;
+            if (ch === "}") {
+              braceCount--;
+              if (braceCount === 0) {
+                const jsonStr = html.substring(endIdx, i + 1);
+                const parsed = JSON.parse(unescapeInstagram(jsonStr));
+                return parseGraphQLMediaObject(parsed, shortcode);
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Fall through to simpler extraction
+    }
+  }
+
+  // Strategy B: Extract individual fields from embedded JSON
   const videoUrlMatch = html.match(
     /"video_url"\s*:\s*"((?:https?:)?\\?\/\\?\/[^"]+)"/,
   );
@@ -570,6 +907,16 @@ function extractEmbeddedMedia(
     ? authorMatch[2] || authorMatch[1] || "Unknown"
     : "Unknown";
 
+  // Try to find caption
+  const captionMatch = html.match(
+    /"text"\s*:\s*"([^"]{1,500})"/,
+  );
+  const title = captionMatch
+    ? captionMatch[1]
+    : author
+      ? `${author} on Instagram`
+      : "Instagram Post";
+
   const width = dimensionsMatch ? parseInt(dimensionsMatch[2], 10) : undefined;
   const height = dimensionsMatch ? parseInt(dimensionsMatch[1], 10) : undefined;
 
@@ -578,7 +925,7 @@ function extractEmbeddedMedia(
     media: {
       type: videoUrl ? "video" : "image",
       shortcode,
-      title: author ? `${author} on Instagram` : "Instagram Post",
+      title,
       author,
       thumbnailUrl: displayUrl || videoUrl,
       videoUrl: videoUrl || undefined,
@@ -586,6 +933,53 @@ function extractEmbeddedMedia(
       height,
     },
   } satisfies InstagramDownloadResponse);
+}
+
+/**
+ * Parse a directly extracted GraphQL media object (from embedded page data).
+ * Handles the xdt_shortcode_media structure.
+ */
+function parseGraphQLMediaObject(
+  media: Record<string, unknown>,
+  shortcode: string,
+): NextResponse | null {
+  try {
+    const isVideo = media.is_video === true || media.__typename === "GraphVideo";
+    const owner = media.owner as Record<string, unknown> | undefined;
+    const author = (owner?.username as string) ||
+      (owner?.full_name as string) || "Unknown";
+    const caption = media.caption as Record<string, unknown> | undefined;
+    const displayUrl = (media.display_url as string) || "";
+    const videoUrl = (media.video_url as string) || "";
+
+    // Dimensions
+    const dimensions = media.dimensions as Record<string, number> | undefined;
+    const width = dimensions?.width || (media.original_width as number);
+    const height = dimensions?.height || (media.original_height as number);
+
+    // Get high-res image
+    const displayResources = media.display_resources as
+      | Array<Record<string, unknown>>
+      | undefined;
+    const bestImage = displayResources?.[displayResources.length - 1]?.src as string;
+    const thumbnailUrl = bestImage || displayUrl || videoUrl || "";
+
+    return NextResponse.json({
+      success: true,
+      media: {
+        type: isVideo ? "video" : "image",
+        shortcode,
+        title: (caption?.text as string) || `${author} on Instagram`,
+        author,
+        thumbnailUrl,
+        videoUrl: isVideo ? videoUrl : undefined,
+        width,
+        height,
+      },
+    } satisfies InstagramDownloadResponse);
+  } catch {
+    return null;
+  }
 }
 
 /** Strategy 3: Open Graph meta tags (last resort) */
