@@ -223,24 +223,31 @@ async function tryOembed(
     let videoUrl: string | undefined;
 
     if (!finalThumbnail || !isVideo) {
-      // Fetch the actual Instagram page for og:meta tags (lightweight, works on login pages too)
-      const ogData = await fetchOgTags(postUrl);
-      if (ogData) {
-        if (!finalThumbnail) finalThumbnail = ogData.image || "";
-        if (ogData.video) {
-          isVideo = true;
-          videoUrl = ogData.video;
+      // Fetch og:meta tags from Instagram page (may fail on datacenter IPs)
+      // Wrap in own try-catch so a failure here doesn't kill the oEmbed response
+      try {
+        const ogData = await fetchOgTags(postUrl, 5000); // 5s timeout — don't block
+        if (ogData) {
+          if (!finalThumbnail) finalThumbnail = ogData.image || "";
+          if (ogData.video) {
+            isVideo = true;
+            videoUrl = ogData.video;
+          }
+          // og:title often has better info when oEmbed title is sparse
+          if (ogData.title && rawTitle.length < 5) {
+            const ogAuthorMatch = ogData.title.match(/^(.+?)\s+on\s+Instagram/i);
+            if (ogAuthorMatch && author === "Unknown") author = ogAuthorMatch[1];
+            if (ogData.title.length > caption.length) caption = ogData.title;
+          }
         }
-        // og:title often has better info
-        if (ogData.title && rawTitle.length < 5) {
-          const ogAuthorMatch = ogData.title.match(/^(.+?)\s+on\s+Instagram/i);
-          if (ogAuthorMatch && author === "Unknown") author = ogAuthorMatch[1];
-          if (ogData.title.length > caption.length) caption = ogData.title;
-        }
+      } catch {
+        // og tag fetch failed — continue with oEmbed data alone
+        console.warn("fetchOgTags failed, using oEmbed data only");
       }
     }
 
     // Try to extract media URLs from the HTML embed code
+    // Instagram oEmbed returns a <blockquote> with data-instgrm-permalink, not an <img>
     if (html && !videoUrl) {
       const videoMatch = html.match(/video_url["']?\s*[:=]\s*["']([^"']+)["']/i);
       if (videoMatch) {
@@ -249,8 +256,36 @@ async function tryOembed(
       }
     }
     if (html && !finalThumbnail) {
+      // Try <img> tag (unlikely in Instagram embeds, but handle it)
       const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
       if (imgMatch) finalThumbnail = imgMatch[1];
+    }
+    // If still no thumbnail, try fetching the Instagram embed page
+    if (!finalThumbnail && !videoUrl) {
+      const embedPermalink = html.match(
+        /data-instgrm-permalink=["']([^"']+)["']/i,
+      );
+      const embedUrl = embedPermalink
+        ? embedPermalink[1].replace(/\?.*$/, "") + "embed/captioned/"
+        : `${postUrl}embed/captioned/`;
+      try {
+        const embedRes = await fetchWithTimeout(embedUrl, {
+          headers: BROWSER_HEADERS,
+          redirect: "follow",
+        }, 6000);
+        if (embedRes.ok) {
+          const embedHtml = await embedRes.text();
+          const embedOgImage = extractMeta(embedHtml, "og:image");
+          const embedOgVideo = extractMeta(embedHtml, "og:video");
+          if (embedOgVideo) {
+            isVideo = true;
+            videoUrl = embedOgVideo;
+          }
+          if (embedOgImage) finalThumbnail = embedOgImage;
+        }
+      } catch {
+        // Embed page fetch failed — continue w/o thumbnail
+      }
     }
 
     if (!finalThumbnail && !videoUrl && !html) {
@@ -282,12 +317,13 @@ async function tryOembed(
  */
 async function fetchOgTags(
   postUrl: string,
+  timeoutMs = 8000,
 ): Promise<{ image?: string; video?: string; title?: string } | null> {
   try {
     const response = await fetchWithTimeout(postUrl, {
       headers: BROWSER_HEADERS,
       redirect: "follow",
-    });
+    }, timeoutMs);
 
     if (!response.ok) return null;
 
