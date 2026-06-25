@@ -169,7 +169,10 @@ async function fetchWithTimeout(
 /**
  * Use Meta's tokenless oEmbed API (announced June 15, 2026).
  * No auth required — works reliably from datacenter/Vercel IPs.
- * Returns thumbnail URL, author info, and embed HTML.
+ *
+ * NOTE: author_name and thumbnail_url were deprecated Nov 2025.
+ * We parse author from the title field ("username on Instagram: …") instead,
+ * and fetch og:meta tags from the actual Instagram page for thumbnails.
  */
 async function tryOembed(
   postUrl: string,
@@ -192,44 +195,113 @@ async function tryOembed(
 
     const json = await response.json() as Record<string, unknown>;
 
-    // oEmbed returns: html, thumbnail_url, author_name, title, provider_name, type, version
-    const thumbnailUrl = (json.thumbnail_url as string) || "";
-    const author = (json.author_name as string) || "Unknown";
-    const title = (json.title as string) || "Instagram Post";
-    const type = (json.type as string) || ""; // "rich" or "video"
+    // oEmbed fields (author_name & thumbnail_url deprecated Nov 2025)
+    const rawTitle = (json.title as string) || "";
     const html = (json.html as string) || "";
+    const type = (json.type as string) || ""; // "rich" or "video"
+    const thumbnailUrl = (json.thumbnail_url as string) || "";
 
-    if (!thumbnailUrl && !html) {
-      console.warn("oEmbed returned no usable data");
-      return null;
+    // Parse author + caption from title: "username on Instagram: caption text"
+    let author = (json.author_name as string) || "";
+    let caption = rawTitle;
+
+    if (!author && rawTitle) {
+      const authorMatch = rawTitle.match(/^(.+?)\s+on\s+Instagram/i);
+      if (authorMatch) {
+        author = authorMatch[1];
+        // Caption is everything after "on Instagram: " or "on Instagram"
+        const after = rawTitle.slice(authorMatch[0].length).replace(/^:\s*/, "").trim();
+        if (after) caption = after;
+      }
+    }
+    if (!author) author = "Unknown";
+    if (!caption) caption = "Instagram Post";
+
+    // If oEmbed gave us thumbnail_url, use it; otherwise try og:tags from Instagram
+    let finalThumbnail = thumbnailUrl;
+    let isVideo = type === "video";
+    let videoUrl: string | undefined;
+
+    if (!finalThumbnail || !isVideo) {
+      // Fetch the actual Instagram page for og:meta tags (lightweight, works on login pages too)
+      const ogData = await fetchOgTags(postUrl);
+      if (ogData) {
+        if (!finalThumbnail) finalThumbnail = ogData.image || "";
+        if (ogData.video) {
+          isVideo = true;
+          videoUrl = ogData.video;
+        }
+        // og:title often has better info
+        if (ogData.title && rawTitle.length < 5) {
+          const ogAuthorMatch = ogData.title.match(/^(.+?)\s+on\s+Instagram/i);
+          if (ogAuthorMatch && author === "Unknown") author = ogAuthorMatch[1];
+          if (ogData.title.length > caption.length) caption = ogData.title;
+        }
+      }
     }
 
-    // Try to extract media URL from the HTML embed code
-    let videoUrl: string | undefined;
-    if (html) {
-      // Look for video URL in the embed HTML
+    // Try to extract media URLs from the HTML embed code
+    if (html && !videoUrl) {
       const videoMatch = html.match(/video_url["']?\s*[:=]\s*["']([^"']+)["']/i);
-      if (videoMatch) videoUrl = videoMatch[1];
-      // Try to extract image URL from embed HTML's og:image or similar
-      if (!thumbnailUrl) {
-        const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-        if (imgMatch) videoUrl = imgMatch[1]; // Overloaded — this is actually image
+      if (videoMatch) {
+        isVideo = true;
+        videoUrl = videoMatch[1];
       }
+    }
+    if (html && !finalThumbnail) {
+      const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (imgMatch) finalThumbnail = imgMatch[1];
+    }
+
+    if (!finalThumbnail && !videoUrl && !html) {
+      console.warn("oEmbed returned no usable data");
+      return null;
     }
 
     return NextResponse.json({
       success: true,
       media: {
-        type: type === "video" || videoUrl ? "video" : "image",
+        type: isVideo ? "video" : "image",
         shortcode: postUrl.split("/").filter(Boolean).pop() || "",
-        title,
+        title: caption,
         author,
-        thumbnailUrl: thumbnailUrl || videoUrl || "",
-        videoUrl: type === "video" ? videoUrl : undefined,
+        thumbnailUrl: finalThumbnail || videoUrl || "",
+        videoUrl: isVideo ? videoUrl : undefined,
       },
     } satisfies InstagramDownloadResponse);
   } catch (error) {
     console.warn("oEmbed fetch failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Fetch og:meta tags from an Instagram post page.
+ * These are served even when Instagram returns a login wall,
+ * so this is a lightweight supplement for oEmbed metadata.
+ */
+async function fetchOgTags(
+  postUrl: string,
+): Promise<{ image?: string; video?: string; title?: string } | null> {
+  try {
+    const response = await fetchWithTimeout(postUrl, {
+      headers: BROWSER_HEADERS,
+      redirect: "follow",
+    });
+
+    if (!response.ok) return null;
+
+    const html = await response.text();
+    if (!html || html.length < 500) return null;
+
+    const ogImage = extractMeta(html, "og:image");
+    const ogVideo = extractMeta(html, "og:video");
+    const ogTitle = extractMeta(html, "og:title");
+
+    if (!ogImage && !ogVideo) return null;
+
+    return { image: ogImage, video: ogVideo, title: ogTitle };
+  } catch {
     return null;
   }
 }
