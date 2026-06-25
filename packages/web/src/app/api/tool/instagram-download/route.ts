@@ -851,7 +851,7 @@ function extractEmbeddedMedia(
         let braceCount = 0;
         let inString = false;
         let escapeNext = false;
-        let endIdx = html.indexOf("{", startIdx);
+        const endIdx = html.indexOf("{", startIdx);
         if (endIdx > 0) {
           for (let i = endIdx; i < html.length; i++) {
             const ch = html[i];
